@@ -20,6 +20,7 @@ Use `yarn` for this repo.
 - Follow existing formatting: 2-space indentation, double quotes, and semicolons in TS/TSX.
 - Prefer functional React components and hooks; keep props and state typing explicit.
 - Use Tailwind utility classes in JSX and keep tokens centralized in `src/index.css`.
+- Use shadcn components as the default building blocks for UI.
 - For Rust in `src-tauri/src`, follow rustfmt defaults and keep Tauri command names in `snake_case`.
 
 ## Testing Guidelines
