@@ -42,7 +42,11 @@ export const useLocations = () => {
             .map((entry) => resolveEntry(entry, "/Volumes"))
             .filter((entry): entry is { name: string; path: string } => Boolean(entry))
             .filter((entry) => !isHiddenName(entry.name))
-            .map((entry) => ({ path: entry.path, name: entry.name, kind: "volume" }))
+            .map<LocationItem>((entry) => ({
+              path: entry.path,
+              name: entry.name,
+              kind: "volume",
+            }))
             .sort((a, b) => a.name.localeCompare(b.name));
         } catch (error) {
           locationRoots = [];
@@ -52,7 +56,10 @@ export const useLocations = () => {
           locationRoots = [{ path: "/Volumes", name: "Volumes", kind: "volume" }];
         }
 
-        const roots = [{ path: homePath, name: homeLabel, kind: "home" }, ...locationRoots];
+        const roots: LocationItem[] = [
+          { path: homePath, name: homeLabel, kind: "home" },
+          ...locationRoots,
+        ];
         setState({ locations: roots, error: null, homePath });
       } catch (error) {
         if (!isActive) {

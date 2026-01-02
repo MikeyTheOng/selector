@@ -61,7 +61,7 @@ export const ColumnView = ({
 
   const selectedChildPaths = useMemo(
     () =>
-      columnPaths.map((path, index) =>
+      columnPaths.map((_, index) =>
         index < columnPaths.length - 1 ? columnPaths[index + 1] : null,
       ),
     [columnPaths],
@@ -96,7 +96,7 @@ export const ColumnView = ({
                       type: "file" as const,
                       path: file.path,
                       name: file.name,
-                      row: file,
+                    row: file,
                     })),
                   ]
                 : [];
