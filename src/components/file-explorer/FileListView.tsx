@@ -54,7 +54,7 @@ export const FileListView = ({
       onMouseDown={handleMouseDown}
       className="outline-none focus:outline-none"
     >
-      <div className="grid cursor-default select-none grid-cols-[minmax(0,1fr)_120px_90px] gap-3 border-b border-border/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+      <div className="grid cursor-default select-none grid-cols-[minmax(0,1fr)_120px_90px] gap-3 border-b border-border/50 px-3 py-2 text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
         <span>Name</span>
         <span>Extension</span>
         <span>Size</span>

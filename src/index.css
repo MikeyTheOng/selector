@@ -5,6 +5,7 @@
 
 :root {
   --radius: 0.65rem;
+  --app-text-scale: 1;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -118,6 +119,10 @@
   body,
   #root {
     height: 100%;
+  }
+
+  html {
+    font-size: calc(16px * var(--app-text-scale));
   }
 
   body {

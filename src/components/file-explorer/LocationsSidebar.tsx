@@ -31,7 +31,7 @@ export const LocationsSidebar = ({
           <div className="flex flex-col gap-4">
             {homeLocation ? (
               <div>
-                <p className="cursor-default select-none px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                <p className="cursor-default select-none px-2 pb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Favorites
                 </p>
                 <Button
@@ -51,7 +51,7 @@ export const LocationsSidebar = ({
               </div>
             ) : null}
             <div>
-              <p className="cursor-default select-none px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              <p className="cursor-default select-none px-2 pb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Locations
               </p>
               {locationNodes.length === 0 ? (
