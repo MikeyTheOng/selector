@@ -21,6 +21,7 @@ function App() {
     selectedEntries,
     selectedCount,
     selectFile,
+    selectMultiple,
     toggleFileSelection,
     removeSelection,
     clearSelections,
@@ -86,6 +87,7 @@ function App() {
                   selectedFiles={selectedFiles}
                   onSelectFolder={navigateTo}
                   onSelectFile={handleFileSelection}
+                  onSelectMultiple={selectMultiple}
                 />
               ) : (
                 <ColumnView
