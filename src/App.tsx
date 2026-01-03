@@ -4,7 +4,6 @@ import { BrowserToolbar } from "./components/file-explorer/BrowserToolbar";
 import { FileListView } from "./components/file-explorer/FileListView";
 import { LocationsSidebar } from "./components/file-explorer/LocationsSidebar";
 import { SelectionSheet } from "./components/file-explorer/SelectionSheet";
-import { SelectionSummary } from "./components/file-explorer/SelectionSummary";
 import { useFileSelection } from "./hooks/use-file-selection";
 import { useFolderListing } from "./hooks/use-folder-listing";
 import { useLocations } from "./hooks/use-locations";
@@ -101,8 +100,6 @@ function App() {
                 />
               )}
             </div>
-
-            <SelectionSummary entries={selectedEntries} onRemove={removeSelection} />
           </section>
         </div>
       </div>
