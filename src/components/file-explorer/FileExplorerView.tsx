@@ -107,18 +107,20 @@ export const FileExplorerView = ({
         />
 
         <div className="flex-1 overflow-auto">
-          {listing.isLoading ? (
-            <div className="px-4 py-6 text-sm text-muted-foreground">Loading files...</div>
-          ) : listing.error ? (
-            <div className="px-4 py-6 text-sm text-destructive">{listing.error}</div>
-          ) : viewMode === "list" ? (
-            <FileListView
-              listing={listing}
-              selectedFiles={selectedFiles}
-              onSelectFolder={onSelectFolder}
-              onSelectFile={handleFileSelection}
-              onSelectMultiple={selectMultiple}
-            />
+          {viewMode === "list" ? (
+            listing.isLoading ? (
+              <div className="px-4 py-6 text-sm text-muted-foreground">Loading files...</div>
+            ) : listing.error ? (
+              <div className="px-4 py-6 text-sm text-destructive">{listing.error}</div>
+            ) : (
+              <FileListView
+                listing={listing}
+                selectedFiles={selectedFiles}
+                onSelectFolder={onSelectFolder}
+                onSelectFile={handleFileSelection}
+                onSelectMultiple={selectMultiple}
+              />
+            )
           ) : (
             <ColumnView
               locations={locations}
