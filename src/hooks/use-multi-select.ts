@@ -18,7 +18,7 @@ type DragSelectionState = {
 };
 
 /**
- * Hook for multi-selection features: CMD+A to select all and click+drag marquee selection.
+ * Hook for multi-selection features: click+drag marquee selection.
  * Designed to be reusable across different file view components.
  */
 export const useMultiSelect = ({
@@ -50,23 +50,6 @@ export const useMultiSelect = ({
             onSelectFile(file, { additive: true });
         });
     }, [files, onSelectFile, onSelectMultiple]);
-
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if ((event.metaKey || event.ctrlKey) && event.key === "a") {
-                event.preventDefault();
-                selectAll();
-            }
-        };
-
-        container.addEventListener("keydown", handleKeyDown);
-        return () => {
-            container.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [containerRef, selectAll]);
 
     const getSelectionRect = useCallback(() => {
         if (!dragState) return null;
