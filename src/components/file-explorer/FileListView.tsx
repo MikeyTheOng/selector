@@ -54,19 +54,19 @@ export const FileListView = ({
       onMouseDown={handleMouseDown}
       className="outline-none focus:outline-none"
     >
-      <div className="grid grid-cols-[minmax(0,1fr)_120px_90px] gap-3 border-b border-border/50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+      <div className="grid grid-cols-[minmax(0,1fr)_120px_90px] gap-3 border-b border-border/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
         <span>Name</span>
         <span>Extension</span>
         <span>Size</span>
       </div>
       {rows.length === 0 ? (
-        <div className="px-4 py-6 text-sm text-muted-foreground">No items found in this folder.</div>
+        <div className="px-3 py-4 text-sm text-muted-foreground">No items found in this folder.</div>
       ) : (
         <TreeProvider selectable={false} showLines={false} className="w-full">
           <TreeView className="p-0">
             <div className="divide-y divide-border/40">
               {rows.map((row) => {
-                const isSelected =
+                const isFileSelected =
                   row.type === "file" ? Boolean(selectedFiles[row.path]) : false;
 
                 return (
@@ -86,24 +86,43 @@ export const FileListView = ({
                         onSelectFile(row.row, { additive: event.metaKey || event.ctrlKey });
                       }}
                       className={cn(
-                        "grid w-full grid-cols-[minmax(0,1fr)_120px_90px] items-center gap-3 px-4 py-2 text-left text-sm transition",
-                        isSelected
-                          ? "bg-accent/60 text-foreground"
+                        "grid w-full grid-cols-[minmax(0,1fr)_120px_90px] items-center gap-3 px-3 py-2 text-left text-xs transition",
+                        isFileSelected
+                          ? "bg-primary text-primary-foreground"
                           : "text-foreground hover:bg-muted/60 focus-visible:bg-muted/60",
                       )}
-                      aria-selected={isSelected}
+                      aria-selected={isFileSelected}
                     >
                       <div className="flex items-center gap-2 overflow-hidden">
                         <FileRowLabel
                           name={row.name}
                           type={row.type}
-                          labelClassName="font-medium text-foreground"
+                          iconClassName={cn(
+                            row.type === "folder"
+                              ? "text-primary"
+                              : isFileSelected
+                                ? "text-primary-foreground"
+                                : "text-muted-foreground",
+                          )}
+                          labelClassName={
+                            isFileSelected ? "text-primary-foreground" : "text-foreground"
+                          }
                         />
                       </div>
-                      <span className="truncate text-sm text-muted-foreground">
+                      <span
+                        className={cn(
+                          "truncate text-xs",
+                          isFileSelected ? "text-primary-foreground/80" : "text-muted-foreground",
+                        )}
+                      >
                         {row.type === "file" ? row.extension || "-" : "-"}
                       </span>
-                      <span className="truncate text-sm text-muted-foreground">
+                      <span
+                        className={cn(
+                          "truncate text-xs",
+                          isFileSelected ? "text-primary-foreground/80" : "text-muted-foreground",
+                        )}
+                      >
                         {row.type === "file" ? row.sizeLabel : "-"}
                       </span>
                     </button>
