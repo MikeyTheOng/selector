@@ -1,13 +1,16 @@
 import { FileRowLabel } from "@/components/file-explorer/FileRowLabel";
 import { TreeNode, TreeProvider, TreeView } from "@/components/kibo-ui/tree";
+import { useMultiSelect } from "@/hooks/use-multi-select";
 import { cn } from "@/lib/utils";
 import { FileRow, FolderListing } from "@/lib/fs";
+import { useRef } from "react";
 
 type FileListViewProps = {
   listing: FolderListing;
   selectedFiles: Record<string, FileRow>;
   onSelectFolder: (path: string) => void;
   onSelectFile: (row: FileRow, options?: { additive?: boolean }) => void;
+  onSelectMultiple?: (rows: FileRow[], options?: { additive?: boolean }) => void;
 };
 
 export const FileListView = ({
@@ -15,7 +18,10 @@ export const FileListView = ({
   selectedFiles,
   onSelectFolder,
   onSelectFile,
+  onSelectMultiple,
 }: FileListViewProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const rows = [
     ...listing.folders.map((folder) => ({
       type: "folder" as const,
@@ -32,8 +38,22 @@ export const FileListView = ({
     })),
   ];
 
+  const { isDragging, selectionRectStyle, registerRowRef, handleMouseDown } = useMultiSelect({
+    files: listing.files,
+    onSelectFile,
+    onSelectMultiple,
+    containerRef,
+  });
+
+  const rectStyle = selectionRectStyle();
+
   return (
-    <>
+    <div
+      ref={containerRef}
+      tabIndex={0}
+      onMouseDown={handleMouseDown}
+      className="outline-none focus:outline-none"
+    >
       <div className="grid grid-cols-[minmax(0,1fr)_120px_90px] gap-3 border-b border-border/50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
         <span>Name</span>
         <span>Extension</span>
@@ -52,6 +72,11 @@ export const FileListView = ({
                 return (
                   <TreeNode key={row.path} nodeId={row.path} level={0}>
                     <button
+                      ref={(el) => {
+                        if (row.type === "file") {
+                          registerRowRef(row.path, el);
+                        }
+                      }}
                       type="button"
                       onClick={(event) => {
                         if (row.type === "folder") {
@@ -89,6 +114,14 @@ export const FileListView = ({
           </TreeView>
         </TreeProvider>
       )}
-    </>
+
+      {/* Drag selection rectangle */}
+      {isDragging && rectStyle && (
+        <div
+          style={rectStyle}
+          className="fixed pointer-events-none border border-primary/30 bg-primary/10"
+        />
+      )}
+    </div>
   );
 };

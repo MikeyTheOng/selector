@@ -22,6 +22,19 @@ export const useFileSelection = () => {
     });
   }, []);
 
+  const selectMultiple = useCallback((rows: FileRow[], options?: { additive?: boolean }) => {
+    setSelectedFiles((prev) => {
+      if (options?.additive) {
+        const next = { ...prev };
+        rows.forEach((row) => {
+          next[row.path] = row;
+        });
+        return next;
+      }
+      return Object.fromEntries(rows.map((row) => [row.path, row] as const));
+    });
+  }, []);
+
   const toggleFileSelection = useCallback((row: FileRow) => {
     setSelectedFiles((prev) => {
       const next = { ...prev };
@@ -54,6 +67,7 @@ export const useFileSelection = () => {
     selectedEntries,
     selectedCount,
     selectFile,
+    selectMultiple,
     toggleFileSelection,
     removeSelection,
     clearSelections,
