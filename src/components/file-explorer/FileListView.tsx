@@ -54,7 +54,7 @@ export const FileListView = ({
       onMouseDown={handleMouseDown}
       className="outline-none focus:outline-none"
     >
-      <div className="grid grid-cols-[minmax(0,1fr)_120px_90px] gap-3 border-b border-border/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+      <div className="grid cursor-default select-none grid-cols-[minmax(0,1fr)_120px_90px] gap-3 border-b border-border/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
         <span>Name</span>
         <span>Extension</span>
         <span>Size</span>
@@ -111,7 +111,7 @@ export const FileListView = ({
                       </div>
                       <span
                         className={cn(
-                          "truncate text-xs",
+                          "cursor-default select-text truncate text-xs",
                           isFileSelected ? "text-primary-foreground/80" : "text-muted-foreground",
                         )}
                       >
@@ -119,7 +119,7 @@ export const FileListView = ({
                       </span>
                       <span
                         className={cn(
-                          "truncate text-xs",
+                          "cursor-default select-text truncate text-xs",
                           isFileSelected ? "text-primary-foreground/80" : "text-muted-foreground",
                         )}
                       >

@@ -61,7 +61,7 @@ export const SelectionSheet = ({
         side="right"
         className="flex min-h-0 w-1/3 flex-col md:max-w-none"
       >
-        <SheetHeader className="border-b border-border/60 pb-3 text-left">
+        <SheetHeader className="cursor-default select-none border-b border-border/60 pb-3 text-left">
           <SheetTitle className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Selection
           </SheetTitle>
@@ -77,8 +77,12 @@ export const SelectionSheet = ({
                   className="flex min-w-0 items-center gap-3 rounded-lg border border-border/60 bg-card/70 px-3 py-2 transition-colors hover:bg-card"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">{entry.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{entry.path}</p>
+                    <p className="cursor-default select-text truncate text-sm font-medium text-foreground">
+                      {entry.name}
+                    </p>
+                    <p className="cursor-default select-text truncate text-xs text-muted-foreground">
+                      {entry.path}
+                    </p>
                   </div>
                   <Button
                     type="button"
