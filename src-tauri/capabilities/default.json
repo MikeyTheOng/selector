@@ -11,6 +11,7 @@
     "drag:default",
     "fs:allow-read-dir",
     "fs:allow-stat",
+    "fs:allow-watch",
     {
       "identifier": "fs:scope",
       "allow": [
