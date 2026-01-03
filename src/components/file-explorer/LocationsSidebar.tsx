@@ -21,7 +21,7 @@ export const LocationsSidebar = ({
   const locationNodes = locations.filter((node) => node.kind === "volume");
 
   return (
-    <aside className="flex min-h-0 w-full flex-col border-border/60 lg:w-70 border-b lg:border-b-0 lg:border-r">
+    <aside className="flex-col min-w-0 w-full sm:w-1/6 border-border/60 border-b lg:border-b-0 lg:border-r">
       <ScrollArea className="flex-1 px-2 py-3">
         {locationsError ? (
           <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
