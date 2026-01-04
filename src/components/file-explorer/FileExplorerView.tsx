@@ -3,6 +3,7 @@ import { BrowserToolbar } from "@/components/file-explorer/BrowserToolbar";
 import { ColumnView } from "@/components/file-explorer/ColumnView";
 import { FileListView } from "@/components/file-explorer/FileListView";
 import { LocationsSidebar } from "@/components/file-explorer/LocationsSidebar";
+import { PathBar } from "@/components/file-explorer/PathBar";
 import { SelectionSheet } from "@/components/file-explorer/SelectionSheet";
 import { useFileSelection } from "@/hooks/use-file-selection";
 import { useFolderListing } from "@/hooks/use-folder-listing";
@@ -133,6 +134,12 @@ export const FileExplorerView = ({
             />
           )}
         </div>
+
+        <PathBar
+          selectedFolder={selectedFolder}
+          locations={locations}
+          onSelectFolder={onSelectFolder}
+        />
       </section>
     </div>
   );
