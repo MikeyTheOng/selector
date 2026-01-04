@@ -1,34 +1,94 @@
-# Repository Guidelines
+# AGENTS.md — Repository Guidelines
 
-## Project Structure & Module Organization
-- `src/` holds the React + TypeScript UI; entry points are `src/main.tsx` and `src/App.tsx`.
-- `src/lib/` contains shared helpers (for example, `src/lib/utils.ts`).
-- `src/assets/` and `public/` store static assets and icons served by Vite.
-- `src-tauri/` contains the Rust backend and Tauri configuration (`src-tauri/src`, `src-tauri/tauri.conf.json`).
-- Root configs include `vite.config.ts`, `tsconfig.json`, and `index.html`.
+This document defines how AI coding agents (Claude Code, Codex) and contributors should work in this repository.
 
-## Build, Test, and Development Commands
-Use `yarn` for this repo.
-- `yarn install`: install dependencies.
-- `yarn dev`: start the Vite dev server for the web UI.
-- `yarn build`: run TypeScript checks and produce a production build.
-- `yarn preview`: serve the production build locally.
-- `yarn tauri dev`: run the desktop app with Tauri in dev mode.
-- `yarn tauri build`: bundle the desktop app for distribution.
+---
 
-## Coding Style & Naming Conventions
-- Follow existing formatting: 2-space indentation, double quotes, and semicolons in TS/TSX.
-- Prefer functional React components and hooks; keep props and state typing explicit.
-- Use Tailwind utility classes in JSX and keep tokens centralized in `src/index.css`.
-- Use shadcn components as the default building blocks for UI.
-- For Rust in `src-tauri/src`, follow rustfmt defaults and keep Tauri command names in `snake_case`.
+## Project Overview
 
-## Testing Guidelines
-- No test framework is configured yet. If you add tests, prefer Vitest and place files as `src/**/*.test.ts(x)`.
-- Update this guide with any new test commands or coverage expectations.
+**Selector** is a **Tauri v2 desktop file browser**.  
+It allows users to browse directories, select files, and switch between list and column view modes.
 
-## Commit & Pull Request Guidelines
-- Use commit messages with a concise summary line followed by a short bullet list.
-- Keep subjects imperative and focused (e.g., "Add settings panel"), and keep the bullets to 1–3 lines.
-- PRs should include a clear summary, linked issues when applicable, and screenshots for UI changes.
-- Call out changes to Tauri config or capabilities explicitly.
+---
+
+## Repository Structure
+- Refer to [file-structure](/docs/file-structure.md)
+
+---
+
+## Development & Build
+
+This repository uses **Yarn**.
+
+- `yarn install` — Install dependencies
+- `yarn dev` — Start the Vite dev server
+- `yarn build` — Type-check and build for production
+- `yarn preview` — Preview the production build
+- `yarn tauri dev` — Run the desktop app in dev mode
+- `yarn tauri build` — Build distributable desktop binaries
+
+---
+
+## Coding Standards
+
+### Frontend (React / TypeScript)
+- 2-space indentation, double quotes, semicolons.
+- Prefer functional components and hooks.
+- Explicitly type props and state.
+- Use Tailwind utility classes; keep tokens centralized in `src/index.css`.
+- Use **shadcn/ui** components as default UI primitives.
+
+### Backend (Rust / Tauri)
+- Follow `rustfmt` defaults.
+- Use `snake_case` for Tauri command names.
+
+---
+
+## Core Hooks
+
+- `useNavigation` — Back/forward navigation history
+- `useFolderListing` — Directory listing with caching and live FS watching
+- `useFileSelection` — Multi-file selection state
+- `useLocations` — Sidebar locations (home directory, mounted volumes)
+- `useTextScale` — Global text scaling with `localStorage` persistence
+
+---
+
+## Path Aliases
+
+- Use `@/` to import from `src/`  
+  ```ts
+  import { Button } from "@/components/ui/button";
+
+## Testing
+
+- No test framework is configured by default.
+- If tests are added:
+  - Prefer **Vitest**
+  - Place files under `src/**/*.test.ts(x)`
+- Update this document if testing expectations change.
+
+---
+
+## Commit Guidelines
+
+- Every commit title must start with **at least one type prefix**, e.g.  
+  `feat:`, `fix:`, `feat/refactor:`
+- Follow the prefix with a concise, imperative summary.
+- Include a short bullet list (1–3 bullets) describing intent and impact.
+- Keep commits narrowly scoped; avoid unrelated changes.
+
+**Examples**
+- `feat: Add column view toggle`
+- `feat/refactor: Simplify navigation stack`
+- `fix: Handle null paths on import`
+
+---
+
+## Pull Request Guidelines
+
+- Provide a clear summary explaining what changed and why.
+- Link related issues or tickets when applicable.
+- Include screenshots or recordings for UI changes.
+- Explicitly call out any changes to Tauri config, permissions, or capabilities.
+- Ensure all commits comply with the commit guidelines above.
