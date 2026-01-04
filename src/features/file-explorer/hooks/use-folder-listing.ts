@@ -1,19 +1,14 @@
 import { watch, type WatchEvent } from "@tauri-apps/plugin-fs";
 import { useCallback, useEffect, useState } from "react";
+import { fsModule } from "@/lib/tauri/fs";
+import { formatDateTime, formatSize, getExtension, getKindLabel } from "@/lib/formatters";
 import {
-  FileRow,
-  FolderListing,
-  formatDateTime,
-  formatSize,
-  fsModule,
   getErrorMessage,
-  getExtension,
-  getKindLabel,
   getPathHierarchy,
   isHiddenName,
   resolveEntry,
-  type LocationItem,
-} from "../lib/fs";
+} from "@/lib/path-utils";
+import type { FileRow, FolderListing, LocationItem } from "@/types/fs";
 
 const createListing = (overrides: Partial<FolderListing> = {}): FolderListing => ({
   folders: [],

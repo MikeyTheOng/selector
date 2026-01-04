@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { BrowserToolbar } from "@/components/file-explorer/BrowserToolbar";
-import { ColumnView } from "@/components/file-explorer/ColumnView";
-import { FileListView } from "@/components/file-explorer/FileListView";
-import { LocationsSidebar } from "@/components/file-explorer/LocationsSidebar";
-import { PathBar } from "@/components/file-explorer/PathBar";
-import { SelectionSheet } from "@/components/file-explorer/SelectionSheet";
-import { useFileSelection } from "@/hooks/use-file-selection";
-import { useFolderListing } from "@/hooks/use-folder-listing";
-import { FileRow, LocationItem, getPathBaseName } from "@/lib/fs";
+import { BrowserToolbar } from "./BrowserToolbar";
+import { ColumnView } from "./ColumnView";
+import { FileListView } from "./FileListView";
+import { LocationsSidebar } from "./LocationsSidebar";
+import { PathBar } from "./PathBar";
+import { SelectionSheet } from "./SelectionSheet";
+import { useFileSelection } from "../hooks/use-file-selection";
+import { useFolderListing } from "../hooks/use-folder-listing";
+import type { FileRow, LocationItem } from "@/types/fs";
+import { getPathBaseName } from "@/lib/path-utils";
 
 type FileExplorerViewProps = {
   locations: LocationItem[];

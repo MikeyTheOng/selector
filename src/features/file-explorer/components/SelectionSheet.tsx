@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { FileRow } from "@/lib/fs";
+import type { FileRow } from "@/types/fs";
 
 type SelectionSheetProps = {
   isOpen: boolean;

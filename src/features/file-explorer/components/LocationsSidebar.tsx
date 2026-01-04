@@ -2,7 +2,7 @@ import { Folder, HardDrive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { LocationItem } from "@/lib/fs";
+import type { LocationItem } from "@/types/fs";
 
 type LocationsSidebarProps = {
   locations: LocationItem[];

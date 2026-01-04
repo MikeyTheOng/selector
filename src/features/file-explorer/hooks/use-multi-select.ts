@@ -1,6 +1,6 @@
 import type { CSSProperties, MouseEvent as ReactMouseEvent, RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { FileRow } from "@/lib/fs";
+import type { FileRow } from "@/types/fs";
 
 type UseMultiSelectOptions = {
     files: FileRow[];

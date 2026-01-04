@@ -1,7 +1,7 @@
 import { TreeNode, TreeProvider, TreeView } from "@/components/kibo-ui/tree";
-import { FileRowLabel } from "@/components/file-explorer/FileRowLabel";
+import { FileRowLabel } from "./FileRowLabel";
 import { cn } from "@/lib/utils";
-import { FileRow, FolderListing, LocationItem } from "@/lib/fs";
+import type { FileRow, FolderListing, LocationItem } from "@/types/fs";
 import { useEffect, useMemo } from "react";
 
 type ColumnViewProps = {
@@ -96,7 +96,7 @@ export const ColumnView = ({
                       type: "file" as const,
                       path: file.path,
                       name: file.name,
-                    row: file,
+                      row: file,
                     })),
                   ]
                 : [];

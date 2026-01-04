@@ -1,8 +1,6 @@
 import { useEffect } from "react";
-import { FileExplorerView } from "./components/file-explorer/FileExplorerView";
-import { useLocations } from "./hooks/use-locations";
-import { useNavigation } from "./hooks/use-navigation";
-import { useTextScale } from "./hooks/use-text-scale";
+import { FileExplorerView, useLocations, useNavigation } from "@/features/file-explorer";
+import { useTextScale } from "@/hooks/use-text-scale";
 
 function App() {
   const { locations, error: locationsError, homePath } = useLocations();

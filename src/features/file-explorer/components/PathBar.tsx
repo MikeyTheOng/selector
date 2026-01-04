@@ -9,7 +9,8 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
-import { LocationItem, getPathBaseName } from "@/lib/fs";
+import type { LocationItem } from "@/types/fs";
+import { getPathBaseName } from "@/lib/path-utils";
 
 type PathSegment = {
   path: string;

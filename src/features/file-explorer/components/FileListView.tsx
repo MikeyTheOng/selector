@@ -1,8 +1,8 @@
-import { FileRowLabel } from "@/components/file-explorer/FileRowLabel";
+import { FileRowLabel } from "./FileRowLabel";
 import { TreeNode, TreeProvider, TreeView } from "@/components/kibo-ui/tree";
-import { useMultiSelect } from "@/hooks/use-multi-select";
+import { useMultiSelect } from "../hooks/use-multi-select";
 import { cn } from "@/lib/utils";
-import { FileRow, FolderListing } from "@/lib/fs";
+import type { FileRow, FolderListing } from "@/types/fs";
 import { useRef } from "react";
 
 type FileListViewProps = {
