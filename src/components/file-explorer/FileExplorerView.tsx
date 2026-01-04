@@ -83,7 +83,7 @@ export const FileExplorerView = ({
         onSelectFolder={onSelectFolder}
       />
 
-      <section className="relative flex min-h-0 flex-1 flex-col">
+      <section className="relative flex min-h-0 min-w-0 flex-1 flex-col">
         <BrowserToolbar
           currentFolderName={currentFolderName}
           canGoBack={canGoBack}
