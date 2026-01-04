@@ -27,13 +27,15 @@ export const FileListView = ({
       type: "folder" as const,
       path: folder.path,
       name: folder.name,
+      kindLabel: "Folder",
+      dateModifiedLabel: folder.dateModifiedLabel,
     })),
     ...listing.files.map((file) => ({
       type: "file" as const,
       path: file.path,
       name: file.name,
-      extension: file.extension,
-      sizeLabel: file.sizeLabel,
+      kindLabel: file.kindLabel,
+      dateModifiedLabel: file.dateModifiedLabel,
       row: file,
     })),
   ];
@@ -54,10 +56,10 @@ export const FileListView = ({
       onMouseDown={handleMouseDown}
       className="outline-none focus:outline-none"
     >
-      <div className="grid cursor-default select-none grid-cols-[minmax(0,1fr)_120px_90px] gap-3 border-b border-border/50 px-3 py-2 text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+      <div className="grid cursor-default select-none grid-cols-[minmax(0,1fr)_160px_170px] gap-3 border-b border-border/50 px-3 py-2 text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
         <span>Name</span>
-        <span>Extension</span>
-        <span>Size</span>
+        <span>Kind</span>
+        <span>Date modified</span>
       </div>
       {rows.length === 0 ? (
         <div className="px-3 py-4 text-sm text-muted-foreground">No items found in this folder.</div>
@@ -86,7 +88,7 @@ export const FileListView = ({
                         onSelectFile(row.row, { additive: event.metaKey || event.ctrlKey });
                       }}
                       className={cn(
-                        "grid w-full grid-cols-[minmax(0,1fr)_120px_90px] items-center gap-3 px-2 py-1 text-left text-xs transition",
+                        "grid w-full grid-cols-[minmax(0,1fr)_160px_170px] items-center gap-3 px-2 py-1 text-left text-xs transition",
                         isFileSelected
                           ? "bg-primary text-primary-foreground"
                           : "text-foreground hover:bg-muted/60 focus-visible:bg-muted/60",
@@ -115,7 +117,7 @@ export const FileListView = ({
                           isFileSelected ? "text-primary-foreground/80" : "text-muted-foreground",
                         )}
                       >
-                        {row.type === "file" ? row.extension || "-" : "-"}
+                        {row.kindLabel || "-"}
                       </span>
                       <span
                         className={cn(
@@ -123,7 +125,7 @@ export const FileListView = ({
                           isFileSelected ? "text-primary-foreground/80" : "text-muted-foreground",
                         )}
                       >
-                        {row.type === "file" ? row.sizeLabel : "-"}
+                        {row.dateModifiedLabel || "-"}
                       </span>
                     </button>
                   </TreeNode>

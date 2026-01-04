@@ -3,10 +3,12 @@ import { useCallback, useEffect, useState } from "react";
 import {
   FileRow,
   FolderListing,
+  formatDateTime,
   formatSize,
   fsModule,
   getErrorMessage,
   getExtension,
+  getKindLabel,
   isHiddenName,
   resolveEntry,
 } from "../lib/fs";
@@ -93,34 +95,61 @@ export const useFolderListing = (selectedFolder: string | null) => {
       .sort((a, b) => a.name.localeCompare(b.name));
 
     const metadataReader = fsModule.metadata ?? fsModule.stat;
+    const folderRows = await Promise.all(
+      folders.map(async (entry) => {
+        let mtime: Date | null = null;
+        if (metadataReader) {
+          try {
+            mtime = (await metadataReader(entry.path)).mtime ?? null;
+          } catch (error) {
+            mtime = null;
+          }
+        }
+
+        return {
+          path: entry.path,
+          name: entry.name,
+          dateModified: mtime,
+          dateModifiedLabel: formatDateTime(mtime),
+        };
+      }),
+    );
     const rows = await Promise.all(
       files.map(async (entry) => {
         const name = entry.name;
+        const extension = getExtension(name);
         let size: number | undefined;
+        let mtime: Date | null = null;
         if (metadataReader) {
           try {
-            size = (await metadataReader(entry.path)).size;
+            const metadata = await metadataReader(entry.path);
+            size = metadata.size;
+            mtime = metadata.mtime ?? null;
           } catch (error) {
             size = undefined;
+            mtime = null;
           }
         }
 
         return {
           path: entry.path,
           name,
-          extension: getExtension(name),
+          extension,
+          kindLabel: getKindLabel(extension),
           size,
           sizeLabel: formatSize(size),
+          dateModified: mtime,
+          dateModifiedLabel: formatDateTime(mtime),
         } satisfies FileRow;
       }),
     );
 
     return {
-      folders,
+      folders: folderRows,
       files: rows,
       isLoading: false,
       fileCount: files.length,
-      folderCount: folders.length,
+      folderCount: folderRows.length,
       isTruncated: false,
     } satisfies FolderListing;
   }, []);
