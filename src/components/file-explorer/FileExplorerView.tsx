@@ -30,7 +30,7 @@ export const FileExplorerView = ({
   onBack,
   onForward,
 }: FileExplorerViewProps) => {
-  const { listing, ensureListing, getListingForPath } = useFolderListing(selectedFolder);
+  const { listing, ensureListing, getListingForPath } = useFolderListing(selectedFolder, locations);
   const {
     selectedFiles,
     selectedEntries,

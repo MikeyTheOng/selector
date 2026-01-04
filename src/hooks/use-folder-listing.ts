@@ -9,8 +9,10 @@ import {
   getErrorMessage,
   getExtension,
   getKindLabel,
+  getPathHierarchy,
   isHiddenName,
   resolveEntry,
+  type LocationItem,
 } from "../lib/fs";
 
 const createListing = (overrides: Partial<FolderListing> = {}): FolderListing => ({
@@ -30,7 +32,10 @@ const shouldRefreshForEvent = (event: WatchEvent) => {
   return true;
 };
 
-export const useFolderListing = (selectedFolder: string | null) => {
+export const useFolderListing = (
+  selectedFolder: string | null,
+  locations: LocationItem[],
+) => {
   const [listing, setListing] = useState<FolderListing>(() => createListing());
   const [listingCache, setListingCache] = useState<Record<string, FolderListing>>({});
 
@@ -221,67 +226,73 @@ export const useFolderListing = (selectedFolder: string | null) => {
   }, [applyListingError, applyListingUpdate, readFolderListing, selectedFolder]);
 
   useEffect(() => {
-    if (!selectedFolder) {
+    if (!selectedFolder || locations.length === 0) {
       return;
     }
 
     let isActive = true;
-    let unwatch: (() => void) | null = null;
-    let refreshInProgress = false;
-    let refreshQueued = false;
+    const unwatchMap = new Map<string, () => void>();
+    const refreshInProgressMap = new Map<string, boolean>();
+    const refreshQueuedMap = new Map<string, boolean>();
 
-    const refreshListing = async () => {
-      if (refreshInProgress) {
-        refreshQueued = true;
+    const pathsToWatch = getPathHierarchy(selectedFolder, locations);
+
+    const createRefreshForPath = (path: string) => async () => {
+      if (refreshInProgressMap.get(path)) {
+        refreshQueuedMap.set(path, true);
         return;
       }
 
-      refreshInProgress = true;
+      refreshInProgressMap.set(path, true);
       do {
-        refreshQueued = false;
-        await refreshListingForPath(selectedFolder);
+        refreshQueuedMap.set(path, false);
+        await refreshListingForPath(path);
         if (!isActive) {
           return;
         }
-      } while (refreshQueued);
-      refreshInProgress = false;
+      } while (refreshQueuedMap.get(path));
+      refreshInProgressMap.set(path, false);
     };
 
-    const startWatch = async () => {
-      try {
-        const stop = await watch(
-          selectedFolder,
-          (event) => {
-            if (!shouldRefreshForEvent(event)) {
-              return;
-            }
-            void refreshListing();
-          },
-          { recursive: false, delayMs: 200 },
-        );
+    const startWatchers = async () => {
+      for (const path of pathsToWatch) {
+        try {
+          const refreshForPath = createRefreshForPath(path);
+          const stop = await watch(
+            path,
+            (event) => {
+              if (!shouldRefreshForEvent(event)) {
+                return;
+              }
+              void refreshForPath();
+            },
+            { recursive: false, delayMs: 200 },
+          );
 
-        if (!isActive) {
-          stop();
-          return;
-        }
+          if (!isActive) {
+            stop();
+            return;
+          }
 
-        unwatch = stop;
-      } catch (error) {
-        if (isActive) {
-          console.warn(`Failed to watch folder: ${selectedFolder}`, error);
+          unwatchMap.set(path, stop);
+        } catch (error) {
+          if (isActive) {
+            console.warn(`Failed to watch folder: ${path}`, error);
+          }
         }
       }
     };
 
-    void startWatch();
+    void startWatchers();
 
     return () => {
       isActive = false;
-      if (unwatch) {
+      for (const unwatch of unwatchMap.values()) {
         unwatch();
       }
+      unwatchMap.clear();
     };
-  }, [refreshListingForPath, selectedFolder]);
+  }, [locations, refreshListingForPath, selectedFolder]);
 
   useEffect(() => {
     if (!selectedFolder) {

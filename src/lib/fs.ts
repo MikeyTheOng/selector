@@ -186,6 +186,36 @@ const resolveEntry = (entry: FsDirEntry, parentPath: string) => {
 
 const isHiddenName = (name: string) => name.startsWith(".");
 
+const getPathHierarchy = (path: string, locations: LocationItem[]): string[] => {
+  const sortedLocations = [...locations]
+    .filter(
+      (loc) =>
+        path === loc.path ||
+        path.startsWith(loc.path.endsWith("/") ? loc.path : `${loc.path}/`),
+    )
+    .sort((a, b) => b.path.length - a.path.length);
+
+  const rootPath = sortedLocations[0]?.path ?? path;
+
+  if (path === rootPath) {
+    return [rootPath];
+  }
+
+  const relative = path.slice(rootPath.length);
+  const segments = relative.split("/").filter(Boolean);
+  const paths = [rootPath];
+  let currentPath = rootPath;
+
+  for (const segment of segments) {
+    currentPath = currentPath.endsWith("/")
+      ? `${currentPath}${segment}`
+      : `${currentPath}/${segment}`;
+    paths.push(currentPath);
+  }
+
+  return paths;
+};
+
 export type { FileRow, FolderListing, FolderRow, FsDirEntry, FsMetadata, FsModule, LocationItem };
 export {
   formatSize,
@@ -195,6 +225,7 @@ export {
   getExtension,
   getKindLabel,
   getPathBaseName,
+  getPathHierarchy,
   isHiddenName,
   resolveEntry,
 };
