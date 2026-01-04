@@ -136,7 +136,7 @@ export const ColumnView = ({
                                   });
                                 }}
                                 className={cn(
-                                  "flex w-full items-center px-3 py-2 text-left text-xs transition",
+                                  "flex w-full items-center px-2 py-1 text-left text-xs transition",
                                   isFolderSelected
                                     ? "bg-accent text-foreground"
                                     : isFileSelected

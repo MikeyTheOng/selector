@@ -86,7 +86,7 @@ export const FileListView = ({
                         onSelectFile(row.row, { additive: event.metaKey || event.ctrlKey });
                       }}
                       className={cn(
-                        "grid w-full grid-cols-[minmax(0,1fr)_120px_90px] items-center gap-3 px-3 py-2 text-left text-xs transition",
+                        "grid w-full grid-cols-[minmax(0,1fr)_120px_90px] items-center gap-3 px-2 py-1 text-left text-xs transition",
                         isFileSelected
                           ? "bg-primary text-primary-foreground"
                           : "text-foreground hover:bg-muted/60 focus-visible:bg-muted/60",
