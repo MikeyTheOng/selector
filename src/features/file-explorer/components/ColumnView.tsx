@@ -1,5 +1,6 @@
 import { TreeNode, TreeProvider, TreeView } from "@/components/kibo-ui/tree";
 import { FileRowLabel } from "./FileRowLabel";
+import type { LastClickedFile } from "../hooks/use-file-selection";
 import { cn } from "@/lib/utils";
 import type { FileRow, FolderListing, LocationItem } from "@/types/fs";
 import { useEffect, useMemo } from "react";
@@ -8,20 +9,26 @@ type ColumnViewProps = {
   locations: LocationItem[];
   selectedFolder: string | null;
   selectedFiles: Record<string, FileRow>;
+  lastClickedFile: LastClickedFile | null;
   getListingForPath: (path: string) => FolderListing | undefined;
   onEnsureListing: (path: string) => void;
   onSelectFolder: (path: string) => void;
   onSelectFile: (row: FileRow, options?: { additive?: boolean }) => void;
+  onSelectRange: (from: FileRow, to: FileRow, allFiles: FileRow[]) => void;
+  onUpdateLastClickedFile: (file: FileRow, columnPath?: string) => void;
 };
 
 export const ColumnView = ({
   locations,
   selectedFolder,
   selectedFiles,
+  lastClickedFile,
   getListingForPath,
   onEnsureListing,
   onSelectFolder,
   onSelectFile,
+  onSelectRange,
+  onUpdateLastClickedFile,
 }: ColumnViewProps) => {
   const rootPath = useMemo(() => {
     if (!selectedFolder) {
@@ -122,6 +129,9 @@ export const ColumnView = ({
                             row.type === "folder" && selectedChildPath === row.path;
                           const isSelected = isFileSelected || isFolderSelected;
 
+                          // Get files only for this column (for shift+click range selection)
+                          const columnFiles = listing?.files ?? [];
+
                           return (
                             <TreeNode key={row.path} nodeId={row.path} level={0}>
                               <button
@@ -131,9 +141,23 @@ export const ColumnView = ({
                                     onSelectFolder(row.path);
                                     return;
                                   }
+
+                                  // Shift+click for range selection (only within same column)
+                                  if (
+                                    event.shiftKey &&
+                                    lastClickedFile &&
+                                    lastClickedFile.columnPath === path
+                                  ) {
+                                    onSelectRange(lastClickedFile.file, row.row, columnFiles);
+                                    onUpdateLastClickedFile(row.row, path);
+                                    return;
+                                  }
+
+                                  // Regular click or Cmd/Ctrl+click
                                   onSelectFile(row.row, {
                                     additive: event.metaKey || event.ctrlKey,
                                   });
+                                  onUpdateLastClickedFile(row.row, path);
                                 }}
                                 className={cn(
                                   "flex w-full items-center px-2 py-1 text-left text-xs transition",

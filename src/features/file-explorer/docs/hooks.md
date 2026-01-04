@@ -32,31 +32,18 @@ Returns:
 ## use-file-selection
 Purpose:
 - Maintain selected file rows and expose common selection operations.
+- Track last clicked file for shift+click range selection.
 
 Returns:
 - selectedFiles: Record<string, FileRow>
 - selectedEntries: FileRow[] (sorted)
 - selectedCount: number
+- lastClickedFile: { file: FileRow, columnPath?: string } | null
 - selectFile(row, { additive })
 - selectMultiple(rows, { additive })
+- selectRange(from, to, allFiles) - select all files between two files
 - toggleFileSelection(row)
 - removeSelection(path)
 - clearSelections()
-
-## use-multi-select
-Purpose:
-- Provide click-drag marquee selection for file rows.
-- Track drag state and compute intersection with row elements.
-
-Inputs:
-- files: FileRow[]
-- onSelectFile(row, { additive })
-- onSelectMultiple?(rows, { additive })
-- containerRef
-
-Returns:
-- isDragging: boolean
-- selectionRectStyle(): CSSProperties | null
-- registerRowRef(path, element)
-- handleMouseDown(event)
-- selectAll()
+- updateLastClickedFile(file, columnPath?)
+- clearLastClickedFile()

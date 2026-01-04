@@ -1,27 +1,28 @@
 import { FileRowLabel } from "./FileRowLabel";
 import { TreeNode, TreeProvider, TreeView } from "@/components/kibo-ui/tree";
-import { useMultiSelect } from "../hooks/use-multi-select";
+import type { LastClickedFile } from "../hooks/use-file-selection";
 import { cn } from "@/lib/utils";
 import type { FileRow, FolderListing } from "@/types/fs";
-import { useRef } from "react";
 
 type FileListViewProps = {
   listing: FolderListing;
   selectedFiles: Record<string, FileRow>;
+  lastClickedFile: LastClickedFile | null;
   onSelectFolder: (path: string) => void;
   onSelectFile: (row: FileRow, options?: { additive?: boolean }) => void;
-  onSelectMultiple?: (rows: FileRow[], options?: { additive?: boolean }) => void;
+  onSelectRange: (from: FileRow, to: FileRow, allFiles: FileRow[]) => void;
+  onUpdateLastClickedFile: (file: FileRow) => void;
 };
 
 export const FileListView = ({
   listing,
   selectedFiles,
+  lastClickedFile,
   onSelectFolder,
   onSelectFile,
-  onSelectMultiple,
+  onSelectRange,
+  onUpdateLastClickedFile,
 }: FileListViewProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-
   const rows = [
     ...listing.folders.map((folder) => ({
       type: "folder" as const,
@@ -40,22 +41,21 @@ export const FileListView = ({
     })),
   ];
 
-  const { isDragging, selectionRectStyle, registerRowRef, handleMouseDown } = useMultiSelect({
-    files: listing.files,
-    onSelectFile,
-    onSelectMultiple,
-    containerRef,
-  });
+  const handleFileClick = (event: React.MouseEvent, file: FileRow) => {
+    // Shift+click for range selection
+    if (event.shiftKey && lastClickedFile) {
+      onSelectRange(lastClickedFile.file, file, listing.files);
+      onUpdateLastClickedFile(file);
+      return;
+    }
 
-  const rectStyle = selectionRectStyle();
+    // Regular click or Cmd/Ctrl+click
+    onSelectFile(file, { additive: event.metaKey || event.ctrlKey });
+    onUpdateLastClickedFile(file);
+  };
 
   return (
-    <div
-      ref={containerRef}
-      tabIndex={0}
-      onMouseDown={handleMouseDown}
-      className="outline-none focus:outline-none"
-    >
+    <div tabIndex={0} className="outline-none focus:outline-none">
       <div className="grid cursor-default select-none grid-cols-[minmax(0,1fr)_160px_170px] gap-3 border-b border-border/50 px-3 py-2 text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
         <span>Name</span>
         <span>Kind</span>
@@ -74,18 +74,13 @@ export const FileListView = ({
                 return (
                   <TreeNode key={row.path} nodeId={row.path} level={0}>
                     <button
-                      ref={(el) => {
-                        if (row.type === "file") {
-                          registerRowRef(row.path, el);
-                        }
-                      }}
                       type="button"
                       onClick={(event) => {
                         if (row.type === "folder") {
                           onSelectFolder(row.path);
                           return;
                         }
-                        onSelectFile(row.row, { additive: event.metaKey || event.ctrlKey });
+                        handleFileClick(event, row.row);
                       }}
                       className={cn(
                         "grid w-full grid-cols-[minmax(0,1fr)_160px_170px] items-center gap-3 px-2 py-1 text-left text-xs transition",
@@ -136,13 +131,6 @@ export const FileListView = ({
         </TreeProvider>
       )}
 
-      {/* Drag selection rectangle */}
-      {isDragging && rectStyle && (
-        <div
-          style={rectStyle}
-          className="fixed pointer-events-none border border-primary/30 bg-primary/10"
-        />
-      )}
     </div>
   );
 };

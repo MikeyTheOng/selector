@@ -36,11 +36,15 @@ export const FileExplorerView = ({
     selectedFiles,
     selectedEntries,
     selectedCount,
+    lastClickedFile,
     selectFile,
     selectMultiple,
+    selectRange,
     toggleFileSelection,
     removeSelection,
     clearSelections,
+    updateLastClickedFile,
+    clearLastClickedFile,
   } = useFileSelection();
   const [viewMode, setViewMode] = useState<"list" | "column">("list");
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
@@ -59,6 +63,15 @@ export const FileExplorerView = ({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // ESC key: clear selections and close sheet
+      if (event.key === "Escape") {
+        event.preventDefault();
+        clearSelections();
+        setIsSelectionOpen(false);
+        return;
+      }
+
+      // Cmd/Ctrl+A: select all files
       if (!(event.metaKey || event.ctrlKey)) return;
       if (event.key.toLowerCase() !== "a") return;
 
@@ -73,7 +86,12 @@ export const FileExplorerView = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [listing, selectMultiple]);
+  }, [listing, selectMultiple, clearSelections]);
+
+  // Clear last clicked file when folder or view mode changes
+  useEffect(() => {
+    clearLastClickedFile();
+  }, [selectedFolder, viewMode, clearLastClickedFile]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -118,9 +136,11 @@ export const FileExplorerView = ({
               <FileListView
                 listing={listing}
                 selectedFiles={selectedFiles}
+                lastClickedFile={lastClickedFile}
                 onSelectFolder={onSelectFolder}
                 onSelectFile={handleFileSelection}
-                onSelectMultiple={selectMultiple}
+                onSelectRange={selectRange}
+                onUpdateLastClickedFile={updateLastClickedFile}
               />
             )
           ) : (
@@ -128,10 +148,13 @@ export const FileExplorerView = ({
               locations={locations}
               selectedFolder={selectedFolder}
               selectedFiles={selectedFiles}
+              lastClickedFile={lastClickedFile}
               getListingForPath={getListingForPath}
               onEnsureListing={ensureListing}
               onSelectFolder={onSelectFolder}
               onSelectFile={handleFileSelection}
+              onSelectRange={selectRange}
+              onUpdateLastClickedFile={updateLastClickedFile}
             />
           )}
         </div>

@@ -1,8 +1,14 @@
 import { useCallback, useMemo, useState } from "react";
 import type { FileRow } from "@/types/fs";
 
+export type LastClickedFile = {
+  file: FileRow;
+  columnPath?: string;
+};
+
 export const useFileSelection = () => {
   const [selectedFiles, setSelectedFiles] = useState<Record<string, FileRow>>({});
+  const [lastClickedFile, setLastClickedFile] = useState<LastClickedFile | null>(null);
 
   const selectedEntries = useMemo(
     () => Object.values(selectedFiles).sort((a, b) => a.name.localeCompare(b.name)),
@@ -60,16 +66,50 @@ export const useFileSelection = () => {
 
   const clearSelections = useCallback(() => {
     setSelectedFiles({});
+    setLastClickedFile(null);
+  }, []);
+
+  const selectRange = useCallback(
+    (from: FileRow, to: FileRow, allFiles: FileRow[]) => {
+      const fromIndex = allFiles.findIndex((f) => f.path === from.path);
+      const toIndex = allFiles.findIndex((f) => f.path === to.path);
+      if (fromIndex === -1 || toIndex === -1) return;
+
+      const start = Math.min(fromIndex, toIndex);
+      const end = Math.max(fromIndex, toIndex);
+      const rangeFiles = allFiles.slice(start, end + 1);
+
+      setSelectedFiles((prev) => {
+        const next = { ...prev };
+        rangeFiles.forEach((file) => {
+          next[file.path] = file;
+        });
+        return next;
+      });
+    },
+    [],
+  );
+
+  const updateLastClickedFile = useCallback((file: FileRow, columnPath?: string) => {
+    setLastClickedFile({ file, columnPath });
+  }, []);
+
+  const clearLastClickedFile = useCallback(() => {
+    setLastClickedFile(null);
   }, []);
 
   return {
     selectedFiles,
     selectedEntries,
     selectedCount,
+    lastClickedFile,
     selectFile,
     selectMultiple,
+    selectRange,
     toggleFileSelection,
     removeSelection,
     clearSelections,
+    updateLastClickedFile,
+    clearLastClickedFile,
   };
 };
