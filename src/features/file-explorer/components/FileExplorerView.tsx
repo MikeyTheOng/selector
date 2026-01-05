@@ -7,6 +7,8 @@ import { PathBar } from "./PathBar";
 import { SelectionSheet } from "./SelectionSheet";
 import { useFileSelection } from "../hooks/use-file-selection";
 import { useFolderListing } from "../hooks/use-folder-listing";
+import { useQuickLook } from "../hooks/use-quick-look";
+import { listen } from "@tauri-apps/api/event";
 import type { FileRow, LocationItem } from "@/types/fs";
 import { getPathBaseName } from "@/lib/path-utils";
 
@@ -44,11 +46,11 @@ export const FileExplorerView = ({
     toggleFileSelection,
     removeSelection,
     clearSelections,
-    updateLastClickedFile,
     clearLastClickedFile,
     focusFile,
     clearFocus,
   } = useFileSelection();
+  const { isPreviewActive, togglePreview, updatePreview, closePreview } = useQuickLook();
   const [viewMode, setViewMode] = useState<"list" | "column">("list");
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
 
@@ -66,14 +68,35 @@ export const FileExplorerView = ({
     [selectFile, toggleFileSelection, focusFile],
   );
 
+  // Sync Quick Preview with focused item
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // ESC key: clear selections and close sheet
+    if (isPreviewActive && focusedFile) {
+      const timer = setTimeout(() => {
+        updatePreview(focusedFile.file.path);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [focusedFile, isPreviewActive, updatePreview]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent | { key: string, preventDefault: () => void, metaKey?: boolean, ctrlKey?: boolean, shiftKey?: boolean }) => {
+      // ESC key: close preview if active, otherwise clear selections and close sheet
       if (event.key === "Escape") {
         event.preventDefault();
-        clearSelections();
-        clearFocus();
-        setIsSelectionOpen(false);
+        if (isPreviewActive) {
+          closePreview();
+        } else {
+          clearSelections();
+          clearFocus();
+          setIsSelectionOpen(false);
+        }
+        return;
+      }
+
+      // Space key: toggle quick preview
+      if (event.key === " " && focusedFile) {
+        event.preventDefault();
+        togglePreview(focusedFile.file.path);
         return;
       }
 
@@ -213,11 +236,28 @@ export const FileExplorerView = ({
       selectMultiple(listing.files, { additive: true });
     };
 
+    const setupListeners = async () => {
+      const unlisten = await listen<string>("quicklook://navigate", (event) => {
+        const key = event.payload === "Space" ? " " : event.payload;
+        handleKeyDown({ 
+          key, 
+          preventDefault: () => {},
+          metaKey: false,
+          ctrlKey: false,
+          shiftKey: false
+        });
+      });
+      return unlisten;
+    };
+
+    const unlistenPromise = setupListeners();
+
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      unlistenPromise.then(fn => fn());
     };
-  }, [listing, selectMultiple, clearSelections, clearFocus, focusedFile, viewMode, selectedFolder, onSelectFolder, focusFile, toggleFileSelection, selectRange, lastClickedFile, getListingForPath]);
+  }, [listing, selectMultiple, clearSelections, clearFocus, focusedFile, viewMode, selectedFolder, onSelectFolder, focusFile, toggleFileSelection, selectRange, lastClickedFile, getListingForPath, isPreviewActive, togglePreview, closePreview]);
 
   // Clear last clicked file and focus when folder or view mode changes
   useEffect(() => {
@@ -273,7 +313,6 @@ export const FileExplorerView = ({
                 onSelectFolder={onSelectFolder}
                 onSelectFile={handleFileSelection}
                 onSelectRange={selectRange}
-                onUpdateLastClickedFile={updateLastClickedFile}
                 onFocusFile={focusFile}
                 onToggleFileSelection={toggleFileSelection}
               />
@@ -290,7 +329,6 @@ export const FileExplorerView = ({
               onSelectFolder={onSelectFolder}
               onSelectFile={handleFileSelection}
               onSelectRange={selectRange}
-              onUpdateLastClickedFile={updateLastClickedFile}
               onFocusFile={focusFile}
               onToggleFileSelection={toggleFileSelection}
             />
