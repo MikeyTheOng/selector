@@ -261,6 +261,8 @@ export const FileExplorerView = ({
 
   // Clear last clicked file and focus when folder or view mode changes
   useEffect(() => {
+    if (viewMode === "column") return;
+
     clearLastClickedFile();
     clearFocus();
   }, [selectedFolder, viewMode, clearLastClickedFile, clearFocus]);
