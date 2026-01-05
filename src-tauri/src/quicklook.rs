@@ -111,8 +111,8 @@ define_class!(
     unsafe impl QLPreviewPanelDelegate for PreviewDataSource {
         #[unsafe(method(previewPanel:handleEvent:))]
         fn preview_panel_handle_event(&self, _panel: &QLPreviewPanel, event: &NSEvent) -> Bool {
-            if unsafe { event.r#type() } == NSEventType::KeyDown {
-                let key_code = unsafe { event.keyCode() };
+            if event.r#type() == NSEventType::KeyDown {
+                let key_code = event.keyCode();
                 let key = match key_code {
                     123 => Some("ArrowLeft"),
                     124 => Some("ArrowRight"),
@@ -185,7 +185,9 @@ pub fn is_quick_look_visible(state: State<'_, QuickLookState>) -> bool {
 pub async fn toggle_preview(
     app: AppHandle<Wry>,
     path: String,
-) -> Result<(), String> {
+) -> Result<bool, String> {
+    let (tx, rx) = std::sync::mpsc::channel();
+
     app.clone().run_on_main_thread(move || {
         let mtm = unsafe { MainThreadMarker::new_unchecked() };
         let state: State<'_, QuickLookState> = app.state();
@@ -204,6 +206,7 @@ pub async fn toggle_preview(
         } else {
             if let Err(e) = update_preview_internal(&state, path, mtm) {
                 eprintln!("Failed to update preview: {}", e);
+                let _ = tx.send(false);
                 return;
             }
             
@@ -229,7 +232,13 @@ pub async fn toggle_preview(
                 *is_visible_guard = true;
             }
         }
-    }).map_err(|e| e.to_string())
+                
+        let final_visible = *state.is_visible.lock().unwrap();
+        let _ = tx.send(final_visible);
+
+    }).map_err(|e| e.to_string())?;
+
+    rx.recv().map_err(|e| e.to_string())
 }
 
 #[tauri::command]

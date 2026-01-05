@@ -17,9 +17,7 @@ export const useQuickLook = () => {
 
   const togglePreview = useCallback(async (path: string) => {
     try {
-      await invoke("toggle_preview", { path });
-      // Get the actual visibility state from backend after toggle
-      const visible = await invoke<boolean>("is_quick_look_visible");
+      const visible = await invoke<boolean>("toggle_preview", { path });
       setIsPreviewActive(visible);
     } catch (err) {
       console.error("Failed to toggle preview:", err);
