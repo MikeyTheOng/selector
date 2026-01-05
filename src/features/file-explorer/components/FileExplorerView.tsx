@@ -12,6 +12,13 @@ import { listen } from "@tauri-apps/api/event";
 import type { FileRow, LocationItem } from "@/types/fs";
 import { getPathBaseName } from "@/lib/path-utils";
 
+interface QuickLookEvent {
+  key: string;
+  metaKey: boolean;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+}
+
 type FileExplorerViewProps = {
   locations: LocationItem[];
   locationsError: string | null;
@@ -237,14 +244,15 @@ export const FileExplorerView = ({
     };
 
     const setupListeners = async () => {
-      const unlisten = await listen<string>("quicklook://navigate", (event) => {
-        const key = event.payload === "Space" ? " " : event.payload;
+      const unlisten = await listen<QuickLookEvent>("quicklook://navigate", (event) => {
+        const { key: rawKey, metaKey, ctrlKey, shiftKey } = event.payload;
+        const key = rawKey === "Space" ? " " : rawKey;
         handleKeyDown({ 
           key, 
           preventDefault: () => {},
-          metaKey: false,
-          ctrlKey: false,
-          shiftKey: false
+          metaKey,
+          ctrlKey,
+          shiftKey
         });
       });
       return unlisten;

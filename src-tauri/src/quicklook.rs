@@ -1,9 +1,10 @@
+use serde::Serialize;
 use std::sync::{Mutex, OnceLock};
 use objc2::rc::Retained;
 use objc2::runtime::{ProtocolObject, AnyObject, Bool};
 use objc2::{define_class, msg_send, MainThreadOnly, Message, DefinedClass};
 use objc2_foundation::{NSObject, NSObjectProtocol, NSURL, NSString, MainThreadMarker, NSNotification};
-use objc2_app_kit::{NSWindowDelegate, NSEvent, NSEventType};
+use objc2_app_kit::{NSWindowDelegate, NSEvent, NSEventType, NSEventModifierFlags};
 use objc2_quick_look_ui::{QLPreviewItem, QLPreviewPanel, QLPreviewPanelDataSource, QLPreviewPanelDelegate};
 use tauri::{AppHandle, State, Manager, Emitter, Wry};
 
@@ -15,6 +16,17 @@ unsafe impl<T> Sync for MainThreadSafe<T> {}
 
 // --- Global App Handle Access ---
 static APP_HANDLE: OnceLock<AppHandle<Wry>> = OnceLock::new();
+
+// --- Event Payload ---
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QuickLookEvent {
+    pub key: String,
+    pub meta_key: bool,
+    pub ctrl_key: bool,
+    pub shift_key: bool,
+}
 
 // --- Preview Item ---
 
@@ -120,12 +132,21 @@ define_class!(
                     126 => Some("ArrowUp"),
                     53 => Some("Escape"),
                     49 => Some("Space"),
+                    36 => Some("Enter"),
                     _ => None,
                 };
 
                 if let Some(key_name) = key {
                     if let Some(app) = APP_HANDLE.get() {
-                        let _ = app.emit("quicklook://navigate", key_name);
+                        let flags = event.modifierFlags();
+                        let payload = QuickLookEvent {
+                            key: key_name.to_string(),
+                            meta_key: flags.contains(NSEventModifierFlags::Command),
+                            ctrl_key: flags.contains(NSEventModifierFlags::Control),
+                            shift_key: flags.contains(NSEventModifierFlags::Shift),
+                        };
+
+                        let _ = app.emit("quicklook://navigate", payload);
                         return true.into();
                     }
                 }
@@ -293,4 +314,22 @@ fn update_preview_internal(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_quick_look_event_serialization() {
+        let event = QuickLookEvent {
+            key: "Enter".to_string(),
+            meta_key: true,
+            ctrl_key: false,
+            shift_key: true,
+        };
+
+        let json = serde_json::to_string(&event).expect("Failed to serialize");
+        assert_eq!(json, r#"{"key":"Enter","metaKey":true,"ctrlKey":false,"shiftKey":true}"#);
+    }
 }
