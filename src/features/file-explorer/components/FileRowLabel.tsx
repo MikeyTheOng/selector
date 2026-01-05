@@ -17,7 +17,9 @@ export const FileRowLabel = ({
   return (
     <>
       <TreeIcon hasChildren={type === "folder"} className={iconClassName} />
-      <TreeLabel className={cn("truncate", labelClassName)}>{name}</TreeLabel>
+      <TreeLabel className={cn("cursor-default select-text truncate", labelClassName)}>
+        {name}
+      </TreeLabel>
     </>
   );
 };

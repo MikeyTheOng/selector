@@ -2,7 +2,7 @@ import { Folder, HardDrive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { LocationItem } from "@/lib/fs";
+import type { LocationItem } from "@/types/fs";
 
 type LocationsSidebarProps = {
   locations: LocationItem[];
@@ -21,7 +21,7 @@ export const LocationsSidebar = ({
   const locationNodes = locations.filter((node) => node.kind === "volume");
 
   return (
-    <aside className="flex min-h-0 w-full flex-col border-border/60 lg:w-70 border-b lg:border-b-0 lg:border-r">
+    <aside className="flex-col min-w-0 w-full sm:w-1/6 border-border/60 border-b lg:border-b-0 lg:border-r">
       <ScrollArea className="flex-1 px-2 py-3">
         {locationsError ? (
           <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
@@ -31,7 +31,7 @@ export const LocationsSidebar = ({
           <div className="flex flex-col gap-4">
             {homeLocation ? (
               <div>
-                <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                <p className="cursor-default select-none px-2 pb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Favorites
                 </p>
                 <Button
@@ -51,7 +51,7 @@ export const LocationsSidebar = ({
               </div>
             ) : null}
             <div>
-              <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              <p className="cursor-default select-none px-2 pb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Locations
               </p>
               {locationNodes.length === 0 ? (

@@ -33,9 +33,9 @@ export const BrowserToolbar = ({
   isSelectionOpen,
   onToggleSelection,
 }: BrowserToolbarProps) => (
-  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+  <div className="flex cursor-default select-none flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
     <div className="flex min-w-0 items-center gap-2">
-      <div className="inline-flex items-center rounded-full border border-border/50 bg-background/70 p-1 text-[11px] font-semibold text-muted-foreground">
+      <div className="inline-flex items-center rounded-full border border-border/50 bg-background/70 p-1 text-[0.6875rem] font-semibold text-muted-foreground">
         <Button
           type="button"
           variant="ghost"
@@ -59,14 +59,16 @@ export const BrowserToolbar = ({
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
-      <p className="truncate text-base font-semibold text-foreground">{currentFolderName}</p>
+      <p className="cursor-default truncate text-base font-semibold text-foreground">
+        {currentFolderName}
+      </p>
     </div>
     <div className="flex flex-wrap items-center justify-end gap-2">
       <ToggleGroup
         type="single"
         value={viewMode}
         onValueChange={(value) => value && onViewModeChange(value as "list" | "column")}
-        className="rounded-full border border-border/50 bg-background/70 p-1 text-[11px] font-semibold text-muted-foreground"
+        className="rounded-full border border-border/50 bg-background/70 p-1 text-[0.6875rem] font-semibold text-muted-foreground"
         aria-label="View mode"
       >
         <ToggleGroupItem
