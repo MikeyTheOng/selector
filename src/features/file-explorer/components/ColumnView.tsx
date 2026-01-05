@@ -10,12 +10,15 @@ type ColumnViewProps = {
   selectedFolder: string | null;
   selectedFiles: Record<string, FileRow>;
   lastClickedFile: LastClickedFile | null;
+  focusedFile: LastClickedFile | null;
   getListingForPath: (path: string) => FolderListing | undefined;
   onEnsureListing: (path: string) => void;
   onSelectFolder: (path: string) => void;
   onSelectFile: (row: FileRow, options?: { additive?: boolean }) => void;
   onSelectRange: (from: FileRow, to: FileRow, allFiles: FileRow[]) => void;
   onUpdateLastClickedFile: (file: FileRow, columnPath?: string) => void;
+  onFocusFile: (file: FileRow, columnPath?: string) => void;
+  onToggleFileSelection: (file: FileRow) => void;
 };
 
 export const ColumnView = ({
@@ -23,12 +26,15 @@ export const ColumnView = ({
   selectedFolder,
   selectedFiles,
   lastClickedFile,
+  focusedFile,
   getListingForPath,
   onEnsureListing,
   onSelectFolder,
   onSelectFile,
   onSelectRange,
   onUpdateLastClickedFile,
+  onFocusFile,
+  onToggleFileSelection,
 }: ColumnViewProps) => {
   const rootPath = useMemo(() => {
     if (!selectedFolder) {
@@ -95,14 +101,20 @@ export const ColumnView = ({
               listing?.folders && listing?.files
                 ? [
                     ...listing.folders.map((folder) => ({
+                      ...folder,
                       type: "folder" as const,
-                      path: folder.path,
-                      name: folder.name,
+                      row: {
+                        path: folder.path,
+                        name: folder.name,
+                        size: 0,
+                        modified: folder.modified,
+                        extension: "",
+                        kindLabel: "Folder",
+                      } as FileRow,
                     })),
                     ...listing.files.map((file) => ({
+                      ...file,
                       type: "file" as const,
-                      path: file.path,
-                      name: file.name,
                       row: file,
                     })),
                   ]
@@ -123,14 +135,13 @@ export const ColumnView = ({
                     ) : (
                       <div className="divide-y divide-border/40">
                         {rows.map((row) => {
-                          const isFileSelected =
-                            row.type === "file" && Boolean(selectedFiles[row.path]);
-                          const isFolderSelected =
+                          const isSelected = Boolean(selectedFiles[row.path]);
+                          const isInActivePath =
                             row.type === "folder" && selectedChildPath === row.path;
-                          const isSelected = isFileSelected || isFolderSelected;
+                          const isFocused = focusedFile?.file.path === row.path && focusedFile?.columnPath === path;
 
                           // Get files only for this column (for shift+click range selection)
-                          const columnFiles = listing?.files ?? [];
+                          const columnFiles = rows.map(r => r.row);
 
                           return (
                             <TreeNode key={row.path} nodeId={row.path} level={0}>
@@ -139,6 +150,10 @@ export const ColumnView = ({
                                 onClick={(event) => {
                                   if (row.type === "folder") {
                                     onSelectFolder(row.path);
+                                    if (event.metaKey || event.ctrlKey) {
+                                      onToggleFileSelection(row.row);
+                                    }
+                                    onFocusFile(row.row, path);
                                     return;
                                   }
 
@@ -149,38 +164,40 @@ export const ColumnView = ({
                                     lastClickedFile.columnPath === path
                                   ) {
                                     onSelectRange(lastClickedFile.file, row.row, columnFiles);
-                                    onUpdateLastClickedFile(row.row, path);
+                                    onFocusFile(row.row, path);
                                     return;
                                   }
 
-                                  // Regular click or Cmd/Ctrl+click
-                                  onSelectFile(row.row, {
-                                    additive: event.metaKey || event.ctrlKey,
-                                  });
-                                  onUpdateLastClickedFile(row.row, path);
+                                  if (event.metaKey || event.ctrlKey) {
+                                    onToggleFileSelection(row.row);
+                                  } else {
+                                    onSelectFile(row.row);
+                                  }
+                                  onFocusFile(row.row, path);
                                 }}
                                 className={cn(
-                                  "flex w-full items-center px-2 py-1 text-left text-xs transition",
-                                  isFolderSelected
-                                    ? "bg-accent text-foreground"
-                                    : isFileSelected
-                                      ? "bg-primary text-primary-foreground"
-                                      : "text-foreground hover:bg-muted/60 focus-visible:bg-muted/60",
+                                  "flex w-full items-center px-2 py-1 text-left text-xs transition outline-none",
+                                  isSelected
+                                    ? "bg-primary text-primary-foreground"
+                                    : isInActivePath
+                                      ? "bg-active-path text-foreground font-medium"
+                                      : "text-foreground hover:bg-muted/60",
+                                  isFocused && "ring-1 ring-inset ring-ring ring-offset-0 z-10",
                                 )}
-                                aria-selected={isSelected}
+                                aria-selected={isSelected || isInActivePath}
                               >
                                 <FileRowLabel
                                   name={row.name}
                                   type={row.type}
                                   iconClassName={cn(
                                     row.type === "folder"
-                                      ? "text-primary"
-                                      : isFileSelected
+                                      ? isSelected ? "text-primary-foreground" : "text-primary"
+                                      : isSelected
                                         ? "text-primary-foreground"
                                         : "text-muted-foreground",
                                   )}
                                   labelClassName={
-                                    isFileSelected
+                                    isSelected
                                       ? "text-primary-foreground"
                                       : "text-foreground"
                                   }

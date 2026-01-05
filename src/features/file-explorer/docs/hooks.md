@@ -32,18 +32,22 @@ Returns:
 ## use-file-selection
 Purpose:
 - Maintain selected file rows and expose common selection operations.
-- Track last clicked file for shift+click range selection.
+- Track last clicked file for shift+click range selection anchor.
+- Manage "focused" state for keyboard navigation.
 
 Returns:
 - selectedFiles: Record<string, FileRow>
 - selectedEntries: FileRow[] (sorted)
 - selectedCount: number
-- lastClickedFile: { file: FileRow, columnPath?: string } | null
+- lastClickedFile: { file: FileRow, columnPath?: string } | null (Range anchor)
+- focusedFile: { file: FileRow, columnPath?: string } | null (Keyboard target)
 - selectFile(row, { additive })
 - selectMultiple(rows, { additive })
 - selectRange(from, to, allFiles) - select all files between two files
 - toggleFileSelection(row)
 - removeSelection(path)
 - clearSelections()
+- focusFile(file, columnPath?) - Updates both focus and range anchor
+- clearFocus()
 - updateLastClickedFile(file, columnPath?)
 - clearLastClickedFile()

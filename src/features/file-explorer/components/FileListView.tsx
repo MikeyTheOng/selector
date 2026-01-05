@@ -3,55 +3,71 @@ import { TreeNode, TreeProvider, TreeView } from "@/components/kibo-ui/tree";
 import type { LastClickedFile } from "../hooks/use-file-selection";
 import { cn } from "@/lib/utils";
 import type { FileRow, FolderListing } from "@/types/fs";
+import { useMemo } from "react";
 
 type FileListViewProps = {
   listing: FolderListing;
   selectedFiles: Record<string, FileRow>;
   lastClickedFile: LastClickedFile | null;
+  focusedFile: LastClickedFile | null;
   onSelectFolder: (path: string) => void;
   onSelectFile: (row: FileRow, options?: { additive?: boolean }) => void;
   onSelectRange: (from: FileRow, to: FileRow, allFiles: FileRow[]) => void;
   onUpdateLastClickedFile: (file: FileRow) => void;
+  onFocusFile: (file: FileRow) => void;
+  onToggleFileSelection: (file: FileRow) => void;
 };
 
 export const FileListView = ({
   listing,
   selectedFiles,
   lastClickedFile,
+  focusedFile,
   onSelectFolder,
   onSelectFile,
   onSelectRange,
   onUpdateLastClickedFile,
+  onFocusFile,
+  onToggleFileSelection,
 }: FileListViewProps) => {
-  const rows = [
+  const rows = useMemo(() => [
     ...listing.folders.map((folder) => ({
+      ...folder,
       type: "folder" as const,
-      path: folder.path,
-      name: folder.name,
-      kindLabel: "Folder",
-      dateModifiedLabel: folder.dateModifiedLabel,
+      row: {
+        path: folder.path,
+        name: folder.name,
+        size: 0,
+        sizeLabel: "",
+        dateModified: folder.dateModified,
+        extension: "",
+        kindLabel: "Folder",
+        dateModifiedLabel: folder.dateModifiedLabel,
+      } as FileRow,
     })),
     ...listing.files.map((file) => ({
+      ...file,
       type: "file" as const,
-      path: file.path,
-      name: file.name,
-      kindLabel: file.kindLabel,
-      dateModifiedLabel: file.dateModifiedLabel,
       row: file,
     })),
-  ];
+  ], [listing]);
 
-  const handleFileClick = (event: React.MouseEvent, file: FileRow) => {
+  const allRowItems = useMemo(() => rows.map(r => r.row), [rows]);
+
+  const handleItemClick = (event: React.MouseEvent, row: FileRow) => {
     // Shift+click for range selection
     if (event.shiftKey && lastClickedFile) {
-      onSelectRange(lastClickedFile.file, file, listing.files);
-      onUpdateLastClickedFile(file);
+      onSelectRange(lastClickedFile.file, row, allRowItems);
+      onFocusFile(row);
       return;
     }
 
-    // Regular click or Cmd/Ctrl+click
-    onSelectFile(file, { additive: event.metaKey || event.ctrlKey });
-    onUpdateLastClickedFile(file);
+    if (event.metaKey || event.ctrlKey) {
+      onToggleFileSelection(row);
+    } else {
+      onSelectFile(row);
+    }
+    onFocusFile(row);
   };
 
   return (
@@ -68,27 +84,27 @@ export const FileListView = ({
           <TreeView className="p-0">
             <div className="divide-y divide-border/40">
               {rows.map((row) => {
-                const isFileSelected =
-                  row.type === "file" ? Boolean(selectedFiles[row.path]) : false;
+                const isSelected = Boolean(selectedFiles[row.path]);
+                const isFocused = focusedFile?.file.path === row.path;
 
                 return (
                   <TreeNode key={row.path} nodeId={row.path} level={0}>
                     <button
                       type="button"
-                      onClick={(event) => {
+                      onClick={(event) => handleItemClick(event, row.row)}
+                      onDoubleClick={() => {
                         if (row.type === "folder") {
                           onSelectFolder(row.path);
-                          return;
                         }
-                        handleFileClick(event, row.row);
                       }}
                       className={cn(
-                        "grid w-full grid-cols-[minmax(0,1fr)_160px_170px] items-center gap-3 px-2 py-1 text-left text-xs transition",
-                        isFileSelected
+                        "grid w-full grid-cols-[minmax(0,1fr)_160px_170px] items-center gap-3 px-2 py-1 text-left text-xs transition outline-none",
+                        isSelected
                           ? "bg-primary text-primary-foreground"
-                          : "text-foreground hover:bg-muted/60 focus-visible:bg-muted/60",
+                          : "text-foreground hover:bg-muted/60",
+                        isFocused && "ring-1 ring-inset ring-ring ring-offset-0 z-10",
                       )}
-                      aria-selected={isFileSelected}
+                      aria-selected={isSelected}
                     >
                       <div className="flex items-center gap-2 overflow-hidden">
                         <FileRowLabel
@@ -96,20 +112,20 @@ export const FileListView = ({
                           type={row.type}
                           iconClassName={cn(
                             row.type === "folder"
-                              ? "text-primary"
-                              : isFileSelected
+                              ? isSelected ? "text-primary-foreground" : "text-primary"
+                              : isSelected
                                 ? "text-primary-foreground"
                                 : "text-muted-foreground",
                           )}
                           labelClassName={
-                            isFileSelected ? "text-primary-foreground" : "text-foreground"
+                            isSelected ? "text-primary-foreground" : "text-foreground"
                           }
                         />
                       </div>
                       <span
                         className={cn(
                           "cursor-default select-text truncate text-xs",
-                          isFileSelected ? "text-primary-foreground/80" : "text-muted-foreground",
+                          isSelected ? "text-primary-foreground/80" : "text-muted-foreground",
                         )}
                       >
                         {row.kindLabel || "-"}
@@ -117,7 +133,7 @@ export const FileListView = ({
                       <span
                         className={cn(
                           "cursor-default select-text truncate text-xs",
-                          isFileSelected ? "text-primary-foreground/80" : "text-muted-foreground",
+                          isSelected ? "text-primary-foreground/80" : "text-muted-foreground",
                         )}
                       >
                         {row.dateModifiedLabel || "-"}

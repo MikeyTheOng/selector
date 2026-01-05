@@ -9,6 +9,7 @@ export type LastClickedFile = {
 export const useFileSelection = () => {
   const [selectedFiles, setSelectedFiles] = useState<Record<string, FileRow>>({});
   const [lastClickedFile, setLastClickedFile] = useState<LastClickedFile | null>(null);
+  const [focusedFile, setFocusedFile] = useState<LastClickedFile | null>(null);
 
   const selectedEntries = useMemo(
     () => Object.values(selectedFiles).sort((a, b) => a.name.localeCompare(b.name)),
@@ -98,11 +99,22 @@ export const useFileSelection = () => {
     setLastClickedFile(null);
   }, []);
 
+  const focusFile = useCallback((file: FileRow, columnPath?: string) => {
+    const item = { file, columnPath };
+    setFocusedFile(item);
+    setLastClickedFile(item);
+  }, []);
+
+  const clearFocus = useCallback(() => {
+    setFocusedFile(null);
+  }, []);
+
   return {
     selectedFiles,
     selectedEntries,
     selectedCount,
     lastClickedFile,
+    focusedFile,
     selectFile,
     selectMultiple,
     selectRange,
@@ -111,5 +123,7 @@ export const useFileSelection = () => {
     clearSelections,
     updateLastClickedFile,
     clearLastClickedFile,
+    focusFile,
+    clearFocus,
   };
 };
