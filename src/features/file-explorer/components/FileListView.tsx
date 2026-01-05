@@ -13,7 +13,6 @@ type FileListViewProps = {
   onSelectFolder: (path: string) => void;
   onSelectFile: (row: FileRow, options?: { additive?: boolean }) => void;
   onSelectRange: (from: FileRow, to: FileRow, allFiles: FileRow[]) => void;
-  onUpdateLastClickedFile: (file: FileRow) => void;
   onFocusFile: (file: FileRow) => void;
   onToggleFileSelection: (file: FileRow) => void;
 };
@@ -26,7 +25,6 @@ export const FileListView = ({
   onSelectFolder,
   onSelectFile,
   onSelectRange,
-  onUpdateLastClickedFile,
   onFocusFile,
   onToggleFileSelection,
 }: FileListViewProps) => {
@@ -128,7 +126,7 @@ export const FileListView = ({
                           isSelected ? "text-primary-foreground/80" : "text-muted-foreground",
                         )}
                       >
-                        {row.kindLabel || "-"}
+                        {row.row.kindLabel || "-"}
                       </span>
                       <span
                         className={cn(
@@ -136,7 +134,7 @@ export const FileListView = ({
                           isSelected ? "text-primary-foreground/80" : "text-muted-foreground",
                         )}
                       >
-                        {row.dateModifiedLabel || "-"}
+                        {row.row.dateModifiedLabel || "-"}
                       </span>
                     </button>
                   </TreeNode>

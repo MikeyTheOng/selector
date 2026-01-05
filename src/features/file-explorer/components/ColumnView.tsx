@@ -16,7 +16,6 @@ type ColumnViewProps = {
   onSelectFolder: (path: string) => void;
   onSelectFile: (row: FileRow, options?: { additive?: boolean }) => void;
   onSelectRange: (from: FileRow, to: FileRow, allFiles: FileRow[]) => void;
-  onUpdateLastClickedFile: (file: FileRow, columnPath?: string) => void;
   onFocusFile: (file: FileRow, columnPath?: string) => void;
   onToggleFileSelection: (file: FileRow) => void;
 };
@@ -32,7 +31,6 @@ export const ColumnView = ({
   onSelectFolder,
   onSelectFile,
   onSelectRange,
-  onUpdateLastClickedFile,
   onFocusFile,
   onToggleFileSelection,
 }: ColumnViewProps) => {
@@ -107,9 +105,11 @@ export const ColumnView = ({
                         path: folder.path,
                         name: folder.name,
                         size: 0,
-                        modified: folder.modified,
+                        sizeLabel: "",
                         extension: "",
                         kindLabel: "Folder",
+                        dateModified: folder.dateModified,
+                        dateModifiedLabel: folder.dateModifiedLabel,
                       } as FileRow,
                     })),
                     ...listing.files.map((file) => ({

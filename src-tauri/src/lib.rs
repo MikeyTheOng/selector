@@ -1,4 +1,7 @@
+mod quicklook;
+use quicklook::QuickLookState;
 use std::io::Write;
+use tauri::Manager;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -8,7 +11,7 @@ fn greet(name: &str) -> String {
 #[tauri::command]
 async fn import_to_lrc(files: Vec<String>) -> Result<(), String> {
     if files.is_empty() {
-        return Ok(());
+        return Ok(())
     }
 
     #[cfg(target_os = "macos")]
@@ -66,9 +69,19 @@ async fn import_to_lrc(files: Vec<String>) -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app| {
+            app.manage(QuickLookState::new(app.handle().clone()));
+            Ok(())
+        })
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, import_to_lrc])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            import_to_lrc,
+            quicklook::toggle_preview,
+            quicklook::update_preview,
+            quicklook::is_quick_look_visible
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

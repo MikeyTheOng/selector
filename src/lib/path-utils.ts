@@ -55,13 +55,13 @@ const getPathHierarchy = (path: string, locations: LocationItem[]): string[] => 
     )
     .sort((a, b) => b.path.length - a.path.length);
 
-  const rootPath = sortedLocations[0]?.path ?? path;
+  const rootPath = sortedLocations[0]?.path ?? "/";
 
   if (path === rootPath) {
     return [rootPath];
   }
 
-  const relative = path.slice(rootPath.length);
+  const relative = rootPath === "/" ? path : path.slice(rootPath.length);
   const segments = relative.split("/").filter(Boolean);
   const paths = [rootPath];
   let currentPath = rootPath;
