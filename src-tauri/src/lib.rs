@@ -2,6 +2,7 @@ mod quicklook;
 use quicklook::QuickLookState;
 use std::io::Write;
 use tauri::Manager;
+use tauri_plugin_sql::{Migration, MigrationKind};
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -75,6 +76,19 @@ pub fn run() {
         })
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(
+            tauri_plugin_sql::Builder::default()
+                .add_migrations(
+                    "sqlite:selector.db",
+                    vec![Migration {
+                        version: 1,
+                        description: "create_collections",
+                        sql: include_str!("../migrations/001_collections.sql"),
+                        kind: MigrationKind::Up,
+                    }],
+                )
+                .build(),
+        )
         .invoke_handler(tauri::generate_handler![
             greet,
             import_to_lrc,

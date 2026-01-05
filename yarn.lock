@@ -1612,6 +1612,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tauri-apps/plugin-sql@npm:^2.3.1":
+  version: 2.3.1
+  resolution: "@tauri-apps/plugin-sql@npm:2.3.1"
+  dependencies:
+    "@tauri-apps/api": "npm:^2.8.0"
+  checksum: 10c0/82ecae8af074ea2a91c77b4c15f6cd54fcd0b99ee7b6bb507b00bc8f44eccbae5fc361a0df450c9ad78fb202b58135e17db59db187ff06d67bbaeb9a83069df4
+  languageName: node
+  linkType: hard
+
 "@testing-library/dom@npm:^10.4.1":
   version: 10.4.1
   resolution: "@testing-library/dom@npm:10.4.1"
@@ -3276,6 +3285,7 @@ __metadata:
     "@tauri-apps/cli": "npm:^2"
     "@tauri-apps/plugin-fs": "npm:^2"
     "@tauri-apps/plugin-opener": "npm:^2"
+    "@tauri-apps/plugin-sql": "npm:^2.3.1"
     "@testing-library/dom": "npm:^10.4.1"
     "@testing-library/jest-dom": "npm:^6.9.1"
     "@testing-library/react": "npm:^16.3.1"
