@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AddToCollectionWidget } from '../AddToCollectionWidget';
 import { useCollections } from '../../hooks/use-collections';
@@ -9,9 +10,17 @@ import type { FileRow } from '@/types/fs';
 vi.mock('../../hooks/use-collections');
 vi.mock('../../hooks/use-collection-items');
 
+// Mock ResizeObserver for ScrollArea
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 describe('AddToCollectionWidget', () => {
-  const mockSelectedFiles: Record<string, FileRow> = {
-    '/test/file1.txt': {
+  const user = userEvent.setup();
+  const mockSelectedEntries: FileRow[] = [
+    {
       path: '/test/file1.txt',
       name: 'file1.txt',
       extension: 'txt',
@@ -21,7 +30,7 @@ describe('AddToCollectionWidget', () => {
       dateModified: new Date(),
       dateModifiedLabel: 'Jan 1, 2024'
     }
-  };
+  ];
 
   const mockCollections = [
     { id: 1, name: 'Collection 1', created_at: '', updated_at: '' },
@@ -42,7 +51,6 @@ describe('AddToCollectionWidget', () => {
       deleteCollection: vi.fn(),
       refetch: vi.fn(),
     });
-    // Default mock for useCollectionItems
     vi.mocked(useCollectionItems).mockReturnValue({
       items: [],
       isLoading: false,
@@ -55,23 +63,34 @@ describe('AddToCollectionWidget', () => {
     });
   });
 
-  it('renders correctly', () => {
-    render(<AddToCollectionWidget selectedFiles={mockSelectedFiles} />);
-    expect(screen.getByText('Add to Collection')).toBeDefined();
-    expect(screen.getByPlaceholderText('New collection name...')).toBeDefined();
+  it('renders trigger button correctly', () => {
+    render(<AddToCollectionWidget selectedEntries={mockSelectedEntries} />);
+    expect(screen.getByText('Add to Collection...')).toBeDefined();
   });
 
-  it('shows existing collections', () => {
-    render(<AddToCollectionWidget selectedFiles={mockSelectedFiles} />);
-    expect(screen.getByText('Collection 1')).toBeDefined();
-    expect(screen.getByText('Collection 2')).toBeDefined();
+  it('opens dialog when trigger is clicked', async () => {
+    render(<AddToCollectionWidget selectedEntries={mockSelectedEntries} />);
+    
+    const trigger = screen.getByText('Add to Collection...');
+    await user.click(trigger);
+
+    await waitFor(() => {
+      expect(screen.getByText('Existing Collections')).toBeDefined();
+      expect(screen.getByText('Collection 1')).toBeDefined();
+    });
   });
 
   it('adds items to an existing collection', async () => {
-    render(<AddToCollectionWidget selectedFiles={mockSelectedFiles} />);
+    render(<AddToCollectionWidget selectedEntries={mockSelectedEntries} />);
+    
+    await user.click(screen.getByText('Add to Collection...'));
+
+    await waitFor(() => {
+      screen.getByText('Collection 1');
+    });
     
     const collectionButton = screen.getByText('Collection 1');
-    fireEvent.click(collectionButton);
+    await user.click(collectionButton);
 
     await waitFor(() => {
       expect(mockAddItem).toHaveBeenCalled();
@@ -79,17 +98,22 @@ describe('AddToCollectionWidget', () => {
   });
 
   it('creates a new collection and adds items to it', async () => {
-    render(<AddToCollectionWidget selectedFiles={mockSelectedFiles} />);
+    render(<AddToCollectionWidget selectedEntries={mockSelectedEntries} />);
+    
+    await user.click(screen.getByText('Add to Collection...'));
+
+    await waitFor(() => {
+      screen.getByPlaceholderText('New collection name...');
+    });
     
     const input = screen.getByPlaceholderText('New collection name...');
-    fireEvent.change(input, { target: { value: 'New Coll' } });
+    await user.type(input, 'New Coll');
     
     const createButton = screen.getByLabelText('Create new collection');
-    fireEvent.click(createButton);
+    await user.click(createButton);
 
     await waitFor(() => {
       expect(mockCreateCollection).toHaveBeenCalledWith({ name: 'New Coll' });
-      // It should also add items to the newly created collection
       expect(mockAddItem).toHaveBeenCalled();
     });
   });
