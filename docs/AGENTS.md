@@ -78,10 +78,13 @@ This repository uses **Yarn**.
 - Include a short bullet list (1–3 bullets) describing intent and impact.
 - Keep commits narrowly scoped; avoid unrelated changes.
 
-**Examples**
-- `feat: Add column view toggle`
-- `feat/refactor: Simplify navigation stack`
-- `fix: Handle null paths on import`
+---
+
+## Documentation Standards
+
+- **Global Hub (`docs/`):** Infrastructure, architecture notes, and shared strategies (e.g., `docs/database.md`).
+- **Feature Spoke (`src/features/<feature>/docs/`):** Technical schemas, invariants, and API surfaces specific to a feature.
+- **Continuous Update:** Documentation must be updated in tandem with code changes during each implementation phase.
 
 ---
 
