@@ -43,7 +43,7 @@ export const useLocations = () => {
               kind: "volume",
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
-        } catch (error) {
+        } catch {
           locationRoots = [];
         }
 

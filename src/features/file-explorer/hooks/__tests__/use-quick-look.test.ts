@@ -1,8 +1,8 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useQuickLook } from '../use-quick-look';
 import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { listen, type EventCallback } from '@tauri-apps/api/event';
 
 // Mock Tauri APIs
 vi.mock('@tauri-apps/api/core', () => ({
@@ -19,9 +19,9 @@ describe('useQuickLook', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Default listen mock: returns a promise that resolves to an unlisten function
-    mockListen.mockResolvedValue(() => {});
+    mockListen.mockResolvedValue(() => { });
   });
 
   it('initially has inactive preview state', () => {
@@ -74,7 +74,7 @@ describe('useQuickLook', () => {
 
   it('closes preview', async () => {
     mockInvoke.mockResolvedValue(false);
-    
+
     const { result } = renderHook(() => useQuickLook());
 
     // Manually set state to true first? 
@@ -96,12 +96,12 @@ describe('useQuickLook', () => {
   });
 
   it('updates state when quicklook://closed event is received', async () => {
-    let eventCallback: (payload: any) => void = () => {};
+    let eventCallback: EventCallback<unknown> = () => { };
     mockListen.mockImplementation((event, callback) => {
       if (event === 'quicklook://closed') {
         eventCallback = callback;
       }
-      return Promise.resolve(() => {});
+      return Promise.resolve(() => { });
     });
 
     const { result } = renderHook(() => useQuickLook());
@@ -115,7 +115,7 @@ describe('useQuickLook', () => {
 
     // Simulate event
     await act(async () => {
-      eventCallback({});
+      eventCallback({ event: 'quicklook://closed', id: 0, payload: {} });
     });
 
     expect(result.current.isPreviewActive).toBe(false);

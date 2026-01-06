@@ -26,6 +26,8 @@ This repository uses **Yarn**.
 - `yarn preview` — Preview the production build
 - `yarn tauri dev` — Run the desktop app in dev mode
 - `yarn tauri build` — Build distributable desktop binaries
+- `yarn test:ci` — Run all unit tests (CI mode)
+- `yarn eslint .` — Run static code analysis
 
 ---
 
@@ -37,10 +39,17 @@ This repository uses **Yarn**.
 - Explicitly type props and state.
 - Use Tailwind utility classes; keep tokens centralized in `src/index.css`.
 - Use **shadcn/ui** components as default UI primitives.
-
+- **Linting Note:** Files in `src/components/ui/` and `src/components/kibo-ui/` have relaxed linting rules (unused vars, explicit any allowed). **Do not refactor these files solely to satisfy strict linting**, as they are often vendored or auto-generated.
 ### Backend (Rust / Tauri)
 - Follow `rustfmt` defaults.
 - Use `snake_case` for Tauri command names.
+
+### Architectural Enforcement
+This repository uses `eslint-plugin-boundaries` to enforce the [File Structure](/docs/file-structure.md).
+- **Do not** import Feature A into Feature B.
+- **Do not** import App layer code into Shared components.
+- **Do not** import root files (`src/main.tsx`) into other modules.
+- **Do not** disable boundary rules. If you encounter an error, refactor the code to move shared logic to `src/lib/` or `src/hooks/`.
 
 ---
 
@@ -60,15 +69,16 @@ This repository uses **Yarn**.
   ```ts
   import { Button } from "@/components/ui/button";
 
-## Testing
+## Testing & Quality
 
-- No test framework is configured by default.
-- If tests are added:
-  - Prefer **Vitest**
-  - Place files under `src/**/*.test.ts(x)`
-- Update this document if testing expectations change.
+- **Test Framework:** Vitest is configured and required.
+- **Linting:** ESLint is required for all code changes.
+- **Verification:** Before requesting a review or finishing a task, agents **must** run:
+  1. `yarn test:ci` (Ensure all tests pass)
+  2. `yarn eslint .` (Ensure no linting errors)
 
----
+- Place tests under `src/**/*.test.ts(x)`
+- Refer to [testing.md](/docs/testing.md) for detailed guidelines.
 
 ## Commit Guidelines
 

@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { 
-  normalizeTextScale, 
-  readStoredTextScale, 
-  applyTextScale, 
-  TEXT_SCALE_STORAGE_KEY 
+import { describe, it, expect, beforeEach } from 'vitest';
+import {
+  normalizeTextScale,
+  readStoredTextScale,
+  applyTextScale,
+  TEXT_SCALE_STORAGE_KEY
 } from '../use-text-scale';
 
 describe('use-text-scale helpers', () => {

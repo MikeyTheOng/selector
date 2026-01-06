@@ -2,8 +2,8 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useFolderListing } from '../use-folder-listing';
 import { fsModule } from '@/lib/tauri/fs';
-import { watch } from '@tauri-apps/plugin-fs';
-import type { LocationItem } from '@/types/fs';
+import { watch, type WatchEvent } from '@tauri-apps/plugin-fs';
+import type { FsDirEntry, LocationItem } from '@/types/fs';
 
 // Mock the fsModule
 vi.mock('@/lib/tauri/fs', () => ({
@@ -15,17 +15,17 @@ vi.mock('@/lib/tauri/fs', () => ({
 
 // Mock @tauri-apps/plugin-fs watch
 vi.mock('@tauri-apps/plugin-fs', () => ({
-  watch: vi.fn(() => Promise.resolve(() => {})),
+  watch: vi.fn(() => Promise.resolve(() => { })),
 }));
 
 // Helper to mock successful directory read
-const mockReadDirSuccess = (entries: any[]) => {
+const mockReadDirSuccess = (entries: FsDirEntry[]) => {
   vi.mocked(fsModule.readDir).mockResolvedValue(entries);
 };
 
 // Helper to mock successful stat
 const mockStatSuccess = (mtime: Date | null = null, size: number = 0) => {
-  vi.mocked(fsModule.stat).mockResolvedValue({ mtime, size });
+  vi.mocked(fsModule.stat!).mockResolvedValue({ mtime, size });
 };
 
 describe('useFolderListing', () => {
@@ -40,7 +40,7 @@ describe('useFolderListing', () => {
   it('initially returns an empty loading state', () => {
     mockReadDirSuccess([]);
     const { result } = renderHook(() => useFolderListing(null, locations));
-    
+
     expect(result.current.listing.isLoading).toBe(false);
     expect(result.current.listing.files).toEqual([]);
     expect(result.current.listing.folders).toEqual([]);
@@ -118,10 +118,10 @@ describe('useFolderListing', () => {
   });
 
   it('refreshes listing when watch event occurs', async () => {
-    let watchCallback: (event: any) => void = () => {};
+    let watchCallback: (event: WatchEvent) => void = () => { };
     vi.mocked(watch).mockImplementation((_path, callback) => {
       watchCallback = callback;
-      return Promise.resolve(() => {});
+      return Promise.resolve(() => { });
     });
 
     mockReadDirSuccess([]);
@@ -137,7 +137,11 @@ describe('useFolderListing', () => {
 
     // Simulate watch event
     await act(async () => {
-      watchCallback({ type: 'create', paths: ['/home/newfile.txt'] });
+      watchCallback({
+        type: { create: { kind: 'file' } },
+        paths: ['/home/newfile.txt'],
+        attrs: {},
+      });
     });
 
     await waitFor(() => {

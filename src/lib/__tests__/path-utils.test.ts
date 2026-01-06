@@ -56,9 +56,9 @@ describe('path-utils', () => {
     it('constructs path from name and parentPath if path is missing', () => {
       // @ts-expect-error - testing missing path case handled in logic
       expect(getEntryPath({ name: 'file.txt' }, '/parent')).toBe('/parent/file.txt');
-      // @ts-expect-error
+      // @ts-expect-error - name-only entry supported in tests
       expect(getEntryPath({ name: 'file.txt' }, '/parent/')).toBe('/parent/file.txt');
-      // @ts-expect-error
+      // @ts-expect-error - name-only entry with empty parent
       expect(getEntryPath({ name: 'file.txt' }, '')).toBe('/file.txt');
     });
   });
@@ -70,7 +70,7 @@ describe('path-utils', () => {
     });
 
     it('returns null if name or path cannot be resolved', () => {
-      // @ts-expect-error
+      // @ts-expect-error - invalid entry shape
       expect(resolveEntry({}, '')).toBeNull();
     });
   });

@@ -101,7 +101,7 @@ export const useFolderListing = (
         if (metadataReader) {
           try {
             mtime = (await metadataReader(entry.path)).mtime ?? null;
-          } catch (error) {
+          } catch {
             mtime = null;
           }
         }
@@ -125,7 +125,7 @@ export const useFolderListing = (
             const metadata = await metadataReader(entry.path);
             size = metadata.size;
             mtime = metadata.mtime ?? null;
-          } catch (error) {
+          } catch {
             size = undefined;
             mtime = null;
           }
