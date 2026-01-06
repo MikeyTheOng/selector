@@ -29,10 +29,11 @@ export default [
                     pattern: [
                         "src/components/**/*",
                         "src/data/**/*",
-                        "src/drizzle/**/*",
                         "src/hooks/**/*",
                         "src/lib/**/*",
-                        "src/server/**/*",
+                        "src/providers/**/*",
+                        "src/types/**/*",
+                        "src/store/**/*"
                     ],
                 },
                 {
@@ -55,6 +56,9 @@ export default [
             ],
         },
         rules: {
+            // TODO: Configure project-structure rules in the future
+            // "project-structure/file-structure": ["error", ...],
+
             // Boundaries Rules
             "boundaries/no-unknown": ["error"],
             "boundaries/no-unknown-files": ["error"],
@@ -75,12 +79,12 @@ export default [
                             ],
                         },
                         {
-                            from: ["app", "neverImport"],
-                            allow: ["shared", "feature"],
+                            from: ["app"],
+                            allow: ["shared", "feature", ["app", { fileName: "*.css" }]],
                         },
                         {
-                            from: ["app"],
-                            allow: [["app", { fileName: "*.css" }]],
+                            from: ["app", "neverImport"],
+                            allow: ["shared", "feature"],
                         },
                     ],
                 },
