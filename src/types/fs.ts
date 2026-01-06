@@ -31,6 +31,7 @@ export type FileRow = {
   sizeLabel: string;
   dateModified: Date | null;
   dateModifiedLabel: string;
+  status?: "available" | "missing" | "offline";
 };
 
 export type FolderRow = {
@@ -38,6 +39,7 @@ export type FolderRow = {
   name: string;
   dateModified: Date | null;
   dateModifiedLabel: string;
+  status?: "available" | "missing" | "offline";
 };
 
 export type FolderListing = {
@@ -48,4 +50,9 @@ export type FolderListing = {
   fileCount: number;
   folderCount: number;
   isTruncated: boolean;
+};
+
+export type LastClickedFile = {
+  file: FileRow;
+  columnPath?: string;
 };

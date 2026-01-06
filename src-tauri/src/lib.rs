@@ -12,7 +12,7 @@ fn greet(name: &str) -> String {
 #[tauri::command]
 async fn import_to_lrc(files: Vec<String>) -> Result<(), String> {
     if files.is_empty() {
-        return Ok(())
+        return Ok(());
     }
 
     #[cfg(target_os = "macos")]
@@ -48,7 +48,9 @@ async fn import_to_lrc(files: Vec<String>) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
 
         if let Some(mut stdin) = child.stdin.take() {
-            stdin.write_all(script.as_bytes()).map_err(|e| e.to_string())?;
+            stdin
+                .write_all(script.as_bytes())
+                .map_err(|e| e.to_string())?;
         }
 
         let output = child.wait_with_output().map_err(|e| e.to_string())?;
@@ -72,10 +74,26 @@ pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
             app.manage(QuickLookState::new(app.handle().clone()));
+
+            #[cfg(debug_assertions)]
+            {
+                if let Ok(app_data_dir) = app.path().app_data_dir() {
+                    let db_path = app_data_dir.join("selector.db");
+                    println!("[dev] app_data_dir: {}", app_data_dir.display());
+                    println!("[dev] sqlite db path: {}", db_path.display());
+                    println!("[dev] sqlite url used by plugin: sqlite:selector.db");
+                } else {
+                    println!(
+                        "[dev] Could not resolve app_data_dir; sqlite url is sqlite:selector.db"
+                    );
+                }
+            }
+
             Ok(())
         })
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations(
