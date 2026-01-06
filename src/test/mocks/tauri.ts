@@ -1,8 +1,29 @@
 import { vi } from 'vitest';
 
-// Mock @tauri-apps/api
-vi.mock('@tauri-apps/api', () => ({
-  invoke: vi.fn(),
+// Mock @tauri-apps/api/event
+export const mockEmit = vi.fn();
+export const mockListen = vi.fn();
+
+let listeners: Record<string, Array<(event: { payload?: unknown }) => void>> = {};
+
+mockListen.mockImplementation((name: string, callback: (event: { payload?: unknown }) => void) => {
+  if (!listeners[name]) listeners[name] = [];
+  listeners[name].push(callback);
+  return Promise.resolve(() => {
+    listeners[name] = listeners[name].filter(l => l !== callback);
+  });
+});
+
+mockEmit.mockImplementation((name: string, payload?: unknown) => {
+  if (listeners[name]) {
+    listeners[name].forEach(l => l({ payload }));
+  }
+  return Promise.resolve();
+});
+
+vi.mock('@tauri-apps/api/event', () => ({
+  emit: (name: string, payload?: unknown) => mockEmit(name, payload),
+  listen: (name: string, callback: (event: { payload?: unknown }) => void) => mockListen(name, callback),
 }));
 
 // Mock database instance for @tauri-apps/plugin-sql
@@ -48,6 +69,7 @@ vi.mock('@tauri-apps/plugin-shell', () => ({
 // Helper to reset all mocks between tests
 export const resetTauriMocks = () => {
   vi.clearAllMocks();
+  listeners = {};
 };
 
 // Helper to reset SQL mocks specifically (useful for database tests)
