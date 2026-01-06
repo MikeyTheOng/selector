@@ -4759,7 +4759,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"motion@npm:^12.24.0":
+"motion@npm:^12.23.26":
   version: 12.24.0
   resolution: "motion@npm:12.24.0"
   dependencies:
@@ -5478,7 +5478,7 @@ __metadata:
     globals: "npm:^17.0.0"
     jsdom: "npm:^27.4.0"
     lucide-react: "npm:^0.562.0"
-    motion: "npm:^12.24.0"
+    motion: "npm:^12.23.26"
     react: "npm:^19.1.0"
     react-dom: "npm:^19.1.0"
     tailwind-merge: "npm:^3.4.0"

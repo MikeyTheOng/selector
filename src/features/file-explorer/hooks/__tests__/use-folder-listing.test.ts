@@ -25,7 +25,7 @@ const mockReadDirSuccess = (entries: FsDirEntry[]) => {
 
 // Helper to mock successful stat
 const mockStatSuccess = (mtime: Date | null = null, size: number = 0) => {
-  vi.mocked(fsModule.stat).mockResolvedValue({ mtime, size });
+  vi.mocked(fsModule.stat!).mockResolvedValue({ mtime, size });
 };
 
 describe('useFolderListing', () => {
@@ -137,7 +137,11 @@ describe('useFolderListing', () => {
 
     // Simulate watch event
     await act(async () => {
-      watchCallback({ type: 'create', paths: ['/home/newfile.txt'] });
+      watchCallback({
+        type: { create: { kind: 'file' } },
+        paths: ['/home/newfile.txt'],
+        attrs: {},
+      });
     });
 
     await waitFor(() => {

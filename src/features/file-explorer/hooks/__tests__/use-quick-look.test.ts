@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useQuickLook } from '../use-quick-look';
 import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { listen, type EventCallback } from '@tauri-apps/api/event';
 
 // Mock Tauri APIs
 vi.mock('@tauri-apps/api/core', () => ({
@@ -96,7 +96,7 @@ describe('useQuickLook', () => {
   });
 
   it('updates state when quicklook://closed event is received', async () => {
-    let eventCallback: (payload: unknown) => void = () => { };
+    let eventCallback: EventCallback<unknown> = () => { };
     mockListen.mockImplementation((event, callback) => {
       if (event === 'quicklook://closed') {
         eventCallback = callback;
@@ -115,7 +115,7 @@ describe('useQuickLook', () => {
 
     // Simulate event
     await act(async () => {
-      eventCallback({});
+      eventCallback({ event: 'quicklook://closed', id: 0, payload: {} });
     });
 
     expect(result.current.isPreviewActive).toBe(false);

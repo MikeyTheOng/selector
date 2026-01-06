@@ -4,7 +4,7 @@ import { FileExplorerView } from '../FileExplorerView';
 import { useFolderListing } from '../../hooks/use-folder-listing';
 import { useFileSelection } from '../../hooks/use-file-selection';
 import { useQuickLook } from '../../hooks/use-quick-look';
-import { listen } from '@tauri-apps/api/event';
+import { listen, type EventCallback } from '@tauri-apps/api/event';
 import type { FileRow, FolderListing } from '@/types/fs';
 
 // Mock the hooks
@@ -51,13 +51,11 @@ describe('FileExplorerView Integration', () => {
     isTruncated: false,
   };
 
-  type QuickLookNavigateEvent = {
-    payload: {
-      key: string;
-      metaKey: boolean;
-      ctrlKey: boolean;
-      shiftKey: boolean;
-    };
+  type QuickLookNavigatePayload = {
+    key: string;
+    metaKey: boolean;
+    ctrlKey: boolean;
+    shiftKey: boolean;
   };
 
   const defaultProps = {
@@ -113,7 +111,7 @@ describe('FileExplorerView Integration', () => {
   });
 
   it('handles quicklook://navigate event for selection toggle (Cmd+Enter)', async () => {
-    let eventCallback: (event: QuickLookNavigateEvent) => void = () => { };
+    let eventCallback: EventCallback<unknown> = () => { };
     vi.mocked(listen).mockImplementation((event, callback) => {
       if (event === 'quicklook://navigate') {
         eventCallback = callback;
@@ -126,12 +124,14 @@ describe('FileExplorerView Integration', () => {
     // Simulate event from Quick Look panel
     await act(async () => {
       eventCallback({
+        event: 'quicklook://navigate',
+        id: 0,
         payload: {
           key: 'Enter',
           metaKey: true,
           ctrlKey: false,
           shiftKey: false,
-        }
+        } satisfies QuickLookNavigatePayload,
       });
     });
 
@@ -139,7 +139,7 @@ describe('FileExplorerView Integration', () => {
   });
 
   it('handles quicklook://navigate event for navigation (ArrowDown)', async () => {
-    let eventCallback: (event: QuickLookNavigateEvent) => void = () => { };
+    let eventCallback: EventCallback<unknown> = () => { };
     vi.mocked(listen).mockImplementation((event, callback) => {
       if (event === 'quicklook://navigate') {
         eventCallback = callback;
@@ -152,12 +152,14 @@ describe('FileExplorerView Integration', () => {
     // Simulate ArrowDown from Quick Look panel
     await act(async () => {
       eventCallback({
+        event: 'quicklook://navigate',
+        id: 0,
         payload: {
           key: 'ArrowDown',
           metaKey: false,
           ctrlKey: false,
           shiftKey: false,
-        }
+        } satisfies QuickLookNavigatePayload,
       });
     });
 
@@ -166,7 +168,7 @@ describe('FileExplorerView Integration', () => {
   });
 
   it('handles quicklook://navigate event for navigation (ArrowUp)', async () => {
-    let eventCallback: (event: QuickLookNavigateEvent) => void = () => { };
+    let eventCallback: EventCallback<unknown> = () => { };
     vi.mocked(listen).mockImplementation((event, callback) => {
       if (event === 'quicklook://navigate') {
         eventCallback = callback;
@@ -199,12 +201,14 @@ describe('FileExplorerView Integration', () => {
     // Simulate ArrowUp from Quick Look panel
     await act(async () => {
       eventCallback({
+        event: 'quicklook://navigate',
+        id: 0,
         payload: {
           key: 'ArrowUp',
           metaKey: false,
           ctrlKey: false,
           shiftKey: false,
-        }
+        } satisfies QuickLookNavigatePayload,
       });
     });
 
@@ -213,7 +217,7 @@ describe('FileExplorerView Integration', () => {
   });
 
   it('handles quicklook://navigate event for closing preview (Escape)', async () => {
-    let eventCallback: (event: QuickLookNavigateEvent) => void = () => { };
+    let eventCallback: EventCallback<unknown> = () => { };
     vi.mocked(listen).mockImplementation((event, callback) => {
       if (event === 'quicklook://navigate') {
         eventCallback = callback;
@@ -226,12 +230,14 @@ describe('FileExplorerView Integration', () => {
     // Simulate Escape from Quick Look panel
     await act(async () => {
       eventCallback({
+        event: 'quicklook://navigate',
+        id: 0,
         payload: {
           key: 'Escape',
           metaKey: false,
           ctrlKey: false,
           shiftKey: false,
-        }
+        } satisfies QuickLookNavigatePayload,
       });
     });
 
@@ -239,7 +245,7 @@ describe('FileExplorerView Integration', () => {
   });
 
   it('handles quicklook://navigate event for toggling preview (Space)', async () => {
-    let eventCallback: (event: QuickLookNavigateEvent) => void = () => { };
+    let eventCallback: EventCallback<unknown> = () => { };
     vi.mocked(listen).mockImplementation((event, callback) => {
       if (event === 'quicklook://navigate') {
         eventCallback = callback;
@@ -252,12 +258,14 @@ describe('FileExplorerView Integration', () => {
     // Simulate Space from Quick Look panel
     await act(async () => {
       eventCallback({
+        event: 'quicklook://navigate',
+        id: 0,
         payload: {
           key: 'Space',
           metaKey: false,
           ctrlKey: false,
           shiftKey: false,
-        }
+        } satisfies QuickLookNavigatePayload,
       });
     });
 

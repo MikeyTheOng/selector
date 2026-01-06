@@ -14,15 +14,15 @@ describe('FileListView', () => {
       { path: '/test/folder1', name: 'folder1', dateModified: new Date(), dateModifiedLabel: 'Jan 1, 2024' }
     ],
     files: [
-      { 
-        path: '/test/file1.txt', 
-        name: 'file1.txt', 
-        extension: 'txt', 
-        kindLabel: 'Text document', 
-        size: 1024, 
-        sizeLabel: '1 KB', 
-        dateModified: new Date(), 
-        dateModifiedLabel: 'Jan 1, 2024' 
+      {
+        path: '/test/file1.txt',
+        name: 'file1.txt',
+        extension: 'txt',
+        kindLabel: 'Text document',
+        size: 1024,
+        sizeLabel: '1 KB',
+        dateModified: new Date(),
+        dateModifiedLabel: 'Jan 1, 2024'
       }
     ],
     isLoading: false,
@@ -64,7 +64,7 @@ describe('FileListView', () => {
     render(<FileListView {...defaultProps} />);
     const fileButton = screen.getByText('file1.txt').closest('button');
     fireEvent.click(fileButton!);
-    
+
     expect(defaultProps.onSelectFile).toHaveBeenCalled();
     expect(defaultProps.onFocusFile).toHaveBeenCalled();
   });
@@ -73,41 +73,41 @@ describe('FileListView', () => {
     render(<FileListView {...defaultProps} />);
     const folderButton = screen.getByText('folder1').closest('button');
     fireEvent.doubleClick(folderButton!);
-    
+
     expect(defaultProps.onSelectFolder).toHaveBeenCalledWith('/test/folder1');
   });
 
   it('supports meta/ctrl click for toggle selection', () => {
     render(<FileListView {...defaultProps} />);
     const fileButton = screen.getByText('file1.txt').closest('button');
-    
+
     fireEvent.click(fileButton!, { metaKey: true });
     expect(defaultProps.onToggleFileSelection).toHaveBeenCalled();
-    
+
     vi.clearAllMocks();
     fireEvent.click(fileButton!, { ctrlKey: true });
     expect(defaultProps.onToggleFileSelection).toHaveBeenCalled();
   });
 
   it('supports shift click for range selection', () => {
-    const lastClicked: FileRow = { 
-      path: '/test/last.txt', 
-      name: 'last.txt', 
-      extension: 'txt', 
-      kindLabel: 'Text', 
-      sizeLabel: '', 
-      dateModified: null, 
-      dateModifiedLabel: '' 
+    const lastClicked: FileRow = {
+      path: '/test/last.txt',
+      name: 'last.txt',
+      extension: 'txt',
+      kindLabel: 'Text',
+      sizeLabel: '',
+      dateModified: null,
+      dateModifiedLabel: ''
     };
-    
-    render(<FileListView 
-      {...defaultProps} 
-      lastClickedFile={{ file: lastClicked, index: 0 }} 
+
+    render(<FileListView
+      {...defaultProps}
+      lastClickedFile={{ file: lastClicked }}
     />);
-    
+
     const fileButton = screen.getByText('file1.txt').closest('button');
     fireEvent.click(fileButton!, { shiftKey: true });
-    
+
     expect(defaultProps.onSelectRange).toHaveBeenCalled();
     expect(defaultProps.onFocusFile).toHaveBeenCalled();
   });
