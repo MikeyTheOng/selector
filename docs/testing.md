@@ -29,6 +29,7 @@ vi.mocked(readDir).mockResolvedValue([
 ### Frontend (Yarn)
 - `yarn test` - Runs Vitest in watch mode (recommended for TDD).
 - `yarn test:ci` - Runs all tests once and exits (used in CI/CD).
+- `yarn eslint .` - Runs static analysis to catch style and logic errors.
 
 ### Backend (Cargo)
 - `yarn test:rust` - Runs all Rust backend tests.

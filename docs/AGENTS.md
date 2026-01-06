@@ -26,6 +26,8 @@ This repository uses **Yarn**.
 - `yarn preview` — Preview the production build
 - `yarn tauri dev` — Run the desktop app in dev mode
 - `yarn tauri build` — Build distributable desktop binaries
+- `yarn test:ci` — Run all unit tests (CI mode)
+- `yarn eslint .` — Run static code analysis
 
 ---
 
@@ -60,15 +62,16 @@ This repository uses **Yarn**.
   ```ts
   import { Button } from "@/components/ui/button";
 
-## Testing
+## Testing & Quality
 
-- No test framework is configured by default.
-- If tests are added:
-  - Prefer **Vitest**
-  - Place files under `src/**/*.test.ts(x)`
-- Update this document if testing expectations change.
+- **Test Framework:** Vitest is configured and required.
+- **Linting:** ESLint is required for all code changes.
+- **Verification:** Before requesting a review or finishing a task, agents **must** run:
+  1. `yarn test:ci` (Ensure all tests pass)
+  2. `yarn eslint .` (Ensure no linting errors)
 
----
+- Place tests under `src/**/*.test.ts(x)`
+- Refer to [testing.md](/docs/testing.md) for detailed guidelines.
 
 ## Commit Guidelines
 
