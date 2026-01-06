@@ -5,7 +5,7 @@ import * as collectionsService from "../../lib/collections-repository";
 import type { Collection } from "../../types";
 
 // Mock the collections service
-vi.mock("../../lib/collections-service");
+vi.mock("../../lib/collections-repository");
 
 describe("useCollections", () => {
   const mockCollections: Collection[] = [

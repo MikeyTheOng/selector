@@ -30,3 +30,6 @@ export {
 // Hooks
 export { useCollections } from "./hooks/use-collections";
 export { useCollectionItems } from "./hooks/use-collection-items";
+
+// Components
+export { AddToCollectionWidget } from "./components/AddToCollectionWidget";

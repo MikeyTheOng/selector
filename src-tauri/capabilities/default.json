@@ -9,6 +9,8 @@
     "core:default",
     "opener:default",
     "sql:default",
+    "sql:allow-execute",
+    "sql:allow-select",
     "fs:allow-read-dir",
     "fs:allow-stat",
     "fs:allow-watch",

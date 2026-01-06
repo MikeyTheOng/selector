@@ -6,7 +6,7 @@ import { fsModule } from "@/lib/tauri/fs";
 import type { CollectionItem } from "../../types";
 
 // Mock the collections service
-vi.mock("../../lib/collections-service");
+vi.mock("../../lib/collections-repository");
 
 // Mock the fsModule for status detection
 vi.mock("@/lib/tauri/fs", () => ({

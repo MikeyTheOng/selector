@@ -28,6 +28,8 @@ type FileExplorerViewProps = {
   canGoForward: boolean;
   onBack: () => void;
   onForward: () => void;
+  /** Optional slot for injecting external action UI into the SelectionSheet */
+  selectionActions?: (entries: FileRow[]) => React.ReactNode;
 };
 
 export const FileExplorerView = ({
@@ -39,6 +41,7 @@ export const FileExplorerView = ({
   canGoForward,
   onBack,
   onForward,
+  selectionActions,
 }: FileExplorerViewProps) => {
   const { listing, ensureListing, getListingForPath } = useFolderListing(selectedFolder, locations);
   const {
@@ -306,6 +309,7 @@ export const FileExplorerView = ({
           onClose={() => setIsSelectionOpen(false)}
           onRemove={removeSelection}
           onClear={clearSelections}
+          renderActions={selectionActions}
         />
 
         <div className="flex-1 overflow-auto">

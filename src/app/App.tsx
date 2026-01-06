@@ -1,12 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { FileExplorerView, useLocations, useNavigation } from "@/features/file-explorer";
+import { AddToCollectionWidget } from "@/features/collections";
 import { useTextScale } from "@/hooks/use-text-scale";
+import type { FileRow } from "@/types/fs";
 
 function App() {
   const { locations, error: locationsError, homePath } = useLocations();
   const { selectedFolder, navigateTo, canGoBack, canGoForward, goBack, goForward } =
     useNavigation(homePath);
   const { textScale, setTextScale } = useTextScale();
+
+  const renderSelectionActions = useCallback((entries: FileRow[]) => {
+    const selectedFiles = Object.fromEntries(entries.map((e) => [e.path, e]));
+    return <AddToCollectionWidget selectedFiles={selectedFiles} />;
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -60,6 +67,7 @@ function App() {
           canGoForward={canGoForward}
           onBack={goBack}
           onForward={goForward}
+          selectionActions={renderSelectionActions}
         />
       </div>
     </main>

@@ -19,7 +19,7 @@ async function detectItemStatus(
   try {
     await fsModule.stat?.(item.path);
     return "available";
-  } catch (error) {
+  } catch {
     // Path doesn't exist - check if it's on an external volume
     if (item.volume_id) {
       return "offline";

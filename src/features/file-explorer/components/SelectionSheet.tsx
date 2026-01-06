@@ -13,6 +13,8 @@ type SelectionSheetProps = {
   onClose: () => void;
   onRemove: (path: string) => void;
   onClear: () => void;
+  /** Optional slot for injecting external action UI (e.g., Collections widget) */
+  renderActions?: (entries: FileRow[]) => React.ReactNode;
 };
 
 export const SelectionSheet = ({
@@ -21,6 +23,7 @@ export const SelectionSheet = ({
   onClose,
   onRemove,
   onClear,
+  renderActions,
 }: SelectionSheetProps) => {
   const [isImporting, setIsImporting] = useState(false);
 
@@ -85,6 +88,8 @@ export const SelectionSheet = ({
           )}
         </ScrollArea>
         <div className="mt-4 flex flex-col gap-3 border-t border-border/60 pt-3">
+          {/* External actions slot (e.g., Collections widget) */}
+          {renderActions?.(entries)}
           <Button
             type="button"
             variant="default"
