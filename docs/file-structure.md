@@ -25,6 +25,7 @@ prevents cross-feature coupling, and scales from small tools to larger products.
 │   ├── components/     # Shared UI primitives
 │   ├── hooks/          # Shared hooks (non-feature-specific)
 │   ├── lib/            # Shared frontend infrastructure
+│   ├── test/           # Test utilities and global mocks (test-utils)
 │   ├── assets/         # Images, fonts, static UI assets
 │   └── types/          # Shared TS types (optional)
 └── src-tauri/          # Tauri / Rust backend
@@ -46,6 +47,23 @@ Rules:
 - Do not import from `src/features/` or `src/app/`.
 - May import from other shared folders.
 - Avoid business logic.
+
+Examples:
+- `src/components/ui/button.tsx`
+- `src/lib/tauri.ts` (thin IPC wrapper)
+- `src/hooks/useDebounce.ts`
+
+### Layer 1.5 — Test Utilities
+Folder: `src/test/`
+
+Purpose:
+- Global mocks (e.g., Tauri API mocks).
+- Test setup files and custom renderers.
+- Shared test helpers.
+
+Rules:
+- Accessible by **Shared**, **Features**, and **App** layers (typically in `.test.ts` files).
+- Can import from `shared`, `features`, and `app` (for integration testing).
 
 ### Layer 2 — Features
 Each feature owns its UI, logic, and documentation end-to-end.
@@ -122,8 +140,31 @@ Rules:
 - No shared mutable state across features.
 
 ## Dependency Direction (Frontend)
-```
-shared  ←  features  ←  app
+Enforced by `eslint-plugin-boundaries`:
+
+```mermaid
+graph TD
+    %% Nodes
+    App[App]
+    Features[Features]
+    Shared[Shared]
+    TestUtils["Test Utils (src/test)"]
+
+    App --> Features
+    App --> Shared
+    Features --> Shared
+    Features --> TestUtils
+    Shared --> TestUtils
+
+    classDef app fill:#FFEBEE,stroke:#C62828,stroke-width:2px,color:#B71C1C
+    classDef shared fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef feature fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef utils fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#4A148C
+
+    class App app
+    class Features feature
+    class Shared shared
+    class TestUtils utils
 ```
 
 ## Example Mappings
