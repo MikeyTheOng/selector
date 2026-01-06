@@ -185,3 +185,44 @@ export async function updateItemPath(
 
   return result.rowsAffected;
 }
+
+/**
+ * Relinks all items within a folder to a new location
+ * This is used when a parent folder is moved, updating all contained files/folders
+ * @param oldFolderPath - The old folder path
+ * @param newFolderPath - The new folder path
+ * @returns Number of items updated
+ */
+export async function relinkFolderItems(
+  oldFolderPath: string,
+  newFolderPath: string
+): Promise<number> {
+  const db = await getDatabase();
+
+  // Normalize paths (remove trailing slashes)
+  const normalizedOldPath = oldFolderPath.replace(/\/+$/, "");
+  const normalizedNewPath = newFolderPath.replace(/\/+$/, "");
+
+  // Find all items that start with the old folder path
+  const items = await db.select<CollectionItem[]>(
+    "SELECT * FROM collection_items WHERE path LIKE ?",
+    [`${normalizedOldPath}%`]
+  );
+
+  if (items.length === 0) {
+    return 0;
+  }
+
+  // Update each item's path
+  let updatedCount = 0;
+  for (const item of items) {
+    const newPath = item.path.replace(normalizedOldPath, normalizedNewPath);
+    await db.execute("UPDATE collection_items SET path = ? WHERE id = ?", [
+      newPath,
+      item.id,
+    ]);
+    updatedCount++;
+  }
+
+  return updatedCount;
+}

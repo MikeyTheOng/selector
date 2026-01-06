@@ -24,4 +24,9 @@ export {
   removeItemFromCollection,
   getCollectionItems,
   updateItemPath,
-} from "./lib/collections-service";
+  relinkFolderItems,
+} from "./lib/collections-repository";
+
+// Hooks
+export { useCollections } from "./hooks/use-collections";
+export { useCollectionItems } from "./hooks/use-collection-items";

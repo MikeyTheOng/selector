@@ -14,7 +14,7 @@ import {
   removeItemFromCollection,
   getCollectionItems,
   updateItemPath,
-} from "../collections-service";
+} from "../collections-repository";
 import { resetDatabaseCache } from "@/lib/tauri/database";
 import type { Collection, CollectionItem } from "../../types";
 
@@ -283,6 +283,90 @@ describe("collections-service", () => {
         expect.stringContaining("UPDATE collection_items SET path = ?"),
         ["/new/path/file.jpg", "/old/path/file.jpg"]
       );
+    });
+  });
+
+  describe("relinkFolderItems", () => {
+    it("should update all items within a folder across all collections", async () => {
+      const oldFolderPath = "/Volumes/OldDrive/Photos";
+      const newFolderPath = "/Volumes/NewDrive/Photos";
+
+      // Mock items that need relinking
+      const itemsToRelink: CollectionItem[] = [
+        {
+          id: 1,
+          collection_id: 1,
+          path: "/Volumes/OldDrive/Photos/vacation/beach.jpg",
+          item_type: "file",
+          volume_id: "OldDrive",
+          added_at: "2024-01-01T00:00:00",
+        },
+        {
+          id: 2,
+          collection_id: 2,
+          path: "/Volumes/OldDrive/Photos/family/dinner.jpg",
+          item_type: "file",
+          volume_id: "OldDrive",
+          added_at: "2024-01-01T00:00:00",
+        },
+        {
+          id: 3,
+          collection_id: 1,
+          path: "/Volumes/OldDrive/Photos/work",
+          item_type: "folder",
+          volume_id: "OldDrive",
+          added_at: "2024-01-01T00:00:00",
+        },
+      ];
+
+      mockDatabaseSelect.mockResolvedValueOnce(itemsToRelink);
+      mockDatabaseExecute.mockResolvedValue({ rowsAffected: 1 });
+
+      const { relinkFolderItems } = await import("../collections-repository");
+      const result = await relinkFolderItems(oldFolderPath, newFolderPath);
+
+      expect(result).toBe(3); // 3 items relinked
+      expect(mockDatabaseSelect).toHaveBeenCalledWith(
+        expect.stringContaining("SELECT * FROM collection_items WHERE path LIKE ?"),
+        ["/Volumes/OldDrive/Photos%"]
+      );
+
+      // Should update each item
+      expect(mockDatabaseExecute).toHaveBeenCalledTimes(3);
+    });
+
+    it("should handle folder relinking with trailing slashes", async () => {
+      const oldFolderPath = "/Users/test/Documents/";
+      const newFolderPath = "/Users/test/NewDocuments/";
+
+      mockDatabaseSelect.mockResolvedValueOnce([
+        {
+          id: 1,
+          collection_id: 1,
+          path: "/Users/test/Documents/report.pdf",
+          item_type: "file",
+          volume_id: null,
+          added_at: "2024-01-01T00:00:00",
+        },
+      ]);
+      mockDatabaseExecute.mockResolvedValue({ rowsAffected: 1 });
+
+      const { relinkFolderItems } = await import("../collections-repository");
+      const result = await relinkFolderItems(oldFolderPath, newFolderPath);
+
+      expect(result).toBe(1);
+    });
+
+    it("should return 0 if no items match the folder path", async () => {
+      mockDatabaseSelect.mockResolvedValueOnce([]);
+
+      const { relinkFolderItems } = await import("../collections-repository");
+      const result = await relinkFolderItems(
+        "/nonexistent/folder",
+        "/new/folder"
+      );
+
+      expect(result).toBe(0);
     });
   });
 });
