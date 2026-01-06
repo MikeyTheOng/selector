@@ -21,6 +21,12 @@ export default [
             boundaries,
         },
         settings: {
+            "import/resolver": {
+                typescript: {
+                    alwaysTryTypes: true,
+                    project: "./tsconfig.json",
+                },
+            },
             "boundaries/include": ["src/**/*"],
             "boundaries/elements": [
                 {
@@ -46,20 +52,22 @@ export default [
                     mode: "full",
                     type: "app",
                     capture: ["_", "fileName"],
-                    pattern: ["src/app/**/*"],
+                    pattern: ["src/app/**/*", "src/App.tsx"],
+                },
+                {
+                    mode: "full",
+                    type: "test-utils",
+                    pattern: ["src/test/**/*"],
                 },
                 {
                     mode: "full",
                     type: "neverImport",
-                    pattern: ["src/*", "src/tasks/**/*"],
-                },
+                    capture: ["fileName"],
+                    pattern: ["src/*"],
+                },  
             ],
         },
         rules: {
-            // TODO: Configure project-structure rules in the future
-            // "project-structure/file-structure": ["error", ...],
-
-            // Boundaries Rules
             "boundaries/no-unknown": ["error"],
             "boundaries/no-unknown-files": ["error"],
             "boundaries/element-types": [
@@ -69,12 +77,13 @@ export default [
                     rules: [
                         {
                             from: ["shared"],
-                            allow: ["shared"],
+                            allow: ["shared", "test-utils"],
                         },
                         {
                             from: ["feature"],
                             allow: [
                                 "shared",
+                                "test-utils",
                                 ["feature", { featureName: "${from.featureName}" }],
                             ],
                         },
@@ -83,12 +92,25 @@ export default [
                             allow: ["shared", "feature", ["app", { fileName: "*.css" }]],
                         },
                         {
-                            from: ["app", "neverImport"],
-                            allow: ["shared", "feature"],
+                            from: ["neverImport"],
+                            allow: ["shared", "feature", "app", ["neverImport", { fileName: "*.css" }]],
                         },
+                        {
+                            from: ["test-utils"],
+                            allow: ["shared", "feature", "app", "test-utils"],
+                        }
                     ],
                 },
             ],
+        },
+    },
+    // --- OVERRIDE: Relax rules for UI Components ---
+    {
+        files: ["src/components/ui/**/*.{ts,tsx}", "src/components/kibo-ui/**/*.{ts,tsx}"],
+        rules: {
+            "@typescript-eslint/no-unused-vars": "off",
+            "@typescript-eslint/no-explicit-any": "off",
+            "@typescript-eslint/ban-ts-comment": "off",
         },
     },
 ];
