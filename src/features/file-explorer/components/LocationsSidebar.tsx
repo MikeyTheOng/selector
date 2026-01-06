@@ -9,6 +9,7 @@ type LocationsSidebarProps = {
   locationsError: string | null;
   selectedFolder: string | null;
   onSelectFolder: (path: string) => void;
+  renderCollections?: () => React.ReactNode;
 };
 
 export const LocationsSidebar = ({
@@ -16,6 +17,7 @@ export const LocationsSidebar = ({
   locationsError,
   selectedFolder,
   onSelectFolder,
+  renderCollections,
 }: LocationsSidebarProps) => {
   const homeLocation = locations.find((node) => node.kind === "home") ?? null;
   const locationNodes = locations.filter((node) => node.kind === "volume");
@@ -50,6 +52,14 @@ export const LocationsSidebar = ({
                 </Button>
               </div>
             ) : null}
+            
+            {/* Collections Slot */}
+            {renderCollections && (
+              <div>
+                {renderCollections()}
+              </div>
+            )}
+
             <div>
               <p className="cursor-default select-none px-2 pb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Locations

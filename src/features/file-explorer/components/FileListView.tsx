@@ -1,8 +1,7 @@
 import { FileRowLabel } from "./FileRowLabel";
 import { TreeNode, TreeProvider, TreeView } from "@/components/kibo-ui/tree";
-import type { LastClickedFile } from "../hooks/use-file-selection";
 import { cn } from "@/lib/utils";
-import type { FileRow, FolderListing } from "@/types/fs";
+import type { FileRow, FolderListing, LastClickedFile } from "@/types/fs";
 import { useMemo } from "react";
 
 type FileListViewProps = {
@@ -15,6 +14,7 @@ type FileListViewProps = {
   onSelectRange: (from: FileRow, to: FileRow, allFiles: FileRow[]) => void;
   onFocusFile: (file: FileRow) => void;
   onToggleFileSelection: (file: FileRow) => void;
+  onActivateItem?: (row: FileRow) => void;
 };
 
 export const FileListView = ({
@@ -27,6 +27,7 @@ export const FileListView = ({
   onSelectRange,
   onFocusFile,
   onToggleFileSelection,
+  onActivateItem,
 }: FileListViewProps) => {
   const rows = useMemo(() => [
     ...listing.folders.map((folder) => ({
@@ -41,6 +42,7 @@ export const FileListView = ({
         extension: "",
         kindLabel: "Folder",
         dateModifiedLabel: folder.dateModifiedLabel,
+        status: folder.status,
       } as FileRow,
     })),
     ...listing.files.map((file) => ({
@@ -91,8 +93,14 @@ export const FileListView = ({
                       type="button"
                       onClick={(event) => handleItemClick(event, row.row)}
                       onDoubleClick={() => {
+                        if (row.row.status === "missing" || row.row.status === "offline") {
+                          onActivateItem?.(row.row);
+                          return;
+                        }
                         if (row.type === "folder") {
                           onSelectFolder(row.path);
+                        } else if (onActivateItem) {
+                          onActivateItem(row.row);
                         }
                       }}
                       className={cn(
@@ -101,6 +109,7 @@ export const FileListView = ({
                           ? "bg-primary text-primary-foreground"
                           : "text-foreground hover:bg-muted/60",
                         isFocused && "ring-1 ring-inset ring-ring ring-offset-0 z-10",
+                        (row.row.status === "missing" || row.row.status === "offline") && "opacity-50 grayscale"
                       )}
                       aria-selected={isSelected}
                     >
@@ -114,6 +123,7 @@ export const FileListView = ({
                               : isSelected
                                 ? "text-primary-foreground"
                                 : "text-muted-foreground",
+                            (row.row.status === "missing" || row.row.status === "offline") && "text-muted-foreground"
                           )}
                           labelClassName={
                             isSelected ? "text-primary-foreground" : "text-foreground"

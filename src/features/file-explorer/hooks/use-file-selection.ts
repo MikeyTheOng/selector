@@ -1,10 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import type { FileRow } from "@/types/fs";
-
-export type LastClickedFile = {
-  file: FileRow;
-  columnPath?: string;
-};
+import type { FileRow, LastClickedFile } from "@/types/fs";
 
 export const useFileSelection = () => {
   const [selectedFiles, setSelectedFiles] = useState<Record<string, FileRow>>({});

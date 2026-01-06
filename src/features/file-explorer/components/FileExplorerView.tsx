@@ -30,6 +30,10 @@ type FileExplorerViewProps = {
   onForward: () => void;
   /** Optional slot for injecting external action UI into the SelectionSheet */
   selectionActions?: (entries: FileRow[]) => React.ReactNode;
+  /** Optional slot for injecting Collections UI into the sidebar */
+  renderCollections?: () => React.ReactNode;
+  /** Optional slot to override the main content area */
+  renderMainContent?: () => React.ReactNode;
 };
 
 export const FileExplorerView = ({
@@ -42,6 +46,8 @@ export const FileExplorerView = ({
   onBack,
   onForward,
   selectionActions,
+  renderCollections,
+  renderMainContent,
 }: FileExplorerViewProps) => {
   const { listing, ensureListing, getListingForPath } = useFolderListing(selectedFolder, locations);
   const {
@@ -285,6 +291,7 @@ export const FileExplorerView = ({
         locationsError={locationsError}
         selectedFolder={selectedFolder}
         onSelectFolder={onSelectFolder}
+        renderCollections={renderCollections}
       />
 
       <section className="relative flex min-h-0 min-w-0 flex-1 flex-col">
@@ -313,7 +320,9 @@ export const FileExplorerView = ({
         />
 
         <div className="flex-1 overflow-auto">
-          {viewMode === "list" ? (
+          {renderMainContent ? (
+            renderMainContent()
+          ) : viewMode === "list" ? (
             listing.isLoading ? (
               <div className="px-4 py-6 text-sm text-muted-foreground">Loading files...</div>
             ) : listing.error ? (

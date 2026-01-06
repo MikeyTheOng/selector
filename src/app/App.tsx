@@ -1,6 +1,6 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { FileExplorerView, useLocations, useNavigation } from "@/features/file-explorer";
-import { AddToCollectionWidget } from "@/features/collections";
+import { AddToCollectionWidget, CollectionsSidebarSection, CollectionsView } from "@/features/collections";
 import { useTextScale } from "@/hooks/use-text-scale";
 import type { FileRow } from "@/types/fs";
 
@@ -10,10 +10,34 @@ function App() {
     useNavigation(homePath);
   const { textScale, setTextScale } = useTextScale();
 
+  const activeCollectionId = useMemo(() => {
+    if (selectedFolder?.startsWith("collection://")) {
+      const idStr = selectedFolder.replace("collection://", "");
+      const id = parseInt(idStr, 10);
+      return isNaN(id) ? null : id;
+    }
+    return null;
+  }, [selectedFolder]);
+
   const renderSelectionActions = useCallback((entries: FileRow[]) => {
-    const selectedFiles = Object.fromEntries(entries.map((e) => [e.path, e]));
-    return <AddToCollectionWidget selectedFiles={selectedFiles} />;
+    return <AddToCollectionWidget selectedEntries={entries} />;
   }, []);
+
+  const renderCollections = useCallback(() => {
+    return (
+      <CollectionsSidebarSection
+        selectedCollectionId={activeCollectionId}
+        onSelectCollection={(id) => navigateTo(`collection://${id}`)}
+      />
+    );
+  }, [activeCollectionId, navigateTo]);
+
+  const renderMainContent = useCallback(() => {
+    if (activeCollectionId !== null) {
+      return <CollectionsView collectionId={activeCollectionId} />;
+    }
+    return null;
+  }, [activeCollectionId]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -68,6 +92,8 @@ function App() {
           onBack={goBack}
           onForward={goForward}
           selectionActions={renderSelectionActions}
+          renderCollections={renderCollections}
+          renderMainContent={activeCollectionId !== null ? renderMainContent : undefined}
         />
       </div>
     </main>
