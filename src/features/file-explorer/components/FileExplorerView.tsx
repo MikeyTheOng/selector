@@ -9,7 +9,7 @@ import { useFileSelection } from "../hooks/use-file-selection";
 import { useFolderListing } from "../hooks/use-folder-listing";
 import { useQuickLook } from "../hooks/use-quick-look";
 import { listen } from "@tauri-apps/api/event";
-import type { FileRow, LocationItem } from "@/types/fs";
+import type { FileRow, FolderRow, LocationItem } from "@/types/fs";
 import { getPathBaseName } from "@/lib/path-utils";
 
 interface QuickLookEvent {
@@ -62,7 +62,7 @@ export const FileExplorerView = ({
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
 
   const currentFolderName = selectedFolder ? getPathBaseName(selectedFolder) : "Select a folder";
-  
+
   const handleFileSelection = useCallback(
     (row: FileRow, options?: { additive?: boolean }) => {
       if (options?.additive) {
@@ -120,7 +120,7 @@ export const FileExplorerView = ({
       }
 
       // Helper to map a FolderRow to a FileRow for selection/focus consistency
-      const folderToFileRow = (f: any): FileRow => ({
+      const folderToFileRow = (f: FolderRow): FileRow => ({
         path: f.path,
         name: f.name,
         size: 0,
@@ -138,13 +138,13 @@ export const FileExplorerView = ({
             ...listing.folders.map(folderToFileRow),
             ...listing.files
           ];
-          
+
           if (allRows.length === 0) return;
 
           if (event.key === "ArrowUp" || event.key === "ArrowDown") {
             event.preventDefault();
             let nextIndex = -1;
-            
+
             if (!focusedFile) {
               nextIndex = event.key === "ArrowUp" ? allRows.length - 1 : 0;
             } else {
@@ -247,9 +247,9 @@ export const FileExplorerView = ({
       const unlisten = await listen<QuickLookEvent>("quicklook://navigate", (event) => {
         const { key: rawKey, metaKey, ctrlKey, shiftKey } = event.payload;
         const key = rawKey === "Space" ? " " : rawKey;
-        handleKeyDown({ 
-          key, 
-          preventDefault: () => {},
+        handleKeyDown({
+          key,
+          preventDefault: () => { },
           metaKey,
           ctrlKey,
           shiftKey
