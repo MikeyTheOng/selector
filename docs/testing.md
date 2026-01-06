@@ -7,7 +7,9 @@ Selector follows a **Strict Mocking** strategy for all frontend tests. This mean
 3. **Isolation:** We test the application logic and UI components in isolation from the operating system.
 
 ## Test Structure
-- **Global Mocks:** Located in `src/test/mocks/`. These provide shared mocks for Tauri APIs.
+- **Global Mocks & Utilities:** Located in `src/test/` (Architecture Layer: `test-utils`).
+  - Contains `mocks/`, `setup.ts`, and shared test helpers.
+  - Can be imported by shared code and features for testing purposes.
 - **Unit & Component Tests:** Located alongside the code they test, following the pattern: `src/features/<feature-name>/__tests__/<filename>.test.tsx`.
 - **Backend Tests:** Standard Rust tests located within `src-tauri/src/`.
 

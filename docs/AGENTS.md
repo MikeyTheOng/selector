@@ -39,10 +39,17 @@ This repository uses **Yarn**.
 - Explicitly type props and state.
 - Use Tailwind utility classes; keep tokens centralized in `src/index.css`.
 - Use **shadcn/ui** components as default UI primitives.
-
+- **Linting Note:** Files in `src/components/ui/` and `src/components/kibo-ui/` have relaxed linting rules (unused vars, explicit any allowed). **Do not refactor these files solely to satisfy strict linting**, as they are often vendored or auto-generated.
 ### Backend (Rust / Tauri)
 - Follow `rustfmt` defaults.
 - Use `snake_case` for Tauri command names.
+
+### Architectural Enforcement
+This repository uses `eslint-plugin-boundaries` to enforce the [File Structure](/docs/file-structure.md).
+- **Do not** import Feature A into Feature B.
+- **Do not** import App layer code into Shared components.
+- **Do not** import root files (`src/main.tsx`) into other modules.
+- **Do not** disable boundary rules. If you encounter an error, refactor the code to move shared logic to `src/lib/` or `src/hooks/`.
 
 ---
 
