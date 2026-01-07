@@ -9,7 +9,7 @@ import type { ExplorerViewMode } from "@/types/explorer";
 interface ExplorerContextType {
   // State
   listing: FolderListing;
-  selectedFiles: Set<string>;
+  selectedFiles: Record<string, FileRow>;
   selectedEntries: FileRow[];
   selectedCount: number;
   lastClickedFile: { file: FileRow; columnPath?: string } | null;
@@ -29,6 +29,7 @@ interface ExplorerContextType {
   toggleFileSelection: (row: FileRow) => void;
   removeSelection: (path: string) => void;
   clearSelections: () => void;
+  updateLastClickedFile: (file: FileRow, columnPath?: string) => void;
   clearLastClickedFile: () => void;
   focusFile: (row: FileRow, columnPath?: string) => void;
   clearFocus: () => void;
@@ -73,6 +74,7 @@ export const ExplorerProvider = ({
     toggleFileSelection,
     removeSelection,
     clearSelections,
+    updateLastClickedFile,
     clearLastClickedFile,
     focusFile,
     clearFocus,
@@ -109,6 +111,7 @@ export const ExplorerProvider = ({
       toggleFileSelection,
       removeSelection,
       clearSelections,
+      updateLastClickedFile,
       clearLastClickedFile,
       focusFile,
       clearFocus,
@@ -138,6 +141,7 @@ export const ExplorerProvider = ({
       toggleFileSelection,
       removeSelection,
       clearSelections,
+      updateLastClickedFile,
       clearLastClickedFile,
       focusFile,
       clearFocus,
