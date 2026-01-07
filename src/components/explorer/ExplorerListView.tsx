@@ -13,7 +13,7 @@ export interface ExplorerListViewProps {
   /** The item that was most recently clicked (used for range selection) */
   lastClickedId?: string | null;
   /** The item that currently has focus */
-  focusedId: string | null;
+  focusedId?: string | null;
   /** Callback when an item is clicked */
   onItemClick: (item: ExplorerItem, event: React.MouseEvent) => void;
   /** Callback when an item is double clicked */
@@ -89,13 +89,13 @@ export const ExplorerListView = ({
     );
   }
 
-  return (
-    <div
-      tabIndex={0}
-      className={cn("outline-none focus:outline-none", className)}
-    >
-      {/* Header (Only for List view) */}
-      {isList && (
+    return (
+      <div 
+        tabIndex={0} 
+        className={cn("outline-none focus:outline-none", className)}
+        data-testid="explorer-list-view"
+      >
+        {/* Header (Only for List view) */}      {isList && (
         <div className="grid cursor-default select-none grid-cols-[minmax(0,1fr)_160px_170px] gap-3 border-b border-border/50 px-3 py-2 text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           <span>Name</span>
           <span>Kind</span>

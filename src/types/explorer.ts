@@ -64,7 +64,7 @@ export interface ExplorerSelection {
   /** Map of selected item IDs to their item data */
   selectedIds: Record<string, ExplorerItem>;
   /** The item that was most recently clicked (used for range selection) */
-  lastClickedId: string | null;
+  lastClickedId?: string | null;
   /** The item that currently has focus (e.g., for keyboard navigation) */
-  focusedId: string | null;
+  focusedId?: string | null;
 }
