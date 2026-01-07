@@ -1,5 +1,8 @@
 // Components
-export { FileExplorerView } from "./components/FileExplorerView";
+export { ExplorerPage } from "./components/ExplorerPage";
+
+// Context
+export { ExplorerProvider, useExplorerContext } from "./context/ExplorerContext";
 
 // Hooks
 export { useFileSelection } from "./hooks/use-file-selection";

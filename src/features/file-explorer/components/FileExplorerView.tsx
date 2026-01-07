@@ -1,18 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { BrowserToolbar } from "./BrowserToolbar";
 import { ColumnView } from "./ColumnView";
 import { FileListView } from "./FileListView";
 import { PathBar } from "./PathBar";
 import { SelectionSheet } from "./SelectionSheet";
-import { useFileSelection } from "../hooks/use-file-selection";
-import { useFolderListing } from "../hooks/use-folder-listing";
-import { useQuickLook } from "../hooks/use-quick-look";
-import { useExplorerViewState } from "@/hooks/explorer/useExplorerViewState";
+import { useExplorerContext } from "../context/ExplorerContext";
 import { listen } from "@tauri-apps/api/event";
 import type { FileRow, LocationItem } from "@/types/fs";
-import { getPathBaseName } from "@/lib/path-utils";
 import { folderToFileRow } from "@/lib/explorer-utils";
-import type { ExplorerViewMode } from "@/types/explorer";
 
 interface QuickLookEvent {
   key: string;
@@ -32,11 +27,12 @@ export const FileExplorerView = ({
   folderId,
   onSelectFolder,
 }: FileExplorerViewProps) => {
-  const { listing, ensureListing, getListingForPath } = useFolderListing(folderId, locations);
   const {
+    listing,
+    ensureListing,
+    getListingForPath,
     selectedFiles,
     selectedEntries,
-    selectedCount,
     lastClickedFile,
     focusedFile,
     selectFile,
@@ -45,15 +41,16 @@ export const FileExplorerView = ({
     toggleFileSelection,
     removeSelection,
     clearSelections,
-    clearLastClickedFile,
     focusFile,
     clearFocus,
-  } = useFileSelection();
-  const { isPreviewActive, togglePreview, updatePreview, closePreview } = useQuickLook();
-  const { viewMode, setViewMode } = useExplorerViewState({ initialViewMode: "list" });
-  const [isSelectionOpen, setIsSelectionOpen] = useState(false);
-
-  const currentFolderName = folderId ? getPathBaseName(folderId) : "Select a folder";
+    isPreviewActive,
+    togglePreview,
+    updatePreview,
+    closePreview,
+    viewMode,
+    isSelectionOpen,
+    setIsSelectionOpen,
+  } = useExplorerContext();
 
   const handleFileSelection = useCallback(
     (row: FileRow, options?: { additive?: boolean }) => {
@@ -247,25 +244,9 @@ export const FileExplorerView = ({
     };
   }, [listing, selectMultiple, clearSelections, clearFocus, focusedFile, viewMode, folderId, onSelectFolder, focusFile, toggleFileSelection, selectRange, lastClickedFile, getListingForPath, isPreviewActive, togglePreview, closePreview]);
 
-  useEffect(() => {
-    if (viewMode === "column") return;
-
-    clearLastClickedFile();
-    clearFocus();
-  }, [folderId, viewMode, clearLastClickedFile, clearFocus]);
-
   return (
     <section className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-      <BrowserToolbar
-        currentFolderName={currentFolderName}
-        viewMode={viewMode}
-        onViewModeChange={(mode: ExplorerViewMode) => setViewMode(mode)}
-        fileCount={listing.fileCount}
-        folderCount={listing.folderCount}
-        selectedCount={selectedCount}
-        isSelectionOpen={isSelectionOpen}
-        onToggleSelection={() => setIsSelectionOpen((prev) => !prev)}
-      />
+      <BrowserToolbar />
 
       <SelectionSheet
         isOpen={isSelectionOpen}

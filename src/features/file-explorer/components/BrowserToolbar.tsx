@@ -1,37 +1,30 @@
 import { ExplorerToolbar } from "@/components/explorer/ExplorerToolbar";
-import type { ExplorerViewMode } from "@/types/explorer";
+import { useExplorerContext } from "../context/ExplorerContext";
+import { getPathBaseName } from "@/lib/path-utils";
 
-type BrowserToolbarProps = {
-  currentFolderName: string;
-  viewMode: ExplorerViewMode;
-  onViewModeChange: (mode: ExplorerViewMode) => void;
-  fileCount: number;
-  folderCount: number;
-  selectedCount: number;
-  isSelectionOpen: boolean;
-  onToggleSelection: () => void;
-};
+export const BrowserToolbar = () => {
+  const {
+    folderId,
+    viewMode,
+    setViewMode,
+    listing,
+    selectedCount,
+    isSelectionOpen,
+    setIsSelectionOpen,
+  } = useExplorerContext();
 
-export const BrowserToolbar = ({
-  currentFolderName,
-  viewMode,
-  onViewModeChange,
-  fileCount,
-  folderCount,
-  selectedCount,
-  isSelectionOpen,
-  onToggleSelection,
-}: BrowserToolbarProps) => {
+  const currentFolderName = folderId ? getPathBaseName(folderId) : "Select a folder";
+
   return (
     <ExplorerToolbar
       title={currentFolderName}
       viewMode={viewMode}
-      onViewModeChange={onViewModeChange}
-      fileCount={fileCount}
-      folderCount={folderCount}
+      onViewModeChange={setViewMode}
+      fileCount={listing.fileCount}
+      folderCount={listing.folderCount}
       selectedCount={selectedCount}
       isSelectionOpen={isSelectionOpen}
-      onToggleSelection={onToggleSelection}
+      onToggleSelection={() => setIsSelectionOpen(!isSelectionOpen)}
       disabledViewModes={["grid"]}
     />
   );

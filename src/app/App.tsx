@@ -1,4 +1,4 @@
-import { FileExplorerView, useLocations } from "@/features/file-explorer";
+import { ExplorerPage, useLocations } from "@/features/file-explorer";
 import { CollectionsSidebarSection, CollectionsView } from "@/features/collections";
 import { useNavigation, NavigationProvider } from "@/hooks/use-navigation";
 import { MainLayout } from "./MainLayout";
@@ -22,7 +22,7 @@ function AppInner() {
     switch (currentRoute.type) {
       case "explorer":
         return (
-          <FileExplorerView
+          <ExplorerPage
             locations={locations}
             folderId={currentRoute.folderId}
             onSelectFolder={navigateToExplorer}
