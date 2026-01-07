@@ -59,9 +59,17 @@ describe('CollectionsView', () => {
     });
   });
 
-  it('renders collection name', () => {
-    render(<CollectionsView collectionId={1} />);
-    expect(screen.getByText('My Collection')).toBeDefined();
+  it('renders item list', () => {
+    render(<CollectionsView collectionId="1" />);
+    expect(screen.getByText(/file1.txt/i)).toBeDefined();
+  });
+
+  it('does not render toolbar', () => {
+    render(<CollectionsView collectionId="1" />);
+    // ExplorerToolbar title
+    expect(screen.queryByText('Collection Toolbar (Placeholder)')).toBeNull();
+    // Previous internal toolbar title
+    expect(screen.queryByText('My Collection', { selector: '.toolbar-title-class' })).toBeNull();
   });
 
   it('renders loading state', () => {
@@ -76,12 +84,12 @@ describe('CollectionsView', () => {
       relinkFolder: vi.fn(),
     });
 
-    render(<CollectionsView collectionId={1} />);
+    render(<CollectionsView collectionId="1" />);
     expect(screen.getByText('Loading items...')).toBeDefined();
   });
 
   it('renders file list when items loaded', () => {
-    render(<CollectionsView collectionId={1} />);
+    render(<CollectionsView collectionId="1" />);
     expect(screen.getByTestId('explorer-list-view')).toBeDefined();
   });
 
@@ -109,7 +117,7 @@ describe('CollectionsView', () => {
       relinkFolder: vi.fn(),
     });
 
-    render(<CollectionsView collectionId={1} />);
+    render(<CollectionsView collectionId="1" />);
     expect(screen.getByText(/missing/i)).toBeDefined(); 
   });
 
@@ -124,7 +132,7 @@ describe('CollectionsView', () => {
       refetch: vi.fn(),
     });
 
-    render(<CollectionsView collectionId={999} />);
+    render(<CollectionsView collectionId="999" />);
     expect(screen.getByText('Collection not found')).toBeDefined();
   });
 });

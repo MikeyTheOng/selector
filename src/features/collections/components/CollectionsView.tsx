@@ -5,23 +5,22 @@ import { useCollectionItems } from "../hooks/use-collection-items";
 import { useCollectionSelection, collectionItemToExplorerItem } from "../hooks/use-collection-selection";
 import { useExplorerViewState } from "@/hooks/explorer/useExplorerViewState";
 import { ExplorerListView } from "@/components/explorer/ExplorerListView";
-import { ExplorerToolbar } from "@/components/explorer/ExplorerToolbar";
 import { ExplorerSelectionSheet } from "@/components/explorer/ExplorerSelectionSheet";
 import { CollectionRowLabel } from "./CollectionRowLabel";
 import type { ExplorerItem, ExplorerItemStatus } from "@/types/explorer";
 
 interface CollectionsViewProps {
-  collectionId: number;
+  collectionId: string;
 }
 
 export const CollectionsView: React.FC<CollectionsViewProps> = ({
   collectionId,
 }) => {
+  const parsedId = parseInt(collectionId, 10);
   const { collections } = useCollections();
-  const { items, isLoading, relinkItem, relinkFolder } = useCollectionItems(collectionId);
+  const { items, isLoading, relinkItem, relinkFolder } = useCollectionItems(parsedId);
   const { 
     selectedItems, 
-    selectedCount,
     selectedEntries,
     focusedItem,
     lastClickedItem,
@@ -32,10 +31,10 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
     removeSelection,
     clearSelections
   } = useCollectionSelection();
-  const { viewMode, setViewMode } = useExplorerViewState({ initialViewMode: "list" });
+  const { viewMode } = useExplorerViewState({ initialViewMode: "list" });
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
 
-  const collection = collections.find((c) => c.id === collectionId);
+  const collection = collections.find((c) => c.id === parsedId);
 
   const handleActivateItem = async (item: ExplorerItem) => {
     // Only handle missing/offline items for relinking
@@ -65,9 +64,6 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
   const explorerItems = useMemo(() => 
     items.map(collectionItemToExplorerItem), 
   [items]);
-
-  const fileCount = useMemo(() => items.filter(i => i.item_type === "file").length, [items]);
-  const folderCount = useMemo(() => items.filter(i => i.item_type === "folder").length, [items]);
 
   const handleItemClick = (item: ExplorerItem, event: React.MouseEvent) => {
     const originalItem = items.find(i => i.path === item.id);
@@ -108,18 +104,6 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <ExplorerToolbar
-        title={collection.name}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        fileCount={fileCount}
-        folderCount={folderCount}
-        selectedCount={selectedCount}
-        isSelectionOpen={isSelectionOpen}
-        onToggleSelection={() => setIsSelectionOpen(!isSelectionOpen)}
-        disabledViewModes={["column", "grid"]}
-      />
-
       <ExplorerSelectionSheet
         isOpen={isSelectionOpen}
         entries={selectedEntries}
