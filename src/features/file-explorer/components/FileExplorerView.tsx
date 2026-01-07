@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { BrowserToolbar } from "./BrowserToolbar";
 import { ColumnView } from "./ColumnView";
 import { FileListView } from "./FileListView";
-import { LocationsSidebar } from "./LocationsSidebar";
 import { PathBar } from "./PathBar";
 import { SelectionSheet } from "./SelectionSheet";
 import { useFileSelection } from "../hooks/use-file-selection";
@@ -24,35 +23,16 @@ interface QuickLookEvent {
 
 type FileExplorerViewProps = {
   locations: LocationItem[];
-  locationsError: string | null;
-  selectedFolder: string | null;
+  folderId: string | null;
   onSelectFolder: (path: string) => void;
-  canGoBack: boolean;
-  canGoForward: boolean;
-  onBack: () => void;
-  onForward: () => void;
-  /** Optional slot for injecting external action UI into the SelectionSheet */
-  selectionActions?: (entries: FileRow[]) => React.ReactNode;
-  /** Optional slot for injecting Collections UI into the sidebar */
-  renderCollections?: () => React.ReactNode;
-  /** Optional slot to override the main content area */
-  renderMainContent?: () => React.ReactNode;
 };
 
 export const FileExplorerView = ({
   locations,
-  locationsError,
-  selectedFolder,
+  folderId,
   onSelectFolder,
-  canGoBack,
-  canGoForward,
-  onBack,
-  onForward,
-  selectionActions,
-  renderCollections,
-  renderMainContent,
 }: FileExplorerViewProps) => {
-  const { listing, ensureListing, getListingForPath } = useFolderListing(selectedFolder, locations);
+  const { listing, ensureListing, getListingForPath } = useFolderListing(folderId, locations);
   const {
     selectedFiles,
     selectedEntries,
@@ -73,7 +53,7 @@ export const FileExplorerView = ({
   const { viewMode, setViewMode } = useExplorerViewState({ initialViewMode: "list" });
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
 
-  const currentFolderName = selectedFolder ? getPathBaseName(selectedFolder) : "Select a folder";
+  const currentFolderName = folderId ? getPathBaseName(folderId) : "Select a folder";
 
   const handleFileSelection = useCallback(
     (row: FileRow, options?: { additive?: boolean }) => {
@@ -179,8 +159,8 @@ export const FileExplorerView = ({
           if (event.key === "ArrowLeft") {
             event.preventDefault();
             // Go up to parent folder
-            if (selectedFolder) {
-              const segments = selectedFolder.split("/").filter(Boolean);
+            if (folderId) {
+              const segments = folderId.split("/").filter(Boolean);
               if (segments.length > 1) {
                 const parentPath = "/" + segments.slice(0, -1).join("/");
                 onSelectFolder(parentPath);
@@ -196,7 +176,7 @@ export const FileExplorerView = ({
             }
           } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
             event.preventDefault();
-            const currentListing = getListingForPath(selectedFolder || "");
+            const currentListing = getListingForPath(folderId || "");
             if (!currentListing) return;
 
             const allRows = [
@@ -207,7 +187,7 @@ export const FileExplorerView = ({
             if (allRows.length === 0) return;
 
             let nextIndex = -1;
-            if (!focusedFile || focusedFile.columnPath !== selectedFolder) {
+            if (!focusedFile || focusedFile.columnPath !== folderId) {
               nextIndex = event.key === "ArrowUp" ? allRows.length - 1 : 0;
             } else {
               const currentIndex = allRows.findIndex(r => r.path === focusedFile.file.path);
@@ -220,11 +200,11 @@ export const FileExplorerView = ({
 
             if (nextIndex !== -1) {
               const nextRow = allRows[nextIndex];
-              if (isShift && lastClickedFile && lastClickedFile.columnPath === selectedFolder) {
+              if (isShift && lastClickedFile && lastClickedFile.columnPath === folderId) {
                 selectRange(lastClickedFile.file, nextRow, allRows);
-                focusFile(nextRow, selectedFolder || undefined);
+                focusFile(nextRow, folderId || undefined);
               } else {
-                focusFile(nextRow, selectedFolder || undefined);
+                focusFile(nextRow, folderId || undefined);
               }
             }
           }
@@ -265,100 +245,77 @@ export const FileExplorerView = ({
       window.removeEventListener("keydown", handleKeyDown);
       unlistenPromise.then(fn => fn());
     };
-  }, [listing, selectMultiple, clearSelections, clearFocus, focusedFile, viewMode, selectedFolder, onSelectFolder, focusFile, toggleFileSelection, selectRange, lastClickedFile, getListingForPath, isPreviewActive, togglePreview, closePreview]);
+  }, [listing, selectMultiple, clearSelections, clearFocus, focusedFile, viewMode, folderId, onSelectFolder, focusFile, toggleFileSelection, selectRange, lastClickedFile, getListingForPath, isPreviewActive, togglePreview, closePreview]);
 
   useEffect(() => {
     if (viewMode === "column") return;
 
     clearLastClickedFile();
     clearFocus();
-  }, [selectedFolder, viewMode, clearLastClickedFile, clearFocus]);
+  }, [folderId, viewMode, clearLastClickedFile, clearFocus]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-      <LocationsSidebar
-        locations={locations}
-        locationsError={locationsError}
-        selectedFolder={selectedFolder}
-        onSelectFolder={onSelectFolder}
-        renderCollections={renderCollections}
+    <section className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+      <BrowserToolbar
+        currentFolderName={currentFolderName}
+        viewMode={viewMode}
+        onViewModeChange={(mode: ExplorerViewMode) => setViewMode(mode)}
+        fileCount={listing.fileCount}
+        folderCount={listing.folderCount}
+        selectedCount={selectedCount}
+        isSelectionOpen={isSelectionOpen}
+        onToggleSelection={() => setIsSelectionOpen((prev) => !prev)}
       />
 
-      <section className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-        {!renderMainContent && (
-          <BrowserToolbar
-            currentFolderName={currentFolderName}
-            canGoBack={canGoBack}
-            canGoForward={canGoForward}
-            onBack={onBack}
-            onForward={onForward}
-            viewMode={viewMode}
-            onViewModeChange={(mode: ExplorerViewMode) => setViewMode(mode)}
-            fileCount={listing.fileCount}
-            folderCount={listing.folderCount}
-            selectedCount={selectedCount}
-            isSelectionOpen={isSelectionOpen}
-            onToggleSelection={() => setIsSelectionOpen((prev) => !prev)}
-          />
-        )}
+      <SelectionSheet
+        isOpen={isSelectionOpen}
+        entries={selectedEntries}
+        onClose={() => setIsSelectionOpen(false)}
+        onRemove={removeSelection}
+        onClear={clearSelections}
+      />
 
-        <SelectionSheet
-          isOpen={isSelectionOpen}
-          entries={selectedEntries}
-          onClose={() => setIsSelectionOpen(false)}
-          onRemove={removeSelection}
-          onClear={clearSelections}
-          renderActions={selectionActions}
-        />
-
-        <div className="flex-1 overflow-auto">
-          {renderMainContent ? (
-            renderMainContent()
-          ) : viewMode === "column" ? (
-            <ColumnView
-              locations={locations}
-              selectedFolder={selectedFolder}
-              selectedFiles={selectedFiles}
-              lastClickedFile={lastClickedFile}
-              focusedFile={focusedFile}
-              getListingForPath={getListingForPath}
-              onEnsureListing={ensureListing}
-              onSelectFolder={onSelectFolder}
-              onSelectFile={handleFileSelection}
-              onSelectRange={selectRange}
-              onFocusFile={focusFile}
-              onToggleFileSelection={toggleFileSelection}
-            />
-          ) : (
-            listing.isLoading ? (
-              <div className="px-4 py-6 text-sm text-muted-foreground">Loading files...</div>
-            ) : listing.error ? (
-              <div className="px-4 py-6 text-sm text-destructive">{listing.error}</div>
-            ) : (
-              <FileListView
-                listing={listing}
-                selectedFiles={selectedFiles}
-                lastClickedFile={lastClickedFile}
-                focusedFile={focusedFile}
-                viewMode={viewMode}
-                onSelectFolder={onSelectFolder}
-                onSelectFile={handleFileSelection}
-                onSelectRange={selectRange}
-                onFocusFile={focusFile}
-                onToggleFileSelection={toggleFileSelection}
-              />
-            )
-          )}
-        </div>
-
-        {!renderMainContent && (
-          <PathBar
-            selectedFolder={selectedFolder}
+      <div className="flex-1 overflow-auto">
+        {viewMode === "column" ? (
+          <ColumnView
             locations={locations}
+            selectedFolder={folderId}
+            selectedFiles={selectedFiles}
+            lastClickedFile={lastClickedFile}
+            focusedFile={focusedFile}
+            getListingForPath={getListingForPath}
+            onEnsureListing={ensureListing}
             onSelectFolder={onSelectFolder}
+            onSelectFile={handleFileSelection}
+            onSelectRange={selectRange}
+            onFocusFile={focusFile}
+            onToggleFileSelection={toggleFileSelection}
+          />
+        ) : listing.isLoading ? (
+          <div className="px-4 py-6 text-sm text-muted-foreground">Loading files...</div>
+        ) : listing.error ? (
+          <div className="px-4 py-6 text-sm text-destructive">{listing.error}</div>
+        ) : (
+          <FileListView
+            listing={listing}
+            selectedFiles={selectedFiles}
+            lastClickedFile={lastClickedFile}
+            focusedFile={focusedFile}
+            viewMode={viewMode}
+            onSelectFolder={onSelectFolder}
+            onSelectFile={handleFileSelection}
+            onSelectRange={selectRange}
+            onFocusFile={focusFile}
+            onToggleFileSelection={toggleFileSelection}
           />
         )}
-      </section>
-    </div>
+      </div>
+
+      <PathBar
+        selectedFolder={folderId}
+        locations={locations}
+        onSelectFolder={onSelectFolder}
+      />
+    </section>
   );
 };

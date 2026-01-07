@@ -5,10 +5,6 @@ import { BrowserToolbar } from '../BrowserToolbar';
 describe('BrowserToolbar', () => {
   const defaultProps = {
     currentFolderName: 'Test Folder',
-    canGoBack: true,
-    canGoForward: false,
-    onBack: vi.fn(),
-    onForward: vi.fn(),
     viewMode: 'list' as const,
     onViewModeChange: vi.fn(),
     fileCount: 10,
@@ -27,22 +23,6 @@ describe('BrowserToolbar', () => {
     expect(screen.getByText('Test Folder')).toBeDefined();
   });
 
-  it('handles navigation buttons correctly', () => {
-    render(<BrowserToolbar {...defaultProps} />);
-    
-    const backButton = screen.getByLabelText('Go back');
-    const forwardButton = screen.getByLabelText('Go forward');
-
-    expect(backButton).not.toBeDisabled();
-    expect(forwardButton).toBeDisabled();
-
-    fireEvent.click(backButton);
-    expect(defaultProps.onBack).toHaveBeenCalled();
-
-    fireEvent.click(forwardButton);
-    expect(defaultProps.onForward).not.toHaveBeenCalled();
-  });
-
   it('displays correct counts', () => {
     render(<BrowserToolbar {...defaultProps} />);
     expect(screen.getByText('10 files - 5 folders')).toBeDefined();
@@ -51,10 +31,10 @@ describe('BrowserToolbar', () => {
 
   it('handles view mode change', () => {
     render(<BrowserToolbar {...defaultProps} />);
-    
+
     const columnButton = screen.getByText('Column');
     fireEvent.click(columnButton);
-    
+
     expect(defaultProps.onViewModeChange).toHaveBeenCalledWith('column');
   });
 

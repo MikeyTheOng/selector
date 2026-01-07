@@ -60,13 +60,8 @@ describe('FileExplorerView Integration', () => {
 
   const defaultProps = {
     locations: [],
-    locationsError: null,
-    selectedFolder: '/test',
+    folderId: '/test',
     onSelectFolder: vi.fn(),
-    canGoBack: false,
-    canGoForward: false,
-    onBack: vi.fn(),
-    onForward: vi.fn(),
   };
 
   beforeEach(() => {
