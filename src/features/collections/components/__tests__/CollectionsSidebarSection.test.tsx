@@ -2,9 +2,11 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CollectionsSidebarSection } from '../CollectionsSidebarSection';
 import { useCollections } from '../../hooks/use-collections';
+import { useNavigation } from '@/hooks/use-navigation';
 
 // Mock useCollections hook
 vi.mock('../../hooks/use-collections');
+vi.mock('@/hooks/use-navigation');
 
 describe('CollectionsSidebarSection', () => {
   const mockCollections = [
@@ -12,8 +14,19 @@ describe('CollectionsSidebarSection', () => {
     { id: 2, name: 'Work', created_at: '', updated_at: '' }
   ];
 
+  const mockNavigateToCollection = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useNavigation).mockReturnValue({
+      currentRoute: { type: 'explorer', folderId: null },
+      navigateToExplorer: vi.fn(),
+      navigateToCollection: mockNavigateToCollection,
+      canGoBack: false,
+      canGoForward: false,
+      goBack: vi.fn(),
+      goForward: vi.fn(),
+    });
   });
 
   it('renders loading state', () => {
@@ -27,7 +40,7 @@ describe('CollectionsSidebarSection', () => {
       refetch: vi.fn(),
     });
 
-    render(<CollectionsSidebarSection onSelectCollection={vi.fn()} />);
+    render(<CollectionsSidebarSection />);
     expect(screen.getByText('Loading collections...')).toBeDefined();
   });
 
@@ -42,14 +55,13 @@ describe('CollectionsSidebarSection', () => {
       refetch: vi.fn(),
     });
 
-    render(<CollectionsSidebarSection onSelectCollection={vi.fn()} />);
+    render(<CollectionsSidebarSection />);
     expect(screen.getByText('Collections')).toBeDefined();
     expect(screen.getByText('Vacation')).toBeDefined();
     expect(screen.getByText('Work')).toBeDefined();
   });
 
-  it('calls onSelectCollection when clicked', () => {
-    const onSelect = vi.fn();
+  it('calls navigateToCollection when clicked', () => {
     vi.mocked(useCollections).mockReturnValue({
       collections: mockCollections,
       isLoading: false,
@@ -60,10 +72,10 @@ describe('CollectionsSidebarSection', () => {
       refetch: vi.fn(),
     });
 
-    render(<CollectionsSidebarSection onSelectCollection={onSelect} />);
+    render(<CollectionsSidebarSection />);
     
     fireEvent.click(screen.getByText('Vacation'));
-    expect(onSelect).toHaveBeenCalledWith(1);
+    expect(mockNavigateToCollection).toHaveBeenCalledWith('1');
   });
 
   it('renders nothing if no collections', () => {
@@ -77,7 +89,7 @@ describe('CollectionsSidebarSection', () => {
       refetch: vi.fn(),
     });
 
-    const { container } = render(<CollectionsSidebarSection onSelectCollection={vi.fn()} />);
+    const { container } = render(<CollectionsSidebarSection />);
     expect(container.firstChild).toBeNull();
   });
 });

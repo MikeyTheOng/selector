@@ -1,7 +1,10 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LocationsSidebar } from '../LocationsSidebar';
+import { useNavigation } from '@/hooks/use-navigation';
 import type { LocationItem } from '@/types/fs';
+
+vi.mock('@/hooks/use-navigation');
 
 describe('LocationsSidebar', () => {
   const mockLocations: LocationItem[] = [
@@ -9,11 +12,24 @@ describe('LocationsSidebar', () => {
     { path: '/Volumes/Drive', name: 'Drive', kind: 'volume' }
   ];
 
+  const mockNavigateToExplorer = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useNavigation).mockReturnValue({
+      currentRoute: { type: 'explorer', folderId: null },
+      navigateToExplorer: mockNavigateToExplorer,
+      navigateToCollection: vi.fn(),
+      canGoBack: false,
+      canGoForward: false,
+      goBack: vi.fn(),
+      goForward: vi.fn(),
+    });
+  });
+
   const defaultProps = {
     locations: mockLocations,
     locationsError: null,
-    selectedFolder: null,
-    onSelectFolder: vi.fn(),
   };
 
   it('renders home location', () => {
@@ -26,6 +42,12 @@ describe('LocationsSidebar', () => {
     render(<LocationsSidebar {...defaultProps} />);
     expect(screen.getByText('Locations')).toBeDefined();
     expect(screen.getByText('Drive')).toBeDefined();
+  });
+
+  it('calls navigateToExplorer when location clicked', () => {
+    render(<LocationsSidebar {...defaultProps} />);
+    fireEvent.click(screen.getByText('Home'));
+    expect(mockNavigateToExplorer).toHaveBeenCalledWith('/Users/test');
   });
 
   it('renders collections slot when provided', () => {

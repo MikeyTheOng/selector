@@ -1,19 +1,17 @@
 import React from "react";
 import { FolderPlus } from "lucide-react";
 import { useCollections } from "../hooks/use-collections";
+import { useNavigation } from "@/hooks/use-navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface CollectionsSidebarSectionProps {
-  selectedCollectionId?: number | null;
-  onSelectCollection: (id: number) => void;
-}
-
-export const CollectionsSidebarSection: React.FC<CollectionsSidebarSectionProps> = ({
-  selectedCollectionId,
-  onSelectCollection,
-}) => {
+export const CollectionsSidebarSection: React.FC = () => {
   const { collections, isLoading, error } = useCollections();
+  const { currentRoute, navigateToCollection } = useNavigation();
+
+  const selectedCollectionId = currentRoute.type === "collection" 
+    ? parseInt(currentRoute.collectionId, 10) 
+    : null;
 
   if (isLoading) {
     return (
@@ -46,7 +44,7 @@ export const CollectionsSidebarSection: React.FC<CollectionsSidebarSectionProps>
             key={collection.id}
             type="button"
             variant="ghost"
-            onClick={() => onSelectCollection(collection.id)}
+            onClick={() => navigateToCollection(collection.id.toString())}
             className={cn(
               "h-auto w-full justify-start gap-2 rounded-lg px-2 py-2 text-left text-sm hover:text-foreground",
               selectedCollectionId === collection.id
