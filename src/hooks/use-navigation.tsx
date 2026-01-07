@@ -23,7 +23,7 @@ type NavigationContextValue = {
   goForward: () => void;
 };
 
-const NavigationContext = createContext<NavigationContextValue | null>(null);
+export const NavigationContext = createContext<NavigationContextValue | null>(null);
 
 export function NavigationProvider({ children }: { children: ReactNode }) {
   const [navState, setNavState] = useState<NavState>({
