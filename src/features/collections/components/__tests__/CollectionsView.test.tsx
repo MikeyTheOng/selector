@@ -4,16 +4,19 @@ import { CollectionsView } from '../CollectionsView';
 import { useCollections } from '../../hooks/use-collections';
 import { useCollectionItems } from '../../hooks/use-collection-items';
 import type { CollectionItemWithStatus } from '../../types';
-import type { FolderListing } from '@/types/fs';
+import type { ExplorerItem } from '@/types/explorer';
 
 // Mock hooks
 vi.mock('../../hooks/use-collections');
 vi.mock('../../hooks/use-collection-items');
-vi.mock('../CollectionListView', () => ({
-  CollectionListView: ({ listing }: { listing: FolderListing }) => (
-    <div data-testid="file-list-view">
-      {listing.files.map((f) => (
-        <div key={f.path}>{f.name} - {f.kindLabel} - {f.status}</div>
+vi.mock('@/features/file-explorer/components/SelectionSheet', () => ({
+  SelectionSheet: () => <div data-testid="selection-sheet" />
+}));
+vi.mock('@/components/explorer/ExplorerListView', () => ({
+  ExplorerListView: ({ items }: { items: ExplorerItem[] }) => (
+    <div data-testid="explorer-list-view">
+      {items.map((f) => (
+        <div key={f.id}>{f.name} - {f.kindLabel} - {f.status}</div>
       ))}
     </div>
   )
@@ -28,7 +31,7 @@ describe('CollectionsView', () => {
       path: '/test/file1.txt',
       item_type: 'file',
       volume_id: null,
-      added_at: '',
+      added_at: '2024-01-01',
       status: 'available'
     }
   ];
@@ -79,10 +82,10 @@ describe('CollectionsView', () => {
 
   it('renders file list when items loaded', () => {
     render(<CollectionsView collectionId={1} />);
-    expect(screen.getByTestId('file-list-view')).toBeDefined();
+    expect(screen.getByTestId('explorer-list-view')).toBeDefined();
   });
 
-  it('displays missing status for items', () => {
+  it('displays status for items', () => {
     const missingItems: CollectionItemWithStatus[] = [
       {
         id: 2,
@@ -90,7 +93,7 @@ describe('CollectionsView', () => {
         path: '/test/missing.txt',
         item_type: 'file',
         volume_id: null,
-        added_at: '',
+        added_at: '2024-01-01',
         status: 'missing'
       }
     ];
@@ -107,7 +110,6 @@ describe('CollectionsView', () => {
     });
 
     render(<CollectionsView collectionId={1} />);
-    // Based on current implementation which appends status to kindLabel
     expect(screen.getByText(/missing/i)).toBeDefined(); 
   });
 
