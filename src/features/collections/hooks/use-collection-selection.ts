@@ -1,6 +1,7 @@
 import { useCallback, useRef } from "react";
 import { useExplorerSelection } from "@/hooks/explorer/useExplorerSelection";
 import { getPathBaseName } from "@/lib/path-utils";
+import { formatDateTime } from "@/lib/formatters";
 import type { ExplorerItem } from "@/types/explorer";
 import type { CollectionItemWithStatus } from "../types";
 
@@ -16,7 +17,7 @@ export function collectionItemToExplorerItem(item: CollectionItemWithStatus): Ex
     kind: item.item_type,
     status: item.status,
     dateModified: new Date(item.added_at),
-    dateModifiedLabel: new Date(item.added_at).toLocaleDateString(),
+    dateModifiedLabel: formatDateTime(new Date(item.added_at)),
     kindLabel: item.item_type === "folder" ? "Folder" : "File",
     extension: item.item_type === "file" ? name.split(".").pop() || "" : undefined,
   };
