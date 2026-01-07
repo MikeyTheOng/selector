@@ -1,5 +1,5 @@
 import { ExplorerPage, useLocations } from "@/features/file-explorer";
-import { CollectionsSidebarSection, CollectionsView } from "@/features/collections";
+import { CollectionsSidebarSection, CollectionsPage } from "@/features/collections";
 import { useNavigation, NavigationProvider } from "@/hooks/use-navigation";
 import { MainLayout } from "./MainLayout";
 import { AppHeader } from "./AppHeader";
@@ -29,14 +29,14 @@ function AppInner() {
           />
         );
       case "collection":
-        return <CollectionsView collectionId={currentRoute.collectionId} />;
+        return <CollectionsPage collectionId={currentRoute.collectionId} />;
       default:
         return null;
     }
   };
 
   return (
-    <MainLayout sidebar={sidebar} header={<AppHeader />}>
+    <MainLayout sidebar={sidebar} header={null}>
       {renderContent()}
     </MainLayout>
   );

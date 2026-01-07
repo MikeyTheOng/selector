@@ -35,3 +35,4 @@ export { useCollectionItems } from "./hooks/use-collection-items";
 export { AddToCollectionWidget } from "./components/AddToCollectionWidget";
 export { CollectionsSidebarSection } from "./components/CollectionsSidebarSection";
 export { CollectionsView } from "./components/CollectionsView";
+export { CollectionsPage } from "./components/CollectionsPage";

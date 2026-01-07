@@ -6,7 +6,7 @@ describe('MainLayout', () => {
   it('renders sidebar slot', () => {
     const sidebar = <div data-testid="test-sidebar">Test Sidebar</div>;
     render(
-      <MainLayout sidebar={sidebar} header={<div>Header</div>}>
+      <MainLayout sidebar={sidebar}>
         <div>Content</div>
       </MainLayout>
     );
@@ -14,20 +14,9 @@ describe('MainLayout', () => {
     expect(screen.getByText('Test Sidebar')).toBeDefined();
   });
 
-  it('renders header slot', () => {
-    const header = <div data-testid="test-header">Test Header</div>;
-    render(
-      <MainLayout sidebar={<div>Sidebar</div>} header={header}>
-        <div>Content</div>
-      </MainLayout>
-    );
-    expect(screen.getByTestId('test-header')).toBeDefined();
-    expect(screen.getByText('Test Header')).toBeDefined();
-  });
-
   it('renders children content', () => {
     render(
-      <MainLayout sidebar={<div>Sidebar</div>} header={<div>Header</div>}>
+      <MainLayout sidebar={<div>Sidebar</div>}>
         <div data-testid="main-content">Main Content Area</div>
       </MainLayout>
     );
@@ -39,14 +28,12 @@ describe('MainLayout', () => {
     render(
       <MainLayout
         sidebar={<div data-testid="sidebar">Sidebar</div>}
-        header={<div data-testid="header">Header</div>}
       >
         <div data-testid="content">Content</div>
       </MainLayout>
     );
 
     expect(screen.getByTestId('sidebar')).toBeDefined();
-    expect(screen.getByTestId('header')).toBeDefined();
     expect(screen.getByTestId('content')).toBeDefined();
   });
 });
