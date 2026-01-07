@@ -26,7 +26,7 @@ export const SelectionSheet = ({
       isOpen={isOpen}
       entries={entries.map(fileRowToExplorerItem)}
       onClose={onClose}
-      onRemove={onRemove} // id is path for FileRows
+      onRemove={onRemove}
       onClear={onClear}
       renderActions={renderActions ? () => renderActions(entries) : undefined}
     />

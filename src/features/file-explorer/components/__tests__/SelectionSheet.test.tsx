@@ -49,4 +49,16 @@ describe('SelectionSheet', () => {
     expect(screen.getByTestId('custom-actions')).toBeDefined();
     expect(screen.getByText('Custom Actions for 1 items')).toBeDefined();
   });
+
+  it('renders empty state when no entries', () => {
+    render(<SelectionSheet {...defaultProps} entries={[]} />);
+    expect(screen.getByText('No items selected yet.')).toBeDefined();
+  });
+
+  it('calls onClear when clear button clicked', () => {
+    render(<SelectionSheet {...defaultProps} />);
+    const clearButton = screen.getByText('Clear all');
+    fireEvent.click(clearButton);
+    expect(defaultProps.onClear).toHaveBeenCalled();
+  });
 });

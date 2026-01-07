@@ -61,9 +61,11 @@ export const useCollectionItems = (collectionId: number) => {
     error: null,
   });
 
-  const loadItems = useCallback(async () => {
+  const loadItems = useCallback(async (options: { silent?: boolean } = {}) => {
     try {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+      if (!options.silent) {
+        setState((prev) => ({ ...prev, isLoading: true, error: null }));
+      }
       const items = await collectionsService.getCollectionItems(collectionId);
       // Detect status for each item
       const itemsWithStatus = await detectItemsStatus(items);
@@ -85,7 +87,7 @@ export const useCollectionItems = (collectionId: number) => {
   // Auto-recovery: Re-check on window focus
   useEffect(() => {
     const onFocus = () => {
-      loadItems();
+      loadItems({ silent: true });
     };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
@@ -101,7 +103,7 @@ export const useCollectionItems = (collectionId: number) => {
 
     // Poll every 5 seconds to check if volume is back or file is restored
     const interval = setInterval(() => {
-      loadItems();
+      loadItems({ silent: true });
     }, 5000);
 
     return () => clearInterval(interval);

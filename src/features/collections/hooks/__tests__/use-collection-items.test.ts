@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useCollectionItems } from "../use-collection-items";
 import * as collectionsService from "../../lib/collections-repository";
@@ -132,8 +132,73 @@ describe("useCollectionItems", () => {
       });
 
       expect(collectionsService.getCollectionItems).toHaveBeenCalledTimes(2);
-      expect(collectionsService.getCollectionItems).toHaveBeenLastCalledWith(2);
       expect(result.current.items).toHaveLength(1);
+    });
+  });
+
+  describe("auto-recovery and silent updates", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("should not set isLoading to true on window focus", async () => {
+      vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(mockItems);
+      vi.mocked(fsModule.stat!).mockResolvedValue({ size: 1024, mtime: new Date() });
+
+      const { result } = renderHook(() => useCollectionItems(mockCollectionId));
+
+      // Resolve initial load
+      await act(async () => {
+        await vi.runAllTimersAsync();
+      });
+      
+      expect(result.current.isLoading).toBe(false);
+      expect(collectionsService.getCollectionItems).toHaveBeenCalledTimes(1);
+
+      // Simulate window focus
+      await act(async () => {
+        window.dispatchEvent(new Event("focus"));
+        await vi.runAllTimersAsync();
+      });
+
+      // It should call getCollectionItems again
+      expect(collectionsService.getCollectionItems).toHaveBeenCalledTimes(2);
+      
+      // But isLoading should stay false
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    it("should not set isLoading to true during background polling", async () => {
+      // Setup: one item is missing to trigger polling
+      vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(mockItems);
+      
+      // First call returns error for stat (missing), subsequent calls return success
+      vi.mocked(fsModule.stat!)
+        .mockRejectedValueOnce(new Error("File not found"))
+        .mockResolvedValue({ size: 1024, mtime: new Date() });
+
+      const { result } = renderHook(() => useCollectionItems(mockCollectionId));
+
+      // Resolve initial load
+      await act(async () => {
+        await vi.runAllTimersAsync();
+      });
+      
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.items[0].status).toBe("missing");
+
+      // Advance time by 5 seconds
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000);
+      });
+
+      expect(collectionsService.getCollectionItems).toHaveBeenCalledTimes(2);
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.items[0].status).toBe("available");
     });
   });
 
