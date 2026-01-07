@@ -36,7 +36,7 @@ prevents cross-feature coupling, and scales from small tools to larger products.
 ### Layer 1 — Shared (Global)
 Folders:
 - `docs/`
-- `src/components/`
+- `src/components/` (specifically `src/components/ui/`)
 - `src/hooks/`
 - `src/lib/`
 
@@ -48,10 +48,19 @@ Rules:
 - May import from other shared folders.
 - Avoid business logic.
 
-Examples:
-- `src/components/ui/button.tsx`
-- `src/lib/tauri.ts` (thin IPC wrapper)
-- `src/hooks/useDebounce.ts`
+### Layer 1.2 — Shared Domain Components
+Folders:
+- `src/components/explorer/`
+- `src/hooks/explorer/`
+
+Purpose:
+- Domain-aware UI primitives and logic shared between multiple features (e.g., `file-explorer` and `collections`).
+- These are more specialized than generic UI components but more generic than feature-specific components.
+
+Rules:
+- Do not import from `src/features/` or `src/app/`.
+- May import from Layer 1 (Shared Global).
+- Used by multiple features to enforce UI/UX consistency across similar domain concepts (like "browsing items").
 
 ### Layer 1.5 — Test Utilities
 Folder: `src/test/`
