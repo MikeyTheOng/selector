@@ -2,7 +2,6 @@ import { ExplorerPage, useLocations } from "@/features/file-explorer";
 import { CollectionsSidebarSection, CollectionsPage } from "@/features/collections";
 import { useNavigation, NavigationProvider } from "@/hooks/use-navigation";
 import { MainLayout } from "./MainLayout";
-import { AppHeader } from "./AppHeader";
 import { LocationsSidebar } from "@/features/file-explorer/components/LocationsSidebar";
 import { TextScaleProvider } from "@/providers/TextScaleProvider";
 
@@ -36,7 +35,7 @@ function AppInner() {
   };
 
   return (
-    <MainLayout sidebar={sidebar} header={null}>
+    <MainLayout sidebar={sidebar}>
       {renderContent()}
     </MainLayout>
   );

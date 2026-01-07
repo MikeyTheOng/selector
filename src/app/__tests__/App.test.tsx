@@ -10,13 +10,13 @@ vi.mock('@/features/file-explorer/hooks/use-locations');
 vi.mock('@/features/collections/hooks/use-collections');
 
 // Mock child components to keep integration test focused on routing
-vi.mock('@/features/file-explorer/components/FileExplorerView', () => ({
-  FileExplorerView: vi.fn(() => <div data-testid="explorer-view">Explorer View</div>)
+vi.mock('@/features/file-explorer/components/ExplorerPage', () => ({
+  ExplorerPage: vi.fn(() => <div data-testid="explorer-page">Explorer Page</div>)
 }));
 
-vi.mock('@/features/collections/components/CollectionsView', () => ({
-  CollectionsView: ({ collectionId }: { collectionId: string }) => (
-    <div data-testid="collections-view">Collections View: {collectionId}</div>
+vi.mock('@/features/collections/components/CollectionsPage', () => ({
+  CollectionsPage: ({ collectionId }: { collectionId: string }) => (
+    <div data-testid="collections-page">Collections Page: {collectionId}</div>
   )
 }));
 
@@ -30,7 +30,6 @@ describe('App Routing Integration', () => {
     vi.clearAllMocks();
     vi.mocked(useLocations).mockReturnValue({
       locations: [],
-      isLoading: false,
       error: null,
       homePath: '/home/user',
     });
@@ -49,19 +48,14 @@ describe('App Routing Integration', () => {
     return render(<App />);
   };
 
-  it('renders explorer view by default', () => {
+  it('renders explorer page by default', () => {
     renderApp();
-    expect(screen.getByTestId('explorer-view')).toBeDefined();
+    expect(screen.getByTestId('explorer-page')).toBeDefined();
   });
 
-  it('renders collections view when route is collection', async () => {
-    // We need to trigger navigation. Since App wraps everything in NavigationProvider,
-    // we can't easily inject a trigger from outside without duplicating providers.
-    // Instead, we can mock one of the components that App renders to include a trigger.
-    
-    // We'll use the already mocked FileExplorerView as a trigger
-    const { FileExplorerView } = await import('@/features/file-explorer/components/FileExplorerView');
-    vi.mocked(FileExplorerView).mockImplementation(() => {
+  it('renders collections page when route is collection', async () => {
+    const { ExplorerPage } = await import('@/features/file-explorer/components/ExplorerPage');
+    vi.mocked(ExplorerPage).mockImplementation(() => {
       const { navigateToCollection } = useNavigation();
       return (
         <button 
@@ -81,7 +75,7 @@ describe('App Routing Integration', () => {
       fireEvent.click(button);
     });
 
-    expect(screen.getByTestId('collections-view')).toBeDefined();
-    expect(screen.getByText(/Collections View: 5/i)).toBeDefined();
+    expect(screen.getByTestId('collections-page')).toBeDefined();
+    expect(screen.getByText(/Collections Page: 5/i)).toBeDefined();
   });
 });
