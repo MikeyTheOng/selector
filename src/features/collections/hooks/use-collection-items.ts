@@ -82,6 +82,31 @@ export const useCollectionItems = (collectionId: number) => {
     loadItems();
   }, [loadItems]);
 
+  // Auto-recovery: Re-check on window focus
+  useEffect(() => {
+    const onFocus = () => {
+      loadItems();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [loadItems]);
+
+  // Auto-recovery: Poll for missing/offline items
+  useEffect(() => {
+    const hasMissingOrOffline = state.items.some(
+      (item) => item.status === "missing" || item.status === "offline"
+    );
+
+    if (!hasMissingOrOffline) return;
+
+    // Poll every 5 seconds to check if volume is back or file is restored
+    const interval = setInterval(() => {
+      loadItems();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [state.items, loadItems]);
+
   const addItem = useCallback(
     async (input: AddCollectionItemInput): Promise<CollectionItem> => {
       const item = await collectionsService.addItemToCollection(input);

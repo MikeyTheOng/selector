@@ -117,6 +117,7 @@ export const CollectionListView = ({
                         <CollectionRowLabel
                           name={row.name}
                           type={row.type}
+                          status={row.row.status}
                           iconClassName={cn(
                             row.type === "folder"
                               ? isSelected ? "text-primary-foreground" : "text-primary"
