@@ -1,115 +1,159 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import type { FileRow, LastClickedFile } from "@/types/fs";
+import { useExplorerSelection } from "@/hooks/explorer/useExplorerSelection";
+import { fileRowToExplorerItem } from "@/lib/explorer-utils";
 
 export const useFileSelection = () => {
-  const [selectedFiles, setSelectedFiles] = useState<Record<string, FileRow>>({});
-  const [lastClickedFile, setLastClickedFile] = useState<LastClickedFile | null>(null);
-  const [focusedFile, setFocusedFile] = useState<LastClickedFile | null>(null);
+  const {
+    selectedItems,
+    selectedCount,
+    lastClickedItem,
+    focusedItem,
+    selectItem,
+    selectMultiple: genericSelectMultiple,
+    selectRange: genericSelectRange,
+    toggleSelection,
+    removeSelection,
+    clearSelections: genericClearSelections,
+    updateLastClickedItem: genericUpdateLastClickedItem,
+    clearLastClickedItem: clearLastClickedFile,
+    focusItem: genericFocusItem,
+    clearFocus,
+  } = useExplorerSelection();
+
+  // Keep a cache of original FileRow objects to maintain referential identity
+  const fileRowCache = useRef<Record<string, FileRow>>({});
+
+  // Sync cache with selectedItems and prune old entries
+  const selectedFiles = useMemo(() => {
+    const result: Record<string, FileRow> = {};
+    Object.keys(selectedItems).forEach((id) => {
+      if (fileRowCache.current[id]) {
+        result[id] = fileRowCache.current[id];
+      } else {
+        // Fallback reconstruction if not in cache (should be rare if using selectFile)
+        const item = selectedItems[id];
+        result[id] = {
+          path: item.path,
+          name: item.name,
+          extension: item.extension || "",
+          kindLabel: item.kindLabel || (item.kind === "folder" ? "Folder" : "File"),
+          size: item.size,
+          sizeLabel: item.sizeLabel || "",
+          dateModified: item.dateModified || null,
+          dateModifiedLabel: item.dateModifiedLabel || "",
+          status: item.status as FileRow["status"],
+        };
+      }
+    });
+    
+    // Prune cache to only selected items + focused/last clicked to prevent memory leaks
+    const newCache: Record<string, FileRow> = {};
+    Object.keys(result).forEach(id => {
+      newCache[id] = result[id];
+    });
+    if (lastClickedItem && fileRowCache.current[lastClickedItem.item.id]) {
+      newCache[lastClickedItem.item.id] = fileRowCache.current[lastClickedItem.item.id];
+    }
+    if (focusedItem && fileRowCache.current[focusedItem.item.id]) {
+      newCache[focusedItem.item.id] = fileRowCache.current[focusedItem.item.id];
+    }
+    fileRowCache.current = newCache;
+    
+    return result;
+  }, [selectedItems, lastClickedItem, focusedItem]);
 
   const selectedEntries = useMemo(
     () => Object.values(selectedFiles).sort((a, b) => a.name.localeCompare(b.name)),
     [selectedFiles],
   );
-  const selectedCount = selectedEntries.length;
+
+  const lastClickedFile = useMemo(() => {
+    if (!lastClickedItem) return null;
+    return {
+      file: fileRowCache.current[lastClickedItem.item.id] || {
+        path: lastClickedItem.item.path,
+        name: lastClickedItem.item.name,
+        extension: lastClickedItem.item.extension || "",
+        kindLabel: lastClickedItem.item.kindLabel || "",
+        sizeLabel: lastClickedItem.item.sizeLabel || "",
+        dateModified: lastClickedItem.item.dateModified || null,
+        dateModifiedLabel: lastClickedItem.item.dateModifiedLabel || "",
+      },
+      columnPath: lastClickedItem.context,
+    };
+  }, [lastClickedItem]);
+
+  const focusedFile = useMemo(() => {
+    if (!focusedItem) return null;
+    return {
+      file: fileRowCache.current[focusedItem.item.id] || {
+        path: focusedItem.item.path,
+        name: focusedItem.item.name,
+        extension: focusedItem.item.extension || "",
+        kindLabel: focusedItem.item.kindLabel || "",
+        sizeLabel: focusedItem.item.sizeLabel || "",
+        dateModified: focusedItem.item.dateModified || null,
+        dateModifiedLabel: focusedItem.item.dateModifiedLabel || "",
+      },
+      columnPath: focusedItem.context,
+    };
+  }, [focusedItem]);
 
   const selectFile = useCallback((row: FileRow, options?: { additive?: boolean }) => {
-    setSelectedFiles((prev) => {
-      if (options?.additive) {
-        if (prev[row.path]) {
-          return prev;
-        }
-        return { ...prev, [row.path]: row };
-      }
-      return { [row.path]: row };
-    });
-  }, []);
+    fileRowCache.current[row.path] = row;
+    selectItem(fileRowToExplorerItem(row), options);
+  }, [selectItem]);
 
   const selectMultiple = useCallback((rows: FileRow[], options?: { additive?: boolean }) => {
-    setSelectedFiles((prev) => {
-      if (options?.additive) {
-        const next = { ...prev };
-        rows.forEach((row) => {
-          next[row.path] = row;
-        });
-        return next;
-      }
-      return Object.fromEntries(rows.map((row) => [row.path, row] as const));
+    rows.forEach(row => {
+      fileRowCache.current[row.path] = row;
     });
-  }, []);
+    genericSelectMultiple(rows.map(fileRowToExplorerItem), options);
+  }, [genericSelectMultiple]);
 
   const toggleFileSelection = useCallback((row: FileRow) => {
-    setSelectedFiles((prev) => {
-      const next = { ...prev };
-      if (next[row.path]) {
-        delete next[row.path];
-      } else {
-        next[row.path] = row;
-      }
-      return next;
-    });
-  }, []);
-
-  const removeSelection = useCallback((path: string) => {
-    setSelectedFiles((prev) => {
-      if (!prev[path]) {
-        return prev;
-      }
-      const next = { ...prev };
-      delete next[path];
-      return next;
-    });
-  }, []);
-
-  const clearSelections = useCallback(() => {
-    setSelectedFiles({});
-    setLastClickedFile(null);
-  }, []);
+    if (!selectedItems[row.path]) {
+      fileRowCache.current[row.path] = row;
+    }
+    toggleSelection(fileRowToExplorerItem(row));
+  }, [toggleSelection, selectedItems]);
 
   const selectRange = useCallback(
     (from: FileRow, to: FileRow, allFiles: FileRow[]) => {
-      const fromIndex = allFiles.findIndex((f) => f.path === from.path);
-      const toIndex = allFiles.findIndex((f) => f.path === to.path);
-      if (fromIndex === -1 || toIndex === -1) return;
-
-      const start = Math.min(fromIndex, toIndex);
-      const end = Math.max(fromIndex, toIndex);
-      const rangeFiles = allFiles.slice(start, end + 1);
-
-      setSelectedFiles((prev) => {
-        const next = { ...prev };
-        rangeFiles.forEach((file) => {
-          next[file.path] = file;
-        });
-        return next;
+      allFiles.forEach(row => {
+        fileRowCache.current[row.path] = row;
       });
+      genericSelectRange(
+        fileRowToExplorerItem(from),
+        fileRowToExplorerItem(to),
+        allFiles.map(fileRowToExplorerItem)
+      );
     },
-    [],
+    [genericSelectRange],
   );
 
-  const updateLastClickedFile = useCallback((file: FileRow, columnPath?: string) => {
-    setLastClickedFile({ file, columnPath });
-  }, []);
+  const clearSelections = useCallback(() => {
+    fileRowCache.current = {};
+    genericClearSelections();
+  }, [genericClearSelections]);
 
-  const clearLastClickedFile = useCallback(() => {
-    setLastClickedFile(null);
-  }, []);
+  const updateLastClickedFile = useCallback((file: FileRow, columnPath?: string) => {
+    fileRowCache.current[file.path] = file;
+    genericUpdateLastClickedItem(fileRowToExplorerItem(file), columnPath);
+  }, [genericUpdateLastClickedItem]);
 
   const focusFile = useCallback((file: FileRow, columnPath?: string) => {
-    const item = { file, columnPath };
-    setFocusedFile(item);
-    setLastClickedFile(item);
-  }, []);
-
-  const clearFocus = useCallback(() => {
-    setFocusedFile(null);
-  }, []);
+    fileRowCache.current[file.path] = file;
+    genericFocusItem(fileRowToExplorerItem(file), columnPath);
+  }, [genericFocusItem]);
 
   return {
     selectedFiles,
     selectedEntries,
     selectedCount,
-    lastClickedFile,
-    focusedFile,
+    lastClickedFile: lastClickedFile as LastClickedFile | null,
+    focusedFile: focusedFile as LastClickedFile | null,
     selectFile,
     selectMultiple,
     selectRange,

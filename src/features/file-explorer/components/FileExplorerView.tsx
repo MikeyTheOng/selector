@@ -8,9 +8,12 @@ import { SelectionSheet } from "./SelectionSheet";
 import { useFileSelection } from "../hooks/use-file-selection";
 import { useFolderListing } from "../hooks/use-folder-listing";
 import { useQuickLook } from "../hooks/use-quick-look";
+import { useExplorerViewState } from "@/hooks/explorer/useExplorerViewState";
 import { listen } from "@tauri-apps/api/event";
-import type { FileRow, FolderRow, LocationItem } from "@/types/fs";
+import type { FileRow, LocationItem } from "@/types/fs";
 import { getPathBaseName } from "@/lib/path-utils";
+import { folderToFileRow } from "@/lib/explorer-utils";
+import type { ExplorerViewMode } from "@/types/explorer";
 
 interface QuickLookEvent {
   key: string;
@@ -67,7 +70,7 @@ export const FileExplorerView = ({
     clearFocus,
   } = useFileSelection();
   const { isPreviewActive, togglePreview, updatePreview, closePreview } = useQuickLook();
-  const [viewMode, setViewMode] = useState<"list" | "column">("list");
+  const { viewMode, setViewMode } = useExplorerViewState({ initialViewMode: "list" });
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
 
   const currentFolderName = selectedFolder ? getPathBaseName(selectedFolder) : "Select a folder";
@@ -127,18 +130,6 @@ export const FileExplorerView = ({
         }
         return;
       }
-
-      // Helper to map a FolderRow to a FileRow for selection/focus consistency
-      const folderToFileRow = (f: FolderRow): FileRow => ({
-        path: f.path,
-        name: f.name,
-        size: 0,
-        sizeLabel: "",
-        extension: "",
-        kindLabel: "Folder",
-        dateModified: f.dateModified,
-        dateModifiedLabel: f.dateModifiedLabel,
-      });
 
       // Navigation Logic
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(event.key)) {
@@ -302,7 +293,7 @@ export const FileExplorerView = ({
           onBack={onBack}
           onForward={onForward}
           viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          onViewModeChange={(mode: ExplorerViewMode) => setViewMode(mode)}
           fileCount={listing.fileCount}
           folderCount={listing.folderCount}
           selectedCount={selectedCount}
@@ -322,25 +313,7 @@ export const FileExplorerView = ({
         <div className="flex-1 overflow-auto">
           {renderMainContent ? (
             renderMainContent()
-          ) : viewMode === "list" ? (
-            listing.isLoading ? (
-              <div className="px-4 py-6 text-sm text-muted-foreground">Loading files...</div>
-            ) : listing.error ? (
-              <div className="px-4 py-6 text-sm text-destructive">{listing.error}</div>
-            ) : (
-              <FileListView
-                listing={listing}
-                selectedFiles={selectedFiles}
-                lastClickedFile={lastClickedFile}
-                focusedFile={focusedFile}
-                onSelectFolder={onSelectFolder}
-                onSelectFile={handleFileSelection}
-                onSelectRange={selectRange}
-                onFocusFile={focusFile}
-                onToggleFileSelection={toggleFileSelection}
-              />
-            )
-          ) : (
+          ) : viewMode === "column" ? (
             <ColumnView
               locations={locations}
               selectedFolder={selectedFolder}
@@ -355,6 +328,25 @@ export const FileExplorerView = ({
               onFocusFile={focusFile}
               onToggleFileSelection={toggleFileSelection}
             />
+          ) : (
+            listing.isLoading ? (
+              <div className="px-4 py-6 text-sm text-muted-foreground">Loading files...</div>
+            ) : listing.error ? (
+              <div className="px-4 py-6 text-sm text-destructive">{listing.error}</div>
+            ) : (
+              <FileListView
+                listing={listing}
+                selectedFiles={selectedFiles}
+                lastClickedFile={lastClickedFile}
+                focusedFile={focusedFile}
+                viewMode={viewMode}
+                onSelectFolder={onSelectFolder}
+                onSelectFile={handleFileSelection}
+                onSelectRange={selectRange}
+                onFocusFile={focusFile}
+                onToggleFileSelection={toggleFileSelection}
+              />
+            )
           )}
         </div>
 
