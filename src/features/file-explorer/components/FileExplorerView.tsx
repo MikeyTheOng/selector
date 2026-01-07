@@ -267,7 +267,6 @@ export const FileExplorerView = ({
     };
   }, [listing, selectMultiple, clearSelections, clearFocus, focusedFile, viewMode, selectedFolder, onSelectFolder, focusFile, toggleFileSelection, selectRange, lastClickedFile, getListingForPath, isPreviewActive, togglePreview, closePreview]);
 
-  // Clear last clicked file and focus when folder or view mode changes
   useEffect(() => {
     if (viewMode === "column") return;
 
@@ -286,20 +285,22 @@ export const FileExplorerView = ({
       />
 
       <section className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-        <BrowserToolbar
-          currentFolderName={currentFolderName}
-          canGoBack={canGoBack}
-          canGoForward={canGoForward}
-          onBack={onBack}
-          onForward={onForward}
-          viewMode={viewMode}
-          onViewModeChange={(mode: ExplorerViewMode) => setViewMode(mode)}
-          fileCount={listing.fileCount}
-          folderCount={listing.folderCount}
-          selectedCount={selectedCount}
-          isSelectionOpen={isSelectionOpen}
-          onToggleSelection={() => setIsSelectionOpen((prev) => !prev)}
-        />
+        {!renderMainContent && (
+          <BrowserToolbar
+            currentFolderName={currentFolderName}
+            canGoBack={canGoBack}
+            canGoForward={canGoForward}
+            onBack={onBack}
+            onForward={onForward}
+            viewMode={viewMode}
+            onViewModeChange={(mode: ExplorerViewMode) => setViewMode(mode)}
+            fileCount={listing.fileCount}
+            folderCount={listing.folderCount}
+            selectedCount={selectedCount}
+            isSelectionOpen={isSelectionOpen}
+            onToggleSelection={() => setIsSelectionOpen((prev) => !prev)}
+          />
+        )}
 
         <SelectionSheet
           isOpen={isSelectionOpen}
@@ -350,11 +351,13 @@ export const FileExplorerView = ({
           )}
         </div>
 
-        <PathBar
-          selectedFolder={selectedFolder}
-          locations={locations}
-          onSelectFolder={onSelectFolder}
-        />
+        {!renderMainContent && (
+          <PathBar
+            selectedFolder={selectedFolder}
+            locations={locations}
+            onSelectFolder={onSelectFolder}
+          />
+        )}
       </section>
     </div>
   );
