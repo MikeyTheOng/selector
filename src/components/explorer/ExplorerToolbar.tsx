@@ -45,7 +45,7 @@ export const ExplorerToolbar = ({
   className,
 }: ExplorerToolbarProps) => {
   return (
-    <div 
+    <div
       className={cn(
         "flex cursor-default select-none flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3",
         className
@@ -80,17 +80,6 @@ export const ExplorerToolbar = ({
             List
           </ToggleGroupItem>
           <ToggleGroupItem
-            value="grid"
-            className={cn(
-              "gap-1 rounded-full px-3 py-1",
-              viewMode === "grid" ? "bg-foreground/10 text-foreground" : "hover:text-foreground",
-            )}
-            aria-label="Grid view"
-          >
-            <Grid2X2 className="h-3.5 w-3.5" />
-            Grid
-          </ToggleGroupItem>
-          <ToggleGroupItem
             value="column"
             className={cn(
               "gap-1 rounded-full px-3 py-1",
@@ -100,6 +89,18 @@ export const ExplorerToolbar = ({
           >
             <Columns2 className="h-3.5 w-3.5" />
             Column
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="grid"
+            className={cn(
+              "gap-1 rounded-full px-3 py-1",
+              viewMode === "grid" ? "bg-foreground/10 text-foreground" : "hover:text-foreground",
+            )}
+            aria-label="Grid view"
+            disabled={true}
+          >
+            <Grid2X2 className="h-3.5 w-3.5" />
+            Grid
           </ToggleGroupItem>
         </ToggleGroup>
 
