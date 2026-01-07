@@ -93,7 +93,7 @@ export default [
                         },
                         {
                             from: ["app"],
-                            allow: ["shared", "feature", ["app", { fileName: "*.css" }]],
+                            allow: ["shared", "feature", "app"],
                         },
                         {
                             from: ["neverImport"],

@@ -9,7 +9,7 @@ export function AppHeader() {
   const { currentRoute } = useNavigation();
 
   if (currentRoute.type === "collection") {
-    return <CollectionToolbar />;
+    return <CollectionToolbar collectionId={currentRoute.collectionId} />;
   }
 
   // Default to Explorer toolbar
