@@ -117,6 +117,7 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
         selectedCount={selectedCount}
         isSelectionOpen={isSelectionOpen}
         onToggleSelection={() => setIsSelectionOpen(!isSelectionOpen)}
+        disabledViewModes={["column", "grid"]}
       />
 
       <ExplorerSelectionSheet

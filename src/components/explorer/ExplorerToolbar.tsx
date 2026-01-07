@@ -29,6 +29,8 @@ export interface ExplorerToolbarProps {
   rightContent?: React.ReactNode;
   /** Optional additional class names */
   className?: string;
+  /** View modes to disable */
+  disabledViewModes?: ExplorerViewMode[];
 }
 
 export const ExplorerToolbar = ({
@@ -43,6 +45,7 @@ export const ExplorerToolbar = ({
   leftContent,
   rightContent,
   className,
+  disabledViewModes = [],
 }: ExplorerToolbarProps) => {
   return (
     <div
@@ -75,6 +78,7 @@ export const ExplorerToolbar = ({
               viewMode === "list" ? "bg-foreground/10 text-foreground" : "hover:text-foreground",
             )}
             aria-label="List view"
+            disabled={disabledViewModes.includes("list")}
           >
             <LayoutList className="h-3.5 w-3.5" />
             List
@@ -86,6 +90,7 @@ export const ExplorerToolbar = ({
               viewMode === "column" ? "bg-foreground/10 text-foreground" : "hover:text-foreground",
             )}
             aria-label="Column view"
+            disabled={disabledViewModes.includes("column")}
           >
             <Columns2 className="h-3.5 w-3.5" />
             Column
@@ -97,7 +102,7 @@ export const ExplorerToolbar = ({
               viewMode === "grid" ? "bg-foreground/10 text-foreground" : "hover:text-foreground",
             )}
             aria-label="Grid view"
-            disabled={true}
+            disabled={disabledViewModes.includes("grid")}
           >
             <Grid2X2 className="h-3.5 w-3.5" />
             Grid

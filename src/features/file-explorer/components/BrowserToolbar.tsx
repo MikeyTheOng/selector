@@ -71,6 +71,7 @@ export const BrowserToolbar = ({
       selectedCount={selectedCount}
       isSelectionOpen={isSelectionOpen}
       onToggleSelection={onToggleSelection}
+      disabledViewModes={["grid"]}
     />
   );
 };
