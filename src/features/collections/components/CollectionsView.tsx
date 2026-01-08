@@ -7,10 +7,11 @@ import { useExplorerViewState } from "@/hooks/explorer/useExplorerViewState";
 import { useNavigation } from "@/hooks/use-navigation";
 import { getParentPath } from "@/lib/path-utils";
 import { ExplorerListView } from "@/components/explorer/ExplorerListView";
-import { ExplorerSelectionSheet } from "@/components/explorer/ExplorerSelectionSheet";
 import { CollectionRowLabel } from "./CollectionRowLabel";
 import { useExplorerContextMenu } from "@/components/explorer/ExplorerContextMenu";
-import { CollectionSelectionActions } from "./CollectionSelectionActions";
+import { CollectionSelectionSheet } from "./CollectionSelectionSheet";
+import { CollectionMoveCopyDialog } from "./CollectionMoveCopyDialog";
+import { useMoveCopyDialog } from "@/features/collections/hooks/use-move-copy-dialog";
 import type { ExplorerItem, ExplorerItemStatus } from "@/types/explorer";
 
 interface CollectionsViewProps {
@@ -24,7 +25,7 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
   collectionId,
   isSelectionOpen,
   setIsSelectionOpen,
-  selection
+  selection,
 }) => {
   const parsedId = parseInt(collectionId, 10);
   const { collections } = useCollections();
@@ -44,6 +45,13 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
   const { viewMode } = useExplorerViewState({ initialViewMode: "list" });
   const { navigateToExplorer } = useNavigation();
   const { showContextMenu } = useExplorerContextMenu();
+  const {
+    moveCopyState,
+    openMoveCopyDialog,
+    openMoveDialog,
+    openCopyDialog,
+    closeMoveCopyDialog,
+  } = useMoveCopyDialog();
 
   const collection = collections.find((c) => c.id === parsedId);
 
@@ -132,14 +140,14 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
       id: "move",
       text: "Move to...",
       enabled: item.status === "available",
-      action: () => console.log("Move to collection"),
+      action: () => openMoveDialog([item]),
     },
     {
       type: "item" as const,
       id: "copy",
       text: "Copy to...",
       enabled: item.status === "available",
-      action: () => console.log("Copy to collection"),
+      action: () => openCopyDialog([item]),
     },
     {
       type: "item" as const,
@@ -177,22 +185,23 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <ExplorerSelectionSheet
+      <CollectionSelectionSheet
+        collectionId={parsedId}
         isOpen={isSelectionOpen}
         entries={selectedEntries}
         onClose={() => setIsSelectionOpen(false)}
         onRemove={removeSelection}
         onClear={clearSelections}
-        renderActions={(entries) => (
-          <CollectionSelectionActions
-            collectionId={parsedId}
-            entries={entries}
-            onComplete={() => {
-              clearSelections();
-              setIsSelectionOpen(false);
-            }}
-          />
-        )}
+        onRequestCopy={(entries) => openMoveCopyDialog("copy", entries)}
+        onRequestMove={(entries) => openMoveCopyDialog("move", entries)}
+      />
+
+      <CollectionMoveCopyDialog
+        collectionId={parsedId}
+        entries={moveCopyState?.entries ?? []}
+        mode={moveCopyState?.mode ?? "copy"}
+        isOpen={moveCopyState !== null}
+        onClose={closeMoveCopyDialog}
       />
 
       <div className="flex-1 overflow-auto">

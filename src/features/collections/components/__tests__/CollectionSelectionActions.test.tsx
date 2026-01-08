@@ -1,13 +1,10 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CollectionSelectionActions } from '../CollectionSelectionActions';
-import { useCollections } from '../../hooks/use-collections';
 import { useCollectionItems } from '../../hooks/use-collection-items';
 import type { ExplorerItem } from '@/types/explorer';
 
-vi.mock('../../hooks/use-collections');
 vi.mock('../../hooks/use-collection-items');
-vi.mock('../../lib/collections-repository');
 
 describe('CollectionSelectionActions', () => {
   const mockEntries: ExplorerItem[] = [
@@ -17,20 +14,12 @@ describe('CollectionSelectionActions', () => {
   const defaultProps = {
     collectionId: 1,
     entries: mockEntries,
-    onComplete: vi.fn(),
+    onRequestCopy: vi.fn(),
+    onRequestMove: vi.fn(),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useCollections).mockReturnValue({
-      collections: [{ id: 2, name: 'Other Collection', created_at: '', updated_at: '' }],
-      isLoading: false,
-      error: null,
-      createCollection: vi.fn(),
-      updateCollection: vi.fn(),
-      deleteCollection: vi.fn(),
-      refetch: vi.fn(),
-    });
     vi.mocked(useCollectionItems).mockReturnValue({
       items: [],
       isLoading: false,
@@ -61,14 +50,18 @@ describe('CollectionSelectionActions', () => {
     render(<CollectionSelectionActions {...defaultProps} />);
     fireEvent.click(screen.getByText(/Remove from Collection/i));
 
-    expect(mockRemove).toHaveBeenCalledWith('/test/file1.txt');
-    // Wait for async complete
-    await vi.waitFor(() => expect(defaultProps.onComplete).toHaveBeenCalled());
+    await vi.waitFor(() => expect(mockRemove).toHaveBeenCalledWith('/test/file1.txt'));
   });
 
-  it('opens picker when Copy to clicked', () => {
+  it('requests copy when Copy to clicked', () => {
     render(<CollectionSelectionActions {...defaultProps} />);
     fireEvent.click(screen.getByText(/Copy to/i));
-    expect(screen.getByText('Copy to Collection')).toBeDefined();
+    expect(defaultProps.onRequestCopy).toHaveBeenCalledWith(mockEntries);
+  });
+
+  it('requests move when Move to clicked', () => {
+    render(<CollectionSelectionActions {...defaultProps} />);
+    fireEvent.click(screen.getByText(/Move to/i));
+    expect(defaultProps.onRequestMove).toHaveBeenCalledWith(mockEntries);
   });
 });
