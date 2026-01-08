@@ -4,6 +4,7 @@ import { CollectionsView } from '../CollectionsView';
 import { useCollections } from '../../hooks/use-collections';
 import { useCollectionItems } from '../../hooks/use-collection-items';
 import { useNavigation } from '@/hooks/use-navigation';
+import { useCollectionSelection } from '../../hooks/use-collection-selection';
 import type { CollectionItemWithStatus } from '../../types';
 import type { ExplorerItem } from '@/types/explorer';
 
@@ -11,8 +12,15 @@ import type { ExplorerItem } from '@/types/explorer';
 vi.mock('../../hooks/use-collections');
 vi.mock('../../hooks/use-collection-items');
 vi.mock('@/hooks/use-navigation');
-vi.mock('@/features/file-explorer/components/SelectionSheet', () => ({
-  SelectionSheet: () => <div data-testid="selection-sheet" />
+
+// Mock components
+let capturedSelectionSheetProps: { renderActions?: (entries: ExplorerItem[]) => React.ReactNode } | null = null;
+
+vi.mock('@/components/explorer/ExplorerSelectionSheet', () => ({
+  ExplorerSelectionSheet: (props: { renderActions?: (entries: ExplorerItem[]) => React.ReactNode }) => {
+    capturedSelectionSheetProps = props;
+    return <div data-testid="selection-sheet" />;
+  }
 }));
 
 vi.mock('@tauri-apps/plugin-dialog', () => ({
@@ -66,6 +74,40 @@ describe('CollectionsView', () => {
 
   const mockNavigateToExplorer = vi.fn();
 
+  const mockCollectionItemsReturn = {
+    items: mockItems,
+    isLoading: false,
+    error: null,
+    addItem: vi.fn(),
+    removeItem: vi.fn(),
+    removeItemByPath: vi.fn(),
+    refetch: vi.fn(),
+    relinkItem: vi.fn(),
+    relinkFolder: vi.fn(),
+  };
+
+  const mockSelection = {
+    selectedItems: {},
+    selectedEntries: [],
+    focusedItem: null,
+    lastClickedItem: null,
+    selectCollectionItem: vi.fn(),
+    selectMultipleCollectionItems: vi.fn(),
+    toggleCollectionItemSelection: vi.fn(),
+    focusItem: vi.fn(),
+    removeSelection: vi.fn(),
+    clearSelections: vi.fn(),
+    selectItem: vi.fn(),
+    selectMultiple: vi.fn(),
+    toggleSelection: vi.fn(),
+    selectedCount: 0,
+    selectRange: vi.fn(),
+    updateLastClickedItem: vi.fn(),
+    clearLastClickedItem: vi.fn(),
+    clearFocus: vi.fn(),
+    getCachedItem: vi.fn(),
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     capturedDoubleClickHandler = undefined;
@@ -87,25 +129,16 @@ describe('CollectionsView', () => {
       deleteCollection: vi.fn(),
       refetch: vi.fn(),
     });
-    vi.mocked(useCollectionItems).mockReturnValue({
-      items: mockItems,
-      isLoading: false,
-      error: null,
-      addItem: vi.fn(),
-      removeItem: vi.fn(),
-      refetch: vi.fn(),
-      relinkItem: vi.fn(),
-      relinkFolder: vi.fn(),
-    });
+    vi.mocked(useCollectionItems).mockReturnValue(mockCollectionItemsReturn);
   });
 
   it('renders item list', () => {
-    render(<CollectionsView collectionId="1" />);
+    render(<CollectionsView collectionId="1" isSelectionOpen={false} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
     expect(screen.getByText(/file1.txt/i)).toBeDefined();
   });
 
   it('does not render toolbar', () => {
-    render(<CollectionsView collectionId="1" />);
+    render(<CollectionsView collectionId="1" isSelectionOpen={false} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
     // ExplorerToolbar title
     expect(screen.queryByText('Collection Toolbar (Placeholder)')).toBeNull();
     // Previous internal toolbar title
@@ -114,22 +147,17 @@ describe('CollectionsView', () => {
 
   it('renders loading state', () => {
     vi.mocked(useCollectionItems).mockReturnValue({
+      ...mockCollectionItemsReturn,
       items: [],
       isLoading: true,
-      error: null,
-      addItem: vi.fn(),
-      removeItem: vi.fn(),
-      refetch: vi.fn(),
-      relinkItem: vi.fn(),
-      relinkFolder: vi.fn(),
     });
 
-    render(<CollectionsView collectionId="1" />);
+    render(<CollectionsView collectionId="1" isSelectionOpen={false} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
     expect(screen.getByText('Loading items...')).toBeDefined();
   });
 
   it('renders file list when items loaded', () => {
-    render(<CollectionsView collectionId="1" />);
+    render(<CollectionsView collectionId="1" isSelectionOpen={false} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
     expect(screen.getByTestId('explorer-list-view')).toBeDefined();
   });
 
@@ -147,17 +175,11 @@ describe('CollectionsView', () => {
     ];
 
     vi.mocked(useCollectionItems).mockReturnValue({
+      ...mockCollectionItemsReturn,
       items: missingItems,
-      isLoading: false,
-      error: null,
-      addItem: vi.fn(),
-      removeItem: vi.fn(),
-      refetch: vi.fn(),
-      relinkItem: vi.fn(),
-      relinkFolder: vi.fn(),
     });
 
-    render(<CollectionsView collectionId="1" />);
+    render(<CollectionsView collectionId="1" isSelectionOpen={false} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
     expect(screen.getByText(/missing/i)).toBeDefined(); 
   });
 
@@ -172,7 +194,7 @@ describe('CollectionsView', () => {
       refetch: vi.fn(),
     });
 
-    render(<CollectionsView collectionId="999" />);
+    render(<CollectionsView collectionId="999" isSelectionOpen={false} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
     expect(screen.getByText('Collection not found')).toBeDefined();
   });
 
@@ -191,17 +213,11 @@ describe('CollectionsView', () => {
       ];
 
       vi.mocked(useCollectionItems).mockReturnValue({
+        ...mockCollectionItemsReturn,
         items: fileItems,
-        isLoading: false,
-        error: null,
-        addItem: vi.fn(),
-        removeItem: vi.fn(),
-        refetch: vi.fn(),
-        relinkItem: vi.fn(),
-        relinkFolder: vi.fn(),
       });
 
-      render(<CollectionsView collectionId="1" />);
+      render(<CollectionsView collectionId="1" isSelectionOpen={false} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
 
       // Simulate double-click on the file
       const explorerItem = {
@@ -237,17 +253,11 @@ describe('CollectionsView', () => {
       ];
 
       vi.mocked(useCollectionItems).mockReturnValue({
+        ...mockCollectionItemsReturn,
         items: folderItems,
-        isLoading: false,
-        error: null,
-        addItem: vi.fn(),
-        removeItem: vi.fn(),
-        refetch: vi.fn(),
-        relinkItem: vi.fn(),
-        relinkFolder: vi.fn(),
       });
 
-      render(<CollectionsView collectionId="1" />);
+      render(<CollectionsView collectionId="1" isSelectionOpen={false} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
 
       const explorerItem = {
         id: '/Users/test/documents',
@@ -279,17 +289,11 @@ describe('CollectionsView', () => {
       ];
 
       vi.mocked(useCollectionItems).mockReturnValue({
+        ...mockCollectionItemsReturn,
         items: missingItems,
-        isLoading: false,
-        error: null,
-        addItem: vi.fn(),
-        removeItem: vi.fn(),
-        refetch: vi.fn(),
-        relinkItem: vi.fn(),
-        relinkFolder: vi.fn(),
       });
 
-      render(<CollectionsView collectionId="1" />);
+      render(<CollectionsView collectionId="1" isSelectionOpen={false} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
 
       const explorerItem = {
         id: '/Volumes/External/file.txt',
@@ -312,7 +316,7 @@ describe('CollectionsView', () => {
 
   describe('context menu', () => {
     it('shows context menu with correct items', () => {
-      render(<CollectionsView collectionId="1" />);
+      render(<CollectionsView collectionId="1" isSelectionOpen={false} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
       
       const itemToClick = {
         id: '/test/file1.txt',
@@ -332,7 +336,7 @@ describe('CollectionsView', () => {
     });
 
     it('executes Reveal in Explorer action', () => {
-      render(<CollectionsView collectionId="1" />);
+      render(<CollectionsView collectionId="1" isSelectionOpen={false} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
       
       const itemToClick = {
         id: '/test/file1.txt',
@@ -356,17 +360,12 @@ describe('CollectionsView', () => {
     it('executes Remove from Collection action', () => {
       const mockRemoveItem = vi.fn();
       vi.mocked(useCollectionItems).mockReturnValue({
+        ...mockCollectionItemsReturn,
         items: mockItems,
-        isLoading: false,
-        error: null,
-        addItem: vi.fn(),
         removeItem: mockRemoveItem,
-        refetch: vi.fn(),
-        relinkItem: vi.fn(),
-        relinkFolder: vi.fn(),
       });
 
-      render(<CollectionsView collectionId="1" />);
+      render(<CollectionsView collectionId="1" isSelectionOpen={false} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
       
       const itemToClick = {
         id: '/test/file1.txt',
@@ -383,6 +382,21 @@ describe('CollectionsView', () => {
       removeAction.action();
 
       expect(mockRemoveItem).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('selection sheet actions', () => {
+    it('passes collection actions to ExplorerSelectionSheet', () => {
+      render(<CollectionsView collectionId="1" isSelectionOpen={true} setIsSelectionOpen={vi.fn()} selection={mockSelection as unknown as ReturnType<typeof useCollectionSelection>} />);
+      
+      expect(capturedSelectionSheetProps).not.toBeNull();
+      expect(capturedSelectionSheetProps!.renderActions).toBeDefined();
+
+      render(capturedSelectionSheetProps!.renderActions!([{ id: '1', name: 'Item 1', path: '/1', kind: 'file', status: 'available' }]));
+      
+      expect(screen.getByText(/Move to/i)).toBeDefined();
+      expect(screen.getByText(/Copy to/i)).toBeDefined();
+      expect(screen.getByText(/Remove from Collection/i)).toBeDefined();
     });
   });
 });

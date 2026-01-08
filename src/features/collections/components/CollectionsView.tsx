@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useCollections } from "../hooks/use-collections";
 import { useCollectionItems } from "../hooks/use-collection-items";
@@ -10,14 +10,21 @@ import { ExplorerListView } from "@/components/explorer/ExplorerListView";
 import { ExplorerSelectionSheet } from "@/components/explorer/ExplorerSelectionSheet";
 import { CollectionRowLabel } from "./CollectionRowLabel";
 import { useExplorerContextMenu } from "@/components/explorer/ExplorerContextMenu";
+import { CollectionSelectionActions } from "./CollectionSelectionActions";
 import type { ExplorerItem, ExplorerItemStatus } from "@/types/explorer";
 
 interface CollectionsViewProps {
   collectionId: string;
+  isSelectionOpen: boolean;
+  setIsSelectionOpen: (isOpen: boolean) => void;
+  selection: ReturnType<typeof useCollectionSelection>;
 }
 
 export const CollectionsView: React.FC<CollectionsViewProps> = ({
   collectionId,
+  isSelectionOpen,
+  setIsSelectionOpen,
+  selection
 }) => {
   const parsedId = parseInt(collectionId, 10);
   const { collections } = useCollections();
@@ -33,10 +40,9 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
     focusItem,
     removeSelection,
     clearSelections
-  } = useCollectionSelection();
+  } = selection;
   const { viewMode } = useExplorerViewState({ initialViewMode: "list" });
   const { navigateToExplorer } = useNavigation();
-  const [isSelectionOpen, setIsSelectionOpen] = useState(false);
   const { showContextMenu } = useExplorerContextMenu();
 
   const collection = collections.find((c) => c.id === parsedId);
@@ -177,6 +183,16 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
         onClose={() => setIsSelectionOpen(false)}
         onRemove={removeSelection}
         onClear={clearSelections}
+        renderActions={(entries) => (
+          <CollectionSelectionActions
+            collectionId={parsedId}
+            entries={entries}
+            onComplete={() => {
+              clearSelections();
+              setIsSelectionOpen(false);
+            }}
+          />
+        )}
       />
 
       <div className="flex-1 overflow-auto">
