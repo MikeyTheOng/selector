@@ -1,13 +1,14 @@
 import { useCallback, useEffect } from "react";
-import { BrowserToolbar } from "./BrowserToolbar";
+import { ExplorerToolbar } from "@/components/explorer/ExplorerToolbar";
+import { ExplorerSelectionSheet } from "@/components/explorer/ExplorerSelectionSheet";
 import { ColumnView } from "./ColumnView";
 import { FileListView } from "./FileListView";
 import { PathBar } from "./PathBar";
-import { SelectionSheet } from "./SelectionSheet";
 import { useExplorerContext } from "../context/ExplorerContext";
 import { listen } from "@tauri-apps/api/event";
 import type { FileRow, LocationItem } from "@/types/fs";
-import { folderToFileRow } from "@/lib/explorer-utils";
+import { folderToFileRow, fileRowToExplorerItem } from "@/lib/explorer-utils";
+import { getPathBaseName } from "@/lib/path-utils";
 
 interface QuickLookEvent {
   key: string;
@@ -33,6 +34,7 @@ export const FileExplorerView = ({
     getListingForPath,
     selectedFiles,
     selectedEntries,
+    selectedCount,
     lastClickedFile,
     focusedFile,
     selectFile,
@@ -48,9 +50,12 @@ export const FileExplorerView = ({
     updatePreview,
     closePreview,
     viewMode,
+    setViewMode,
     isSelectionOpen,
     setIsSelectionOpen,
   } = useExplorerContext();
+
+  const currentFolderName = folderId ? getPathBaseName(folderId) : "Select a folder";
 
   const handleFileSelection = useCallback(
     (row: FileRow, options?: { additive?: boolean }) => {
@@ -246,11 +251,21 @@ export const FileExplorerView = ({
 
   return (
     <section className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-      <BrowserToolbar />
+      <ExplorerToolbar
+        title={currentFolderName}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        fileCount={listing.fileCount}
+        folderCount={listing.folderCount}
+        selectedCount={selectedCount}
+        isSelectionOpen={isSelectionOpen}
+        onToggleSelection={() => setIsSelectionOpen(!isSelectionOpen)}
+        disabledViewModes={["grid"]}
+      />
 
-      <SelectionSheet
+      <ExplorerSelectionSheet
         isOpen={isSelectionOpen}
-        entries={selectedEntries}
+        entries={selectedEntries.map(fileRowToExplorerItem)}
         onClose={() => setIsSelectionOpen(false)}
         onRemove={removeSelection}
         onClear={clearSelections}

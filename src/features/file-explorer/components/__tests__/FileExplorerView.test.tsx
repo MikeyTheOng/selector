@@ -1,4 +1,4 @@
-import { render, act } from '@testing-library/react';
+import { render, act, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FileExplorerView } from '../FileExplorerView';
 import { useExplorerContext } from '../../context/ExplorerContext';
@@ -272,5 +272,48 @@ describe('FileExplorerView Integration', () => {
     });
 
     expect(mockTogglePreview).toHaveBeenCalledWith(mockListing.files[0].path);
+  });
+
+  it('renders toolbar with correct file count', () => {
+    render(<FileExplorerView {...defaultProps} />);
+    // The toolbar displays "X files - Y folders"
+    expect(screen.getByText(/2 files/)).toBeDefined();
+  });
+
+  it('renders selection sheet when open', () => {
+    vi.mocked(useExplorerContext).mockReturnValue({
+      listing: mockListing,
+      ensureListing: vi.fn(),
+      getListingForPath: vi.fn(),
+      selectedFiles: {},
+      selectedEntries: [],
+      selectedCount: 0,
+      lastClickedFile: null,
+      focusedFile: { file: mockFiles[0] },
+      selectFile: vi.fn(),
+      selectMultiple: vi.fn(),
+      selectRange: vi.fn(),
+      toggleFileSelection: mockToggleFileSelection,
+      removeSelection: vi.fn(),
+      clearSelections: vi.fn(),
+      updateLastClickedFile: vi.fn(),
+      clearLastClickedFile: vi.fn(),
+      focusFile: mockFocusFile,
+      clearFocus: vi.fn(),
+      isPreviewActive: true,
+      togglePreview: mockTogglePreview,
+      updatePreview: vi.fn(),
+      closePreview: mockClosePreview,
+      viewMode: 'list' as const,
+      setViewMode: vi.fn(),
+      isSelectionOpen: true,
+      setIsSelectionOpen: vi.fn(),
+      folderId: '/test',
+      locations: [],
+    } as unknown as ReturnType<typeof useExplorerContext>);
+
+    render(<FileExplorerView {...defaultProps} />);
+    // "Selection" is the title in the sheet
+    expect(screen.getByText('Selection')).toBeDefined();
   });
 });
