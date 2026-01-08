@@ -93,7 +93,7 @@ export const AddToCollectionWidget: React.FC<AddToCollectionWidgetProps> = ({
           Add to Collection...
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-106.25">
         <DialogHeader>
           <DialogTitle>Add to Collection</DialogTitle>
           <DialogDescription>
@@ -131,7 +131,7 @@ export const AddToCollectionWidget: React.FC<AddToCollectionWidgetProps> = ({
             <p className="text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
               Existing Collections
             </p>
-            <ScrollArea className="h-[200px] border rounded-md p-1">
+            <ScrollArea className="h-50 border rounded-md p-1">
               <div className="flex flex-col gap-1">
                 {isCollectionsLoading ? (
                   <div className="flex items-center justify-center p-4">
