@@ -9,6 +9,7 @@ import { getParentPath } from "@/lib/path-utils";
 import { ExplorerListView } from "@/components/explorer/ExplorerListView";
 import { ExplorerSelectionSheet } from "@/components/explorer/ExplorerSelectionSheet";
 import { CollectionRowLabel } from "./CollectionRowLabel";
+import { useExplorerContextMenu } from "@/components/explorer/ExplorerContextMenu";
 import type { ExplorerItem, ExplorerItemStatus } from "@/types/explorer";
 
 interface CollectionsViewProps {
@@ -20,7 +21,7 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
 }) => {
   const parsedId = parseInt(collectionId, 10);
   const { collections } = useCollections();
-  const { items, isLoading, relinkItem, relinkFolder } = useCollectionItems(parsedId);
+  const { items, isLoading, removeItem, relinkItem, relinkFolder } = useCollectionItems(parsedId);
   const {
     selectedItems,
     selectedEntries,
@@ -36,6 +37,7 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
   const { viewMode } = useExplorerViewState({ initialViewMode: "list" });
   const { navigateToExplorer } = useNavigation();
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
+  const { showContextMenu } = useExplorerContextMenu();
 
   const collection = collections.find((c) => c.id === parsedId);
 
@@ -69,9 +71,9 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
     }
   };
 
-  const explorerItems = useMemo(() => 
-    items.map(collectionItemToExplorerItem), 
-  [items]);
+  const explorerItems = useMemo(() =>
+    items.map(collectionItemToExplorerItem),
+    [items]);
 
   const handleItemClick = (item: ExplorerItem, event: React.MouseEvent) => {
     const originalItem = items.find(i => i.path === item.id);
@@ -93,6 +95,63 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
     }
     focusItem(item);
   };
+
+  const handleRemoveItem = async (item: ExplorerItem) => {
+    const originalItem = items.find(i => i.path === item.id);
+    if (originalItem) {
+      await removeItem(originalItem.id);
+    }
+  };
+
+  const getContextMenuItems = (item: ExplorerItem) => [
+    {
+      type: "item" as const,
+      id: "reveal",
+      text: "Reveal in Explorer",
+      enabled: item.status === "available",
+      action: () => {
+        console.log("Reveal in Explorer:", item.path);
+        if (item.kind === "folder") {
+          navigateToExplorer(item.path);
+        } else {
+          navigateToExplorer(getParentPath(item.path), { focusItemPath: item.path });
+        }
+      },
+    },
+    {
+      type: "separator" as const,
+    },
+    {
+      type: "item" as const,
+      id: "move",
+      text: "Move to...",
+      enabled: item.status === "available",
+      action: () => console.log("Move to collection"),
+    },
+    {
+      type: "item" as const,
+      id: "copy",
+      text: "Copy to...",
+      enabled: item.status === "available",
+      action: () => console.log("Copy to collection"),
+    },
+    {
+      type: "item" as const,
+      id: "remove",
+      text: "Remove from Collection",
+      action: () => handleRemoveItem(item),
+    },
+    {
+      type: "separator" as const,
+    },
+    {
+      type: "item" as const,
+      id: "import",
+      text: "Import to Lightroom",
+      enabled: false,
+      action: () => { },
+    },
+  ];
 
   if (!collection) {
     return (
@@ -130,12 +189,16 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
           onItemClick={handleItemClick}
           onItemDoubleClick={handleActivateItem}
           emptyMessage="No items found in this collection."
+          onItemContextMenu={(item) => {
+            showContextMenu(getContextMenuItems(item));
+          }}
+          onContextMenu={(e) => e.preventDefault()}
           renderItemLabel={({ item, isSelected }) => (
             <CollectionRowLabel
               name={item.name}
               type={item.kind as "file" | "folder"}
               status={item.status as ExplorerItemStatus}
-              iconClassName={item.kind === "folder" 
+              iconClassName={item.kind === "folder"
                 ? isSelected ? "text-primary-foreground" : "text-primary"
                 : isSelected ? "text-primary-foreground" : "text-muted-foreground"
               }

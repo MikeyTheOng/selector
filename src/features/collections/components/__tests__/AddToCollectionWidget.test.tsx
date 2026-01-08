@@ -57,6 +57,7 @@ describe('AddToCollectionWidget', () => {
       error: null,
       addItem: mockAddItem,
       removeItem: vi.fn(),
+      removeItemByPath: vi.fn(),
       refetch: vi.fn(),
       relinkItem: vi.fn(),
       relinkFolder: vi.fn(),

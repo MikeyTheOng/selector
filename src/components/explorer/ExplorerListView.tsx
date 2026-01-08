@@ -18,6 +18,10 @@ export interface ExplorerListViewProps {
   onItemClick: (item: ExplorerItem, event: React.MouseEvent) => void;
   /** Callback when an item is double clicked */
   onItemDoubleClick: (item: ExplorerItem) => void;
+  /** Callback when an item is right-clicked */
+  onItemContextMenu?: (item: ExplorerItem, event: React.MouseEvent) => void;
+  /** Callback when the view background is right-clicked */
+  onContextMenu?: (event: React.MouseEvent) => void;
   /** Optional custom renderer for the item's label/content */
   renderItemLabel?: (props: { item: ExplorerItem; isSelected: boolean }) => React.ReactNode;
   /** Optional message to show when the list is empty */
@@ -33,13 +37,20 @@ export const ExplorerListView = ({
   focusedId,
   onItemClick,
   onItemDoubleClick,
+  onItemContextMenu,
+  onContextMenu,
   renderItemLabel,
   emptyMessage = "No items found.",
   className,
 }: ExplorerListViewProps) => {
   if (items.length === 0) {
     return (
-      <div className="px-4 py-6 text-sm text-muted-foreground">{emptyMessage}</div>
+      <div 
+        className="px-4 py-6 text-sm text-muted-foreground"
+        onContextMenu={onContextMenu}
+      >
+        {emptyMessage}
+      </div>
     );
   }
 
@@ -48,6 +59,7 @@ export const ExplorerListView = ({
   if (viewMode === "grid") {
     return (
       <div
+        onContextMenu={onContextMenu}
         className={cn(
           "grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-4 p-4",
           className
@@ -63,6 +75,9 @@ export const ExplorerListView = ({
               type="button"
               onClick={(e) => onItemClick(item, e)}
               onDoubleClick={() => onItemDoubleClick(item)}
+              onContextMenu={(e) => {
+                onItemContextMenu?.(item, e);
+              }}
               className={cn(
                 "group flex flex-col items-center gap-2 rounded-lg p-2 text-center transition outline-none",
                 isSelected
@@ -89,13 +104,14 @@ export const ExplorerListView = ({
     );
   }
 
-    return (
-      <div 
-        tabIndex={0} 
-        className={cn("outline-none focus:outline-none", className)}
-        data-testid="explorer-list-view"
-      >
-        {/* Header (Only for List view) */}      {isList && (
+  return (
+    <div
+      tabIndex={0}
+      onContextMenu={onContextMenu}
+      className={cn("outline-none focus:outline-none", className)}
+      data-testid="explorer-list-view"
+    >
+      {/* Header (Only for List view) */}      {isList && (
         <div className="grid cursor-default select-none grid-cols-[minmax(0,1fr)_160px_170px] gap-3 border-b border-border/50 px-3 py-2 text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           <span>Name</span>
           <span>Kind</span>
@@ -116,6 +132,9 @@ export const ExplorerListView = ({
                     type="button"
                     onClick={(e) => onItemClick(item, e)}
                     onDoubleClick={() => onItemDoubleClick(item)}
+                    onContextMenu={(e) => {
+                      onItemContextMenu?.(item, e);
+                    }}
                     className={cn(
                       "grid w-full items-center gap-3 px-2 py-1 text-left text-xs transition outline-none",
                       isList ? "grid-cols-[minmax(0,1fr)_160px_170px]" : "flex",

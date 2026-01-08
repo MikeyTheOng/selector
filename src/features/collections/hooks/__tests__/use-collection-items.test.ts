@@ -304,6 +304,50 @@ describe("useCollectionItems", () => {
     });
   });
 
+  describe("removeItemByPath", () => {
+    it("should find an item by path and remove it", async () => {
+      vi.mocked(collectionsService.getCollectionItems)
+        .mockResolvedValueOnce(mockItems)
+        .mockResolvedValueOnce([mockItems[0], mockItems[2]]);
+
+      vi.mocked(collectionsService.removeItemFromCollection).mockResolvedValue();
+
+      const { result } = renderHook(() =>
+        useCollectionItems(mockCollectionId)
+      );
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.items).toHaveLength(3);
+
+      await act(async () => {
+        // Remove item with ID 2 ("video.mp4") using its path
+        await result.current.removeItemByPath("/Volumes/ExternalDrive/video.mp4");
+      });
+
+      expect(collectionsService.removeItemFromCollection).toHaveBeenCalledWith(2);
+      expect(result.current.items).toHaveLength(2);
+    });
+
+    it("should throw error if item path not found", async () => {
+      vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(mockItems);
+
+      const { result } = renderHook(() =>
+        useCollectionItems(mockCollectionId)
+      );
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await expect(
+        result.current.removeItemByPath("/non/existent/path")
+      ).rejects.toThrow("Item not found in collection");
+    });
+  });
+
   describe("refetch", () => {
     it("should manually refetch items", async () => {
       vi.mocked(collectionsService.getCollectionItems)

@@ -119,16 +119,29 @@ export const useCollectionItems = (collectionId: number) => {
   );
 
   const removeItem = useCallback(
-    async (itemId: number): Promise<void> => {
-      await collectionsService.removeItemFromCollection(itemId);
-      await loadItems(); // Refresh the list
+    async (itemId: number) => {
+      try {
+        await collectionsService.removeItemFromCollection(itemId);
+        // Refresh items after removal
+        loadItems();
+      } catch (err) {
+        console.error("Failed to remove item:", err);
+        throw err;
+      }
     },
     [loadItems]
   );
 
-  const refetch = useCallback(async () => {
-    await loadItems();
-  }, [loadItems]);
+  const removeItemByPath = useCallback(
+    async (path: string) => {
+      const item = state.items.find((i) => i.path === path);
+      if (!item) {
+        throw new Error("Item not found in collection");
+      }
+      await removeItem(item.id);
+    },
+    [state.items, removeItem]
+  );
 
   const relinkItem = useCallback(
     async (oldPath: string, newPath: string): Promise<number> => {
@@ -157,7 +170,8 @@ export const useCollectionItems = (collectionId: number) => {
     error: state.error,
     addItem,
     removeItem,
-    refetch,
+    removeItemByPath,
+    refetch: loadItems,
     relinkItem,
     relinkFolder,
   };

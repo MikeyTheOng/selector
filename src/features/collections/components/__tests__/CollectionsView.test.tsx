@@ -15,16 +15,35 @@ vi.mock('@/features/file-explorer/components/SelectionSheet', () => ({
   SelectionSheet: () => <div data-testid="selection-sheet" />
 }));
 
-// Store onItemDoubleClick handler so tests can invoke it
+vi.mock('@tauri-apps/plugin-dialog', () => ({
+  open: vi.fn(),
+  ask: vi.fn(),
+  message: vi.fn(),
+  save: vi.fn(),
+}));
+
+// Store handlers so tests can invoke them
 let capturedDoubleClickHandler: ((item: ExplorerItem) => void) | undefined;
+let capturedContextMenuHandler: ((item: ExplorerItem, event: React.MouseEvent) => void) | undefined;
+
+const mockShowContextMenu = vi.fn();
+
+vi.mock('@/components/explorer/ExplorerContextMenu', () => ({
+  useExplorerContextMenu: () => ({
+    showContextMenu: mockShowContextMenu
+  })
+}));
 
 vi.mock('@/components/explorer/ExplorerListView', () => ({
-  ExplorerListView: ({ items, onItemDoubleClick }: { items: ExplorerItem[]; onItemDoubleClick?: (item: ExplorerItem) => void }) => {
+  ExplorerListView: ({ items, onItemDoubleClick, onItemContextMenu }: { items: ExplorerItem[]; onItemDoubleClick?: (item: ExplorerItem) => void; onItemContextMenu?: (item: ExplorerItem, event: React.MouseEvent) => void }) => {
     capturedDoubleClickHandler = onItemDoubleClick;
+    capturedContextMenuHandler = onItemContextMenu;
     return (
       <div data-testid="explorer-list-view">
         {items.map((f) => (
-          <div key={f.id} data-testid={`item-${f.id}`}>{f.name} - {f.kindLabel} - {f.status}</div>
+          <div key={f.id} data-testid={`item-${f.id}`}>
+            {f.name} - {f.kindLabel} - {f.status}
+          </div>
         ))}
       </div>
     );
@@ -288,6 +307,82 @@ describe('CollectionsView', () => {
 
       // Should NOT navigate - instead it should trigger the relink dialog (not tested here)
       expect(mockNavigateToExplorer).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('context menu', () => {
+    it('shows context menu with correct items', () => {
+      render(<CollectionsView collectionId="1" />);
+      
+      const itemToClick = {
+        id: '/test/file1.txt',
+        path: '/test/file1.txt',
+        name: 'file1.txt',
+        kind: 'file' as const,
+        status: 'available' as const,
+      };
+
+      const mockEvent = { preventDefault: vi.fn() } as unknown as React.MouseEvent;
+      capturedContextMenuHandler?.(itemToClick, mockEvent);
+
+      expect(mockShowContextMenu).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({ text: 'Reveal in Explorer', enabled: true }),
+        expect.objectContaining({ text: 'Remove from Collection' }),
+      ]));
+    });
+
+    it('executes Reveal in Explorer action', () => {
+      render(<CollectionsView collectionId="1" />);
+      
+      const itemToClick = {
+        id: '/test/file1.txt',
+        path: '/test/file1.txt',
+        name: 'file1.txt',
+        kind: 'file' as const,
+        status: 'available' as const,
+      };
+
+      const mockEvent = { preventDefault: vi.fn() } as unknown as React.MouseEvent;
+      capturedContextMenuHandler?.(itemToClick, mockEvent);
+
+      const revealAction = mockShowContextMenu.mock.calls[0][0].find((i: { id: string }) => i.id === 'reveal');
+      revealAction.action();
+
+      expect(mockNavigateToExplorer).toHaveBeenCalledWith('/test', {
+        focusItemPath: '/test/file1.txt'
+      });
+    });
+
+    it('executes Remove from Collection action', () => {
+      const mockRemoveItem = vi.fn();
+      vi.mocked(useCollectionItems).mockReturnValue({
+        items: mockItems,
+        isLoading: false,
+        error: null,
+        addItem: vi.fn(),
+        removeItem: mockRemoveItem,
+        refetch: vi.fn(),
+        relinkItem: vi.fn(),
+        relinkFolder: vi.fn(),
+      });
+
+      render(<CollectionsView collectionId="1" />);
+      
+      const itemToClick = {
+        id: '/test/file1.txt',
+        path: '/test/file1.txt',
+        name: 'file1.txt',
+        kind: 'file' as const,
+        status: 'available' as const,
+      };
+
+      const mockEvent = { preventDefault: vi.fn() } as unknown as React.MouseEvent;
+      capturedContextMenuHandler?.(itemToClick, mockEvent);
+      
+      const removeAction = mockShowContextMenu.mock.calls[0][0].find((i: { id: string }) => i.id === 'remove');
+      removeAction.action();
+
+      expect(mockRemoveItem).toHaveBeenCalledWith(1);
     });
   });
 });
