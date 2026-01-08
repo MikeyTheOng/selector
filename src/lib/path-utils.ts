@@ -14,6 +14,15 @@ const getErrorMessage = (error: unknown) => {
 
 const getPathBaseName = (path: string) => path.split("/").filter(Boolean).pop() ?? path;
 
+const getParentPath = (path: string): string => {
+  const normalized = path.endsWith("/") && path.length > 1 ? path.slice(0, -1) : path;
+  const lastSlash = normalized.lastIndexOf("/");
+  if (lastSlash <= 0) {
+    return "/";
+  }
+  return normalized.slice(0, lastSlash);
+};
+
 const getEntryName = (entry: FsDirEntry) => {
   if (entry.name) {
     return entry.name;
@@ -79,6 +88,7 @@ const getPathHierarchy = (path: string, locations: LocationItem[]): string[] => 
 export {
   getErrorMessage,
   getPathBaseName,
+  getParentPath,
   getEntryName,
   getEntryPath,
   resolveEntry,

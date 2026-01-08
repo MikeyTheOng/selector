@@ -13,9 +13,13 @@ type NavState = {
   index: number;
 };
 
+export type NavigateToExplorerOptions = {
+  focusItemPath?: string;
+};
+
 type NavigationContextValue = {
   currentRoute: AppRoute;
-  navigateToExplorer: (folderId: string | null) => void;
+  navigateToExplorer: (folderId: string | null, options?: NavigateToExplorerOptions) => void;
   navigateToCollection: (collectionId: string) => void;
   canGoBack: boolean;
   canGoForward: boolean;
@@ -49,8 +53,8 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const navigateToExplorer = useCallback(
-    (folderId: string | null) => {
-      navigate({ type: "explorer", folderId });
+    (folderId: string | null, options?: NavigateToExplorerOptions) => {
+      navigate({ type: "explorer", folderId, focusItemPath: options?.focusItemPath });
     },
     [navigate],
   );

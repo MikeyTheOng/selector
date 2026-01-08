@@ -24,6 +24,7 @@ function AppInner() {
           <ExplorerPage
             locations={locations}
             folderId={currentRoute.folderId}
+            focusItemPath={currentRoute.focusItemPath}
             onSelectFolder={navigateToExplorer}
           />
         );

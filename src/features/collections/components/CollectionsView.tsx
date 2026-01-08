@@ -4,6 +4,8 @@ import { useCollections } from "../hooks/use-collections";
 import { useCollectionItems } from "../hooks/use-collection-items";
 import { useCollectionSelection, collectionItemToExplorerItem } from "../hooks/use-collection-selection";
 import { useExplorerViewState } from "@/hooks/explorer/useExplorerViewState";
+import { useNavigation } from "@/hooks/use-navigation";
+import { getParentPath } from "@/lib/path-utils";
 import { ExplorerListView } from "@/components/explorer/ExplorerListView";
 import { ExplorerSelectionSheet } from "@/components/explorer/ExplorerSelectionSheet";
 import { CollectionRowLabel } from "./CollectionRowLabel";
@@ -19,8 +21,8 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
   const parsedId = parseInt(collectionId, 10);
   const { collections } = useCollections();
   const { items, isLoading, relinkItem, relinkFolder } = useCollectionItems(parsedId);
-  const { 
-    selectedItems, 
+  const {
+    selectedItems,
     selectedEntries,
     focusedItem,
     lastClickedItem,
@@ -32,16 +34,22 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
     clearSelections
   } = useCollectionSelection();
   const { viewMode } = useExplorerViewState({ initialViewMode: "list" });
+  const { navigateToExplorer } = useNavigation();
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
 
   const collection = collections.find((c) => c.id === parsedId);
 
   const handleActivateItem = async (item: ExplorerItem) => {
-    // Only handle missing/offline items for relinking
-    if (item.status !== "missing" && item.status !== "offline") {
+    if (item.status === "available") {
+      if (item.kind === "folder") {
+        navigateToExplorer(item.path);
+      } else {
+        navigateToExplorer(getParentPath(item.path), { focusItemPath: item.path });
+      }
       return;
     }
 
+    // For missing/offline items, open the relink dialog
     try {
       const selected = await open({
         multiple: false,

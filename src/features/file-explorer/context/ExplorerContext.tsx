@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react";
 import { useFolderListing } from "../hooks/use-folder-listing";
 import { useFileSelection } from "../hooks/use-file-selection";
 import { useQuickLook } from "../hooks/use-quick-look";
@@ -54,12 +54,14 @@ interface ExplorerProviderProps {
   children: ReactNode;
   folderId: string | null;
   locations: LocationItem[];
+  focusItemPath?: string;
 }
 
 export const ExplorerProvider = ({
   children,
   folderId,
   locations,
+  focusItemPath,
 }: ExplorerProviderProps) => {
   const { listing, ensureListing, getListingForPath } = useFolderListing(folderId, locations);
   const {
@@ -83,12 +85,19 @@ export const ExplorerProvider = ({
   const { viewMode, setViewMode } = useExplorerViewState({ initialViewMode: "list" });
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
 
-  // Clear focus and last clicked file when folderId changes (except in column view)
-  React.useEffect(() => {
+  useEffect(() => {
     if (viewMode === "column") return;
     clearLastClickedFile();
     clearFocus();
   }, [folderId, viewMode, clearLastClickedFile, clearFocus]);
+
+  useEffect(() => {
+    if (!focusItemPath || listing.isLoading || listing.error) return;
+    const fileToFocus = listing.files.find(f => f.path === focusItemPath);
+    if (fileToFocus) {
+      focusFile(fileToFocus);
+    }
+  }, [focusItemPath, listing.isLoading, listing.error, listing.files, focusFile]);
 
   const value = useMemo(
     () => ({

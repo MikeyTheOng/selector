@@ -9,6 +9,8 @@ export interface ExplorerRoute {
   type: "explorer";
   /** Folder ID to display, or null for root/volumes */
   folderId: string | null;
+  /** Optional path of item to focus after navigation */
+  focusItemPath?: string;
 }
 
 /**
