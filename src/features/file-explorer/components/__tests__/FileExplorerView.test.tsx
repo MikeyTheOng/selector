@@ -2,11 +2,13 @@ import { render, act, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FileExplorerView } from '../FileExplorerView';
 import { useExplorerContext } from '../../context/ExplorerContext';
+import { useNavigation } from '@/hooks/use-navigation';
 import { listen, type EventCallback } from '@tauri-apps/api/event';
 import type { FileRow, FolderListing } from '@/types/fs';
 
 // Mock the context
 vi.mock('../../context/ExplorerContext');
+vi.mock('@/hooks/use-navigation');
 vi.mock('@tauri-apps/api/event');
 
 describe('FileExplorerView Integration', () => {
@@ -95,6 +97,16 @@ describe('FileExplorerView Integration', () => {
     };
 
     vi.mocked(useExplorerContext).mockReturnValue(mockContextValue as unknown as ReturnType<typeof useExplorerContext>);
+
+    vi.mocked(useNavigation).mockReturnValue({
+      currentRoute: { type: 'explorer', folderId: '/test' },
+      navigateToExplorer: vi.fn(),
+      navigateToCollection: vi.fn(),
+      canGoBack: true,
+      canGoForward: true,
+      goBack: vi.fn(),
+      goForward: vi.fn(),
+    });
 
     vi.mocked(listen).mockResolvedValue(() => { });
   });

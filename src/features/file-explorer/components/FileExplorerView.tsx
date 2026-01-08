@@ -1,6 +1,9 @@
 import { useCallback, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ExplorerToolbar } from "@/components/explorer/ExplorerToolbar";
 import { ExplorerSelectionSheet } from "@/components/explorer/ExplorerSelectionSheet";
+import { Button } from "@/components/ui/button";
+import { useNavigation } from "@/hooks/use-navigation";
 import { ColumnView } from "./ColumnView";
 import { FileListView } from "./FileListView";
 import { PathBar } from "./PathBar";
@@ -55,7 +58,32 @@ export const FileExplorerView = ({
     setIsSelectionOpen,
   } = useExplorerContext();
 
+  const { goBack, goForward, canGoBack, canGoForward } = useNavigation();
+
   const currentFolderName = folderId ? getPathBaseName(folderId) : "Select a folder";
+
+  const navigationButtons = (
+    <div className="flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7"
+        onClick={goBack}
+        disabled={!canGoBack}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7"
+        onClick={goForward}
+        disabled={!canGoForward}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
 
   const handleFileSelection = useCallback(
     (row: FileRow, options?: { additive?: boolean }) => {
@@ -253,6 +281,7 @@ export const FileExplorerView = ({
     <section className="relative flex min-h-0 min-w-0 flex-1 flex-col">
       <ExplorerToolbar
         title={currentFolderName}
+        leftContent={navigationButtons}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         fileCount={listing.fileCount}
