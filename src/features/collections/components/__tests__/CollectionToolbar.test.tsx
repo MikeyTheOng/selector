@@ -2,9 +2,11 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CollectionToolbar } from '../CollectionToolbar';
 import { useCollectionSelection } from '../../hooks/use-collection-selection';
+import { useCollections } from '../../hooks/use-collections';
 import type { ExplorerItem } from '@/types/explorer';
 
 vi.mock('../../hooks/use-collection-selection');
+vi.mock('../../hooks/use-collections');
 
 describe('CollectionToolbar', () => {
   const mockSelection = {
@@ -28,6 +30,18 @@ describe('CollectionToolbar', () => {
     clearFocus: vi.fn(),
     getCachedItem: vi.fn(),
   };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (useCollections as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      collections: [
+        { id: 1, name: 'Collection 1' },
+        { id: 2, name: 'Collection 2' }
+      ],
+      isLoading: false,
+      error: null
+    });
+  });
 
   const defaultProps = {
     collectionId: '1',
