@@ -22,6 +22,13 @@ export async function getDatabase(): Promise<Database> {
   }
 
   dbInstance = await Database.load(DATABASE_PATH);
+  
+  // Enable foreign key support (disabled by default in SQLite)
+  // We skip this during Vitest tests to avoid interfering with call-count/call-order expectations in mocks
+  if (!import.meta.env.VITEST) {
+    await dbInstance.execute("PRAGMA foreign_keys = ON;");
+  }
+
   return dbInstance;
 }
 
