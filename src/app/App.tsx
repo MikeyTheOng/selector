@@ -4,6 +4,7 @@ import { useNavigation, NavigationProvider } from "@/hooks/use-navigation";
 import { MainLayout } from "./MainLayout";
 import { LocationsSidebar } from "@/features/file-explorer/components/LocationsSidebar";
 import { TextScaleProvider } from "@/providers/TextScaleProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 function AppInner() {
   const { locations, error: locationsError } = useLocations();
@@ -49,6 +50,7 @@ function App() {
         <TextScaleProvider>
           <NavigationProvider>
             <AppInner />
+            <Toaster richColors />
           </NavigationProvider>
         </TextScaleProvider>
       </div>
