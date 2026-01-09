@@ -38,3 +38,4 @@ export { CollectionsSidebarSection } from "./components/CollectionsSidebarSectio
 export { CollectionsView } from "./components/CollectionsView";
 export { CollectionsPage } from "./components/CollectionsPage";
 export { AddToCollectionDialog } from "./components/AddToCollectionDialog";
+export { AddToCollectionSelectionPanel } from "./components/AddToCollectionSelectionPanel";
