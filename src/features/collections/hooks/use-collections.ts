@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getErrorMessage } from "@/lib/path-utils";
-import * as collectionsService from "../lib/collections-repository";
+import * as collectionsService from "../lib/collections-service";
 import type {
   Collection,
   CreateCollectionInput,
@@ -104,4 +104,3 @@ export const useCollections = () => {
     refetch,
   };
 };
-

@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useCollectionItems } from "../use-collection-items";
-import * as collectionsService from "../../lib/collections-repository";
+import * as collectionsService from "../../lib/collections-service";
 import { fsModule } from "@/lib/tauri/fs";
 import type { CollectionItem } from "../../types";
 
 // Mock the collections service
-vi.mock("../../lib/collections-repository");
+vi.mock("../../lib/collections-service");
 
 // Mock the fsModule for status detection
 vi.mock("@/lib/tauri/fs", () => ({

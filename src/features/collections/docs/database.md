@@ -82,4 +82,6 @@ Stores items (files/folders) within collections.
 | Component | Path |
 |-----------|------|
 | Collections service | `src/features/collections/lib/collections-service.ts` |
+| Collections repository | `src/features/collections/lib/collections-repository.ts` |
+| Collection items repository | `src/features/collections/lib/collection-items-repository.ts` |
 | TypeScript types | `src/features/collections/types.ts` |

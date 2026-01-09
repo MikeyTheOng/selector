@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getErrorMessage } from "@/lib/path-utils";
 import { fsModule } from "@/lib/tauri/fs";
-import * as collectionsService from "../lib/collections-repository";
-import { DuplicateItemError } from "../errors";
+import * as collectionsService from "../lib/collections-service";
 import type {
   CollectionItem,
   CollectionItemWithStatus,
@@ -123,18 +122,6 @@ export const useCollectionItems = (collectionId: number) => {
       targetCollectionId: number,
       input: AddItemPayload
     ): Promise<CollectionItem> => {
-      const existing = await collectionsService.getItemByPath(
-        targetCollectionId,
-        input.path
-      );
-
-      if (existing) {
-        const collection = await collectionsService.getCollectionById(
-          targetCollectionId
-        );
-        throw new DuplicateItemError(collection?.name);
-      }
-
       const item = await collectionsService.addItemToCollection({
         ...input,
         collection_id: targetCollectionId,
@@ -176,18 +163,11 @@ export const useCollectionItems = (collectionId: number) => {
 
   const relinkItem = useCallback(
     async (oldPath: string, newPath: string): Promise<number> => {
-      const existing = await collectionsService.getItemByPath(
+      const count = await collectionsService.relinkItem(
         collectionId,
+        oldPath,
         newPath
       );
-      if (existing) {
-        const collection = await collectionsService.getCollectionById(
-          collectionId
-        );
-        throw new DuplicateItemError(collection?.name);
-      }
-
-      const count = await collectionsService.updateItemPath(oldPath, newPath);
       await loadItems(); // Refresh the list
       return count;
     },

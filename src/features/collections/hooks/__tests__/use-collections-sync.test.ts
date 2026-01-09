@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useCollections } from "../use-collections";
-import * as collectionsService from "../../lib/collections-repository";
+import * as collectionsService from "../../lib/collections-service";
 import type { Collection } from "../../types";
 import { mockEmit, mockListen } from "@/test/mocks/tauri";
 
 // Mock the collections service
-vi.mock("../../lib/collections-repository");
+vi.mock("../../lib/collections-service");
 
 describe("useCollections Synchronization", () => {
   const mockCollections: Collection[] = [

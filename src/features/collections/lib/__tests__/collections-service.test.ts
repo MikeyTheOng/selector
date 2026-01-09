@@ -11,11 +11,14 @@ import {
   updateCollection,
   deleteCollection,
   addItemToCollection,
+  addItemsToCollection,
   removeItemFromCollection,
   getCollectionItems,
   updateItemPath,
-} from "../collections-repository";
+  relinkFolderItems,
+} from "../collections-service";
 import { resetDatabaseCache } from "@/lib/tauri/database";
+import { DuplicateItemError } from "../../errors";
 import type { Collection, CollectionItem } from "../../types";
 
 describe("collections-service", () => {
@@ -176,7 +179,9 @@ describe("collections-service", () => {
       };
 
       mockDatabaseExecute.mockResolvedValueOnce({ lastInsertId: 1 });
-      mockDatabaseSelect.mockResolvedValueOnce([mockItem]);
+      mockDatabaseSelect
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([mockItem]);
 
       const result = await addItemToCollection({
         collection_id: 1,
@@ -202,7 +207,9 @@ describe("collections-service", () => {
       };
 
       mockDatabaseExecute.mockResolvedValueOnce({ lastInsertId: 1 });
-      mockDatabaseSelect.mockResolvedValueOnce([mockItem]);
+      mockDatabaseSelect
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([mockItem]);
 
       const result = await addItemToCollection({
         collection_id: 1,
@@ -212,6 +219,80 @@ describe("collections-service", () => {
       });
 
       expect(result).toEqual(mockItem);
+    });
+
+    it("should throw DuplicateItemError when item already exists", async () => {
+      const existingItem: CollectionItem = {
+        id: 99,
+        collection_id: 1,
+        path: "/Users/test/photos/image.jpg",
+        item_type: "file",
+        volume_id: null,
+        added_at: "2024-01-01T00:00:00",
+      };
+      const mockCollection: Collection = {
+        id: 1,
+        name: "My Collection",
+        created_at: "2024-01-01T00:00:00",
+        updated_at: "2024-01-01T00:00:00",
+      };
+
+      mockDatabaseSelect
+        .mockResolvedValueOnce([existingItem])
+        .mockResolvedValueOnce([mockCollection]);
+
+      await expect(
+        addItemToCollection({
+          collection_id: 1,
+          path: "/Users/test/photos/image.jpg",
+          item_type: "file",
+        })
+      ).rejects.toThrow(DuplicateItemError);
+
+      expect(mockDatabaseExecute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("addItemsToCollection", () => {
+    it("should return successes and errors without aborting", async () => {
+      const mockItem: CollectionItem = {
+        id: 1,
+        collection_id: 1,
+        path: "/Users/test/photos/image.jpg",
+        item_type: "file",
+        volume_id: null,
+        added_at: "2024-01-01T00:00:00",
+      };
+      const existingItem: CollectionItem = {
+        id: 2,
+        collection_id: 1,
+        path: "/Users/test/photos/duplicate.jpg",
+        item_type: "file",
+        volume_id: null,
+        added_at: "2024-01-01T00:00:00",
+      };
+      const mockCollection: Collection = {
+        id: 1,
+        name: "My Collection",
+        created_at: "2024-01-01T00:00:00",
+        updated_at: "2024-01-01T00:00:00",
+      };
+
+      mockDatabaseExecute.mockResolvedValueOnce({ lastInsertId: 1 });
+      mockDatabaseSelect
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([mockItem])
+        .mockResolvedValueOnce([existingItem])
+        .mockResolvedValueOnce([mockCollection]);
+
+      const result = await addItemsToCollection(1, [
+        { path: mockItem.path, item_type: "file" },
+        { path: existingItem.path, item_type: "file" },
+      ]);
+
+      expect(result.added).toHaveLength(1);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].error).toBeInstanceOf(DuplicateItemError);
     });
   });
 
@@ -322,7 +403,6 @@ describe("collections-service", () => {
       mockDatabaseSelect.mockResolvedValueOnce(itemsToRelink);
       mockDatabaseExecute.mockResolvedValue({ rowsAffected: 1 });
 
-      const { relinkFolderItems } = await import("../collections-repository");
       const result = await relinkFolderItems(oldFolderPath, newFolderPath);
 
       expect(result).toBe(3); // 3 items relinked
@@ -351,7 +431,6 @@ describe("collections-service", () => {
       ]);
       mockDatabaseExecute.mockResolvedValue({ rowsAffected: 1 });
 
-      const { relinkFolderItems } = await import("../collections-repository");
       const result = await relinkFolderItems(oldFolderPath, newFolderPath);
 
       expect(result).toBe(1);
@@ -360,7 +439,6 @@ describe("collections-service", () => {
     it("should return 0 if no items match the folder path", async () => {
       mockDatabaseSelect.mockResolvedValueOnce([]);
 
-      const { relinkFolderItems } = await import("../collections-repository");
       const result = await relinkFolderItems(
         "/nonexistent/folder",
         "/new/folder"
