@@ -50,8 +50,10 @@ function App() {
         <NavigationProvider>
           <Toaster
             className="pointer-events-auto"
+            closeButton
             position="top-right"
             richColors
+            visibleToasts={1}
           />
           <AppInner />
         </NavigationProvider>
