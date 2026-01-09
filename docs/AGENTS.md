@@ -33,6 +33,9 @@ This repository uses **Yarn**.
 
 ## Coding Standards
 
+### General
+- Agents should only add comments where necessary to explain complex code, as code should often be self-explanatory.
+
 ### Frontend (React / TypeScript)
 - 2-space indentation, double quotes, semicolons.
 - Prefer functional components and hooks.
