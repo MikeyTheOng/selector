@@ -96,7 +96,9 @@ describe("ExplorerSelectionSheet", () => {
     const mainButton = screen.getByText("Custom Action");
     fireEvent.click(mainButton);
     
-    expect(onAction).toHaveBeenCalledWith(mockEntries);
+    await waitFor(() => {
+      expect(onAction).toHaveBeenCalledWith(mockEntries);
+    });
     expect(invoke).not.toHaveBeenCalled();
   });
 

@@ -4,7 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { ExplorerItem } from "@/types/explorer";
 
 export interface ExplorerSelectionSheetProps {
@@ -64,6 +64,9 @@ export const ExplorerSelectionSheet = ({
           <SheetTitle className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Selection
           </SheetTitle>
+          <SheetDescription className="sr-only">
+            Manage your selected items
+          </SheetDescription>
         </SheetHeader>
         <ScrollArea className="mt-4 min-h-0 flex-1 pr-3">
           {entries.length === 0 ? (
