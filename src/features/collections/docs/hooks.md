@@ -220,8 +220,7 @@ const { addItem } = useCollectionItems(collectionId);
 
 async function handleAddFile(filePath: string) {
   try {
-    await addItem({
-      collection_id: collectionId,
+    await addItem(collectionId, {
       path: filePath,
       item_type: "file",
       volume_id: null, // or "VolumeName" for external drives

@@ -1,7 +1,9 @@
 import React, { useMemo } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
+import { toast } from "sonner";
 import { useCollections } from "../hooks/use-collections";
-import { useCollectionItems } from "../hooks/use-collection-items";
+import { useCollectionItems, getFilename } from "../hooks/use-collection-items";
+import { DuplicateItemError } from "../errors";
 import { useCollectionSelection, collectionItemToExplorerItem } from "../hooks/use-collection-selection";
 import { useExplorerViewState } from "@/hooks/explorer/useExplorerViewState";
 import { useNavigation } from "@/hooks/use-navigation";
@@ -74,10 +76,19 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
       });
 
       if (selected && typeof selected === "string") {
-        if (item.kind === "folder") {
-          await relinkFolder(item.path, selected);
-        } else {
-          await relinkItem(item.path, selected);
+        try {
+          if (item.kind === "folder") {
+            await relinkFolder(item.path, selected);
+          } else {
+            await relinkItem(item.path, selected);
+          }
+        } catch (error) {
+          let errorMsg = "Failed to relink item.";
+          if (error instanceof DuplicateItemError) {
+            const filename = getFilename(selected);
+            errorMsg = `'${filename}' is already in the target collection.`;
+          } 
+          toast.error(errorMsg);
         }
       }
     } catch (err) {

@@ -2,12 +2,20 @@ import { useCallback, useEffect, useState } from "react";
 import { getErrorMessage } from "@/lib/path-utils";
 import { fsModule } from "@/lib/tauri/fs";
 import * as collectionsService from "../lib/collections-repository";
+import { DuplicateItemError } from "../errors";
 import type {
   CollectionItem,
   CollectionItemWithStatus,
   CollectionItemStatus,
   AddCollectionItemInput,
 } from "../types";
+
+/**
+ * Extracts the filename from a path
+ */
+export function getFilename(path: string): string {
+  return path.split(/[/\\]/).pop() || path;
+}
 
 /**
  * Detects the status of a single collection item
@@ -67,7 +75,6 @@ export const useCollectionItems = (collectionId: number) => {
         setState((prev) => ({ ...prev, isLoading: true, error: null }));
       }
       const items = await collectionsService.getCollectionItems(collectionId);
-      // Detect status for each item
       const itemsWithStatus = await detectItemsStatus(items);
       setState({ items: itemsWithStatus, isLoading: false, error: null });
     } catch (error) {
@@ -109,13 +116,37 @@ export const useCollectionItems = (collectionId: number) => {
     return () => clearInterval(interval);
   }, [state.items, loadItems]);
 
+  type AddItemPayload = Omit<AddCollectionItemInput, "collection_id">;
+
   const addItem = useCallback(
-    async (input: AddCollectionItemInput): Promise<CollectionItem> => {
-      const item = await collectionsService.addItemToCollection(input);
-      await loadItems(); // Refresh the list
+    async (
+      targetCollectionId: number,
+      input: AddItemPayload
+    ): Promise<CollectionItem> => {
+      const existing = await collectionsService.getItemByPath(
+        targetCollectionId,
+        input.path
+      );
+
+      if (existing) {
+        const collection = await collectionsService.getCollectionById(
+          targetCollectionId
+        );
+        throw new DuplicateItemError(collection?.name);
+      }
+
+      const item = await collectionsService.addItemToCollection({
+        ...input,
+        collection_id: targetCollectionId,
+      });
+
+      // Only refresh this hook's list if we added to the collection it manages
+      if (targetCollectionId === collectionId) {
+        await loadItems();
+      }
       return item;
     },
-    [loadItems]
+    [collectionId, loadItems]
   );
 
   const removeItem = useCallback(
@@ -145,11 +176,22 @@ export const useCollectionItems = (collectionId: number) => {
 
   const relinkItem = useCallback(
     async (oldPath: string, newPath: string): Promise<number> => {
+      const existing = await collectionsService.getItemByPath(
+        collectionId,
+        newPath
+      );
+      if (existing) {
+        const collection = await collectionsService.getCollectionById(
+          collectionId
+        );
+        throw new DuplicateItemError(collection?.name);
+      }
+
       const count = await collectionsService.updateItemPath(oldPath, newPath);
       await loadItems(); // Refresh the list
       return count;
     },
-    [loadItems]
+    [collectionId, loadItems]
   );
 
   const relinkFolder = useCallback(

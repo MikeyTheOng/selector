@@ -166,6 +166,26 @@ export async function getCollectionItems(
 }
 
 /**
+ * Gets a specific item from a collection by its path
+ * @param collectionId - The collection ID
+ * @param path - The item path
+ * @returns The collection item or null if not found
+ */
+export async function getItemByPath(
+  collectionId: number,
+  path: string
+): Promise<CollectionItem | null> {
+  const db = await getDatabase();
+
+  const items = await db.select<CollectionItem[]>(
+    "SELECT * FROM collection_items WHERE collection_id = ? AND path = ?",
+    [collectionId, path]
+  );
+
+  return items[0] ?? null;
+}
+
+/**
  * Updates the path of an item across ALL collections
  * This is used for relinking when a file/folder is moved
  * @param oldPath - The current/old path

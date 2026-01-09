@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { useCollectionItems } from "../hooks/use-collection-items";
+import { toast } from "sonner";
+import { useCollectionItems, getFilename } from "../hooks/use-collection-items";
 import { useCollections } from "../hooks/use-collections";
-import * as collectionsService from "../lib/collections-repository";
+import { DuplicateItemError } from "../errors";
 import { FolderPlus, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +33,7 @@ export const CollectionMoveCopyDialog: React.FC<CollectionMoveCopyDialogProps> =
   isOpen,
   onClose,
 }) => {
-  const { removeItemByPath } = useCollectionItems(collectionId);
+  const { addItem, removeItemByPath } = useCollectionItems(collectionId);
   const { collections, createCollection, isLoading } = useCollections();
   const [isProcessing, setIsProcessing] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
@@ -43,16 +44,28 @@ export const CollectionMoveCopyDialog: React.FC<CollectionMoveCopyDialogProps> =
     setIsProcessing(true);
     try {
       for (const entry of entries) {
-        await collectionsService.addItemToCollection({
-          collection_id: targetId,
-          path: entry.path,
-          item_type: entry.kind === "folder" ? "folder" : "file",
-        });
+        try {
+          await addItem(targetId, {
+            path: entry.path,
+            item_type: entry.kind === "folder" ? "folder" : "file",
+          });
+        } catch (error) {
+          let errorMsg = "Failed to add item.";
+          if (error instanceof DuplicateItemError) {
+            const filename = getFilename(entry.path);
+            errorMsg = `'${filename}' is already in '${error.collectionName || "this collection"}'`;
+          }
+          toast.error(errorMsg);
+        }
       }
 
       if (mode === "move") {
         for (const entry of entries) {
-          await removeItemByPath(entry.path);
+          try {
+            await removeItemByPath(entry.path);
+          } catch (err) {
+            console.error("Failed to remove item during move:", err);
+          }
         }
       }
       onClose();
@@ -66,10 +79,7 @@ export const CollectionMoveCopyDialog: React.FC<CollectionMoveCopyDialogProps> =
   const title = mode === "move" ? "Move to Collection" : "Copy to Collection";
   const description = `${mode === "move" ? "Move" : "Copy"} ${entries.length} items to another collection.`;
 
-  const excludeCollectionId = mode === "move" ? collectionId : undefined;
-  const filteredCollections = excludeCollectionId
-    ? collections.filter((c) => c.id !== excludeCollectionId)
-    : collections;
+  const filteredCollections = collections.filter((c) => c.id !== collectionId);
 
   const handleCreateAndSelect = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -155,7 +155,7 @@ describe("useCollectionItems", () => {
       await act(async () => {
         await vi.runAllTimersAsync();
       });
-      
+
       expect(result.current.isLoading).toBe(false);
       expect(collectionsService.getCollectionItems).toHaveBeenCalledTimes(1);
 
@@ -167,7 +167,7 @@ describe("useCollectionItems", () => {
 
       // It should call getCollectionItems again
       expect(collectionsService.getCollectionItems).toHaveBeenCalledTimes(2);
-      
+
       // But isLoading should stay false
       expect(result.current.isLoading).toBe(false);
     });
@@ -175,7 +175,7 @@ describe("useCollectionItems", () => {
     it("should not set isLoading to true during background polling", async () => {
       // Setup: one item is missing to trigger polling
       vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(mockItems);
-      
+
       // First call returns error for stat (missing), subsequent calls return success
       vi.mocked(fsModule.stat!)
         .mockRejectedValueOnce(new Error("File not found"))
@@ -187,7 +187,7 @@ describe("useCollectionItems", () => {
       await act(async () => {
         await vi.runAllTimersAsync();
       });
-      
+
       expect(result.current.isLoading).toBe(false);
       expect(result.current.items[0].status).toBe("missing");
 
@@ -230,8 +230,7 @@ describe("useCollectionItems", () => {
       });
 
       await act(async () => {
-        await result.current.addItem({
-          collection_id: mockCollectionId,
+        await result.current.addItem(mockCollectionId, {
           path: "/Users/test/newfile.txt",
           item_type: "file",
         });
@@ -262,8 +261,7 @@ describe("useCollectionItems", () => {
       });
 
       await expect(
-        result.current.addItem({
-          collection_id: mockCollectionId,
+        result.current.addItem(mockCollectionId, {
           path: "/Users/test/photo1.jpg",
           item_type: "file",
         })
