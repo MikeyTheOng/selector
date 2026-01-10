@@ -44,19 +44,19 @@ describe("collections-service", () => {
       expect(result).toEqual(mockCollection);
       expect(mockDatabaseExecute).toHaveBeenCalledWith(
         expect.stringContaining("INSERT INTO collections"),
-        expect.arrayContaining(["My Collection"])
+        expect.arrayContaining(["My Collection"]),
       );
     });
 
     it("should throw an error if collection name is empty", async () => {
       await expect(createCollection({ name: "" })).rejects.toThrow(
-        "Collection name cannot be empty"
+        "Collection name cannot be empty",
       );
     });
 
     it("should throw an error if collection name is only whitespace", async () => {
       await expect(createCollection({ name: "   " })).rejects.toThrow(
-        "Collection name cannot be empty"
+        "Collection name cannot be empty",
       );
     });
   });
@@ -84,7 +84,7 @@ describe("collections-service", () => {
 
       expect(result).toEqual(mockCollections);
       expect(mockDatabaseSelect).toHaveBeenCalledWith(
-        expect.stringContaining("SELECT * FROM collections")
+        expect.stringContaining("SELECT * FROM collections"),
       );
     });
 
@@ -113,7 +113,7 @@ describe("collections-service", () => {
       expect(result).toEqual(mockCollection);
       expect(mockDatabaseSelect).toHaveBeenCalledWith(
         expect.stringContaining("WHERE id = ?"),
-        [1]
+        [1],
       );
     });
 
@@ -143,13 +143,13 @@ describe("collections-service", () => {
       expect(result).toEqual(updatedCollection);
       expect(mockDatabaseExecute).toHaveBeenCalledWith(
         expect.stringContaining("UPDATE collections"),
-        expect.arrayContaining(["Updated Name", 1])
+        expect.arrayContaining(["Updated Name", 1]),
       );
     });
 
     it("should throw an error if collection name is empty", async () => {
       await expect(updateCollection({ id: 1, name: "" })).rejects.toThrow(
-        "Collection name cannot be empty"
+        "Collection name cannot be empty",
       );
     });
   });
@@ -162,7 +162,7 @@ describe("collections-service", () => {
 
       expect(mockDatabaseExecute).toHaveBeenCalledWith(
         expect.stringContaining("DELETE FROM collections"),
-        [1]
+        [1],
       );
     });
   });
@@ -174,7 +174,6 @@ describe("collections-service", () => {
         collection_id: 1,
         path: "/Users/test/photos/image.jpg",
         item_type: "file",
-        volume_id: null,
         added_at: "2024-01-01T00:00:00",
       };
 
@@ -192,33 +191,39 @@ describe("collections-service", () => {
       expect(result).toEqual(mockItem);
       expect(mockDatabaseExecute).toHaveBeenCalledWith(
         expect.stringContaining("INSERT INTO collection_items"),
-        expect.arrayContaining([1, "/Users/test/photos/image.jpg", "file"])
+        expect.arrayContaining([1, "/Users/test/photos/image.jpg", "file"]),
       );
     });
 
-    it("should add an item with volume_id for external volumes", async () => {
+    it("should add an item from external volumes", async () => {
       const mockItem: CollectionItem = {
         id: 1,
         collection_id: 1,
         path: "/Volumes/External/photos/image.jpg",
         item_type: "file",
-        volume_id: "External",
         added_at: "2024-01-01T00:00:00",
       };
 
-      mockDatabaseExecute.mockResolvedValueOnce({ lastInsertId: 1 });
       mockDatabaseSelect
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([mockItem]);
+        .mockResolvedValueOnce([]) // No duplicate check
+        .mockResolvedValueOnce([mockItem]); // Return the created item
+      mockDatabaseExecute.mockResolvedValueOnce({ lastInsertId: 1 });
 
       const result = await addItemToCollection({
         collection_id: 1,
         path: "/Volumes/External/photos/image.jpg",
         item_type: "file",
-        volume_id: "External",
       });
 
       expect(result).toEqual(mockItem);
+      expect(mockDatabaseExecute).toHaveBeenCalledWith(
+        expect.stringContaining("INSERT INTO collection_items"),
+        expect.arrayContaining([
+          1,
+          "/Volumes/External/photos/image.jpg",
+          "file",
+        ]),
+      );
     });
 
     it("should throw DuplicateItemError when item already exists", async () => {
@@ -227,7 +232,6 @@ describe("collections-service", () => {
         collection_id: 1,
         path: "/Users/test/photos/image.jpg",
         item_type: "file",
-        volume_id: null,
         added_at: "2024-01-01T00:00:00",
       };
       const mockCollection: Collection = {
@@ -246,7 +250,7 @@ describe("collections-service", () => {
           collection_id: 1,
           path: "/Users/test/photos/image.jpg",
           item_type: "file",
-        })
+        }),
       ).rejects.toThrow(DuplicateItemError);
 
       expect(mockDatabaseExecute).not.toHaveBeenCalled();
@@ -260,7 +264,6 @@ describe("collections-service", () => {
         collection_id: 1,
         path: "/Users/test/photos/image.jpg",
         item_type: "file",
-        volume_id: null,
         added_at: "2024-01-01T00:00:00",
       };
       const existingItem: CollectionItem = {
@@ -268,7 +271,6 @@ describe("collections-service", () => {
         collection_id: 1,
         path: "/Users/test/photos/duplicate.jpg",
         item_type: "file",
-        volume_id: null,
         added_at: "2024-01-01T00:00:00",
       };
       const mockCollection: Collection = {
@@ -304,7 +306,7 @@ describe("collections-service", () => {
 
       expect(mockDatabaseExecute).toHaveBeenCalledWith(
         expect.stringContaining("DELETE FROM collection_items"),
-        [1]
+        [1],
       );
     });
   });
@@ -317,7 +319,6 @@ describe("collections-service", () => {
           collection_id: 1,
           path: "/Users/test/photos/image1.jpg",
           item_type: "file",
-          volume_id: null,
           added_at: "2024-01-01T00:00:00",
         },
         {
@@ -325,7 +326,6 @@ describe("collections-service", () => {
           collection_id: 1,
           path: "/Users/test/photos/folder",
           item_type: "folder",
-          volume_id: null,
           added_at: "2024-01-01T00:00:00",
         },
       ];
@@ -337,7 +337,7 @@ describe("collections-service", () => {
       expect(result).toEqual(mockItems);
       expect(mockDatabaseSelect).toHaveBeenCalledWith(
         expect.stringContaining("WHERE collection_id = ?"),
-        [1]
+        [1],
       );
     });
 
@@ -356,13 +356,13 @@ describe("collections-service", () => {
 
       const result = await updateItemPath(
         "/old/path/file.jpg",
-        "/new/path/file.jpg"
+        "/new/path/file.jpg",
       );
 
       expect(result).toBe(3);
       expect(mockDatabaseExecute).toHaveBeenCalledWith(
         expect.stringContaining("UPDATE collection_items SET path = ?"),
-        ["/new/path/file.jpg", "/old/path/file.jpg"]
+        ["/new/path/file.jpg", "/old/path/file.jpg"],
       );
     });
   });
@@ -379,7 +379,6 @@ describe("collections-service", () => {
           collection_id: 1,
           path: "/Volumes/OldDrive/Photos/vacation/beach.jpg",
           item_type: "file",
-          volume_id: "OldDrive",
           added_at: "2024-01-01T00:00:00",
         },
         {
@@ -387,7 +386,6 @@ describe("collections-service", () => {
           collection_id: 2,
           path: "/Volumes/OldDrive/Photos/family/dinner.jpg",
           item_type: "file",
-          volume_id: "OldDrive",
           added_at: "2024-01-01T00:00:00",
         },
         {
@@ -395,7 +393,6 @@ describe("collections-service", () => {
           collection_id: 1,
           path: "/Volumes/OldDrive/Photos/work",
           item_type: "folder",
-          volume_id: "OldDrive",
           added_at: "2024-01-01T00:00:00",
         },
       ];
@@ -407,8 +404,10 @@ describe("collections-service", () => {
 
       expect(result).toBe(3); // 3 items relinked
       expect(mockDatabaseSelect).toHaveBeenCalledWith(
-        expect.stringContaining("SELECT * FROM collection_items WHERE path LIKE ?"),
-        ["/Volumes/OldDrive/Photos%"]
+        expect.stringContaining(
+          "SELECT * FROM collection_items WHERE path LIKE ?",
+        ),
+        ["/Volumes/OldDrive/Photos%"],
       );
 
       // Should update each item
@@ -425,7 +424,6 @@ describe("collections-service", () => {
           collection_id: 1,
           path: "/Users/test/Documents/report.pdf",
           item_type: "file",
-          volume_id: null,
           added_at: "2024-01-01T00:00:00",
         },
       ]);
@@ -441,7 +439,7 @@ describe("collections-service", () => {
 
       const result = await relinkFolderItems(
         "/nonexistent/folder",
-        "/new/folder"
+        "/new/folder",
       );
 
       expect(result).toBe(0);

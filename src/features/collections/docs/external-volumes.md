@@ -6,13 +6,19 @@ This document describes how the Collections feature handles items located on ext
 
 When a collection item is loaded, its status is determined by checking for the existence of the file at `item.path`.
 
-- **Available:** File exists.
-- **Offline:** File is missing, but the item record has a stored `volume_id`. This indicates the item is likely on a disconnected external drive.
-- **Missing:** File is missing and has no `volume_id`. This indicates the file was deleted or moved from the local disk.
+- **Available:** File exists at the specified path.
+- **Offline:** File is missing and the path indicates an external volume (e.g., `/Volumes/ExternalDrive/*`), but the volume mount point itself doesn't exist. This indicates the drive is disconnected.
+- **Missing:** File is missing and either:
+  - The path is on a local drive, or
+  - The path is on an external volume that is currently mounted
 
-### `volume_id`
+### Runtime Volume Detection
 
-The `volume_id` is captured when an item is first added to a collection. It helps distinguish between a deleted file and a disconnected drive.
+The status detection checks if a missing file's path starts with `/Volumes/` (macOS). If it does, the system checks whether the volume mount point exists:
+- If the mount point exists but the file doesn't: status is **missing** (file was deleted/moved)
+- If the mount point doesn't exist: status is **offline** (volume is disconnected)
+
+This approach requires no stored metadata and adapts dynamically to changes in file locations.
 
 ## Auto-Recovery Mechanisms
 

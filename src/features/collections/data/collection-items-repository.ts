@@ -12,14 +12,14 @@ import type { AddCollectionItemInput, CollectionItem } from "../types";
  * @returns The created collection item
  */
 export async function addItemToCollection(
-  input: AddCollectionItemInput
+  input: AddCollectionItemInput,
 ): Promise<CollectionItem> {
   const db = await getDatabase();
 
   await db.execute(
-    `INSERT INTO collection_items (collection_id, path, item_type, volume_id)
-     VALUES (?, ?, ?, ?)`,
-    [input.collection_id, input.path, input.item_type, input.volume_id ?? null]
+    `INSERT INTO collection_items (collection_id, path, item_type)
+     VALUES (?, ?, ?)`,
+    [input.collection_id, input.path, input.item_type],
   );
 
   // Get the created item
@@ -27,7 +27,7 @@ export async function addItemToCollection(
     `SELECT * FROM collection_items
      WHERE collection_id = ? AND path = ?
      ORDER BY id DESC LIMIT 1`,
-    [input.collection_id, input.path]
+    [input.collection_id, input.path],
   );
 
   return items[0];
@@ -49,13 +49,13 @@ export async function removeItemFromCollection(itemId: number): Promise<void> {
  * @returns Array of collection items
  */
 export async function getCollectionItems(
-  collectionId: number
+  collectionId: number,
 ): Promise<CollectionItem[]> {
   const db = await getDatabase();
 
   const items = await db.select<CollectionItem[]>(
     "SELECT * FROM collection_items WHERE collection_id = ? ORDER BY added_at DESC",
-    [collectionId]
+    [collectionId],
   );
 
   return items;
@@ -69,13 +69,13 @@ export async function getCollectionItems(
  */
 export async function getItemByPath(
   collectionId: number,
-  path: string
+  path: string,
 ): Promise<CollectionItem | null> {
   const db = await getDatabase();
 
   const items = await db.select<CollectionItem[]>(
     "SELECT * FROM collection_items WHERE collection_id = ? AND path = ?",
-    [collectionId, path]
+    [collectionId, path],
   );
 
   return items[0] ?? null;
@@ -90,13 +90,13 @@ export async function getItemByPath(
  */
 export async function updateItemPath(
   oldPath: string,
-  newPath: string
+  newPath: string,
 ): Promise<number> {
   const db = await getDatabase();
 
   const result = await db.execute(
     "UPDATE collection_items SET path = ? WHERE path = ?",
-    [newPath, oldPath]
+    [newPath, oldPath],
   );
 
   return result.rowsAffected;
@@ -111,7 +111,7 @@ export async function updateItemPath(
  */
 export async function relinkFolderItems(
   oldFolderPath: string,
-  newFolderPath: string
+  newFolderPath: string,
 ): Promise<number> {
   const db = await getDatabase();
 
@@ -122,7 +122,7 @@ export async function relinkFolderItems(
   // Find all items that start with the old folder path
   const items = await db.select<CollectionItem[]>(
     "SELECT * FROM collection_items WHERE path LIKE ?",
-    [`${normalizedOldPath}%`]
+    [`${normalizedOldPath}%`],
   );
 
   if (items.length === 0) {

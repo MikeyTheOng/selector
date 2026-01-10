@@ -9,7 +9,6 @@ describe("collectionItemToExplorerItem", () => {
       collection_id: 10,
       path: "/Users/test/photo.jpg",
       item_type: "file",
-      volume_id: null,
       added_at: "2024-01-15T10:30:00Z",
       status: "available",
     };
@@ -31,7 +30,6 @@ describe("collectionItemToExplorerItem", () => {
       collection_id: 10,
       path: "/Users/test/photo.jpg",
       item_type: "file",
-      volume_id: null,
       added_at: "2024-01-15T10:30:00Z",
       status: "available",
     };
@@ -52,7 +50,6 @@ describe("collectionItemToExplorerItem", () => {
       collection_id: 10,
       path: "/Users/test/documents",
       item_type: "folder",
-      volume_id: null,
       added_at: "2024-01-15T10:30:00Z",
       status: "available",
     };
@@ -70,7 +67,6 @@ describe("collectionItemToExplorerItem", () => {
       collection_id: 10,
       path: "/Volumes/External/file.txt",
       item_type: "file",
-      volume_id: "External",
       added_at: "2024-01-15T10:30:00Z",
       status: "offline",
     };

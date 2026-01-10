@@ -21,17 +21,24 @@ export function getFilename(path: string): string {
  * @internal
  */
 async function detectItemStatus(
-  item: CollectionItem
+  item: CollectionItem,
 ): Promise<CollectionItemStatus> {
   try {
     await fsModule.stat?.(item.path);
     return "available";
   } catch {
-    // Path doesn't exist - check if it's on an external volume
-    if (item.volume_id) {
-      return "offline";
+    // Check if this is an external volume path
+    const volumeMatch = item.path.match(/^\/Volumes\/([^/]+)/);
+    if (volumeMatch) {
+      // Check if volume mount point exists
+      try {
+        await fsModule.stat?.(`/Volumes/${volumeMatch[1]}`);
+        return "missing"; // Volume is mounted, but file is gone
+      } catch {
+        return "offline"; // Volume is not mounted
+      }
     }
-    return "missing";
+    return "missing"; // Local file that doesn't exist
   }
 }
 
@@ -40,7 +47,7 @@ async function detectItemStatus(
  * @internal
  */
 async function detectItemsStatus(
-  items: CollectionItem[]
+  items: CollectionItem[],
 ): Promise<CollectionItemWithStatus[]> {
   const statusPromises = items.map(async (item) => {
     const status = await detectItemStatus(item);
@@ -68,22 +75,25 @@ export const useCollectionItems = (collectionId: number) => {
     error: null,
   });
 
-  const loadItems = useCallback(async (options: { silent?: boolean } = {}) => {
-    try {
-      if (!options.silent) {
-        setState((prev) => ({ ...prev, isLoading: true, error: null }));
+  const loadItems = useCallback(
+    async (options: { silent?: boolean } = {}) => {
+      try {
+        if (!options.silent) {
+          setState((prev) => ({ ...prev, isLoading: true, error: null }));
+        }
+        const items = await collectionsService.getCollectionItems(collectionId);
+        const itemsWithStatus = await detectItemsStatus(items);
+        setState({ items: itemsWithStatus, isLoading: false, error: null });
+      } catch (error) {
+        setState({
+          items: [],
+          isLoading: false,
+          error: getErrorMessage(error),
+        });
       }
-      const items = await collectionsService.getCollectionItems(collectionId);
-      const itemsWithStatus = await detectItemsStatus(items);
-      setState({ items: itemsWithStatus, isLoading: false, error: null });
-    } catch (error) {
-      setState({
-        items: [],
-        isLoading: false,
-        error: getErrorMessage(error),
-      });
-    }
-  }, [collectionId]);
+    },
+    [collectionId],
+  );
 
   // Load items on mount and when collection ID changes
   useEffect(() => {
@@ -102,7 +112,7 @@ export const useCollectionItems = (collectionId: number) => {
   // Auto-recovery: Poll for missing/offline items
   useEffect(() => {
     const hasMissingOrOffline = state.items.some(
-      (item) => item.status === "missing" || item.status === "offline"
+      (item) => item.status === "missing" || item.status === "offline",
     );
 
     if (!hasMissingOrOffline) return;
@@ -120,7 +130,7 @@ export const useCollectionItems = (collectionId: number) => {
   const addItem = useCallback(
     async (
       targetCollectionId: number,
-      input: AddItemPayload
+      input: AddItemPayload,
     ): Promise<CollectionItem> => {
       const item = await collectionsService.addItemToCollection({
         ...input,
@@ -133,7 +143,7 @@ export const useCollectionItems = (collectionId: number) => {
       }
       return item;
     },
-    [collectionId, loadItems]
+    [collectionId, loadItems],
   );
 
   const removeItem = useCallback(
@@ -147,7 +157,7 @@ export const useCollectionItems = (collectionId: number) => {
         throw err;
       }
     },
-    [loadItems]
+    [loadItems],
   );
 
   const removeItemByPath = useCallback(
@@ -158,7 +168,7 @@ export const useCollectionItems = (collectionId: number) => {
       }
       await removeItem(item.id);
     },
-    [state.items, removeItem]
+    [state.items, removeItem],
   );
 
   const relinkItem = useCallback(
@@ -166,24 +176,24 @@ export const useCollectionItems = (collectionId: number) => {
       const count = await collectionsService.relinkItem(
         collectionId,
         oldPath,
-        newPath
+        newPath,
       );
       await loadItems(); // Refresh the list
       return count;
     },
-    [collectionId, loadItems]
+    [collectionId, loadItems],
   );
 
   const relinkFolder = useCallback(
     async (oldFolderPath: string, newFolderPath: string): Promise<number> => {
       const count = await collectionsService.relinkFolderItems(
         oldFolderPath,
-        newFolderPath
+        newFolderPath,
       );
       await loadItems(); // Refresh the list
       return count;
     },
-    [loadItems]
+    [loadItems],
   );
 
   return {

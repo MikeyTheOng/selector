@@ -31,7 +31,6 @@ Stores items (files/folders) within collections.
 | `collection_id` | INTEGER | NOT NULL, FK → collections(id) ON DELETE CASCADE | Parent collection |
 | `path` | TEXT | NOT NULL | Full filesystem path |
 | `item_type` | TEXT | NOT NULL, CHECK IN ('file', 'folder') | Item type |
-| `volume_id` | TEXT | nullable | External volume name |
 | `added_at` | TEXT | NOT NULL, DEFAULT datetime('now') | ISO 8601 timestamp |
 
 **Unique constraint:** `(collection_id, path)` - prevents duplicate paths in the same collection.
@@ -42,7 +41,6 @@ Stores items (files/folders) within collections.
 |-------|---------|---------|
 | `idx_collection_items_collection_id` | `collection_id` | Fast lookup of items by collection |
 | `idx_collection_items_path` | `path` | Fast path lookups for global relinking |
-| `idx_collection_items_volume_id` | `volume_id` | Fast queries for external volume status |
 
 ### Entity Relationship
 
@@ -54,8 +52,7 @@ Stores items (files/folders) within collections.
 │ name        │       │ id (PK)          │
 │ created_at  │       │ path             │
 │ updated_at  │       │ item_type        │
-└─────────────┘       │ volume_id        │
-                      │ added_at         │
+└─────────────┘       │ added_at         │
                       └──────────────────┘
 ```
 

@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS collection_items (
   collection_id INTEGER NOT NULL,
   path TEXT NOT NULL,
   item_type TEXT NOT NULL CHECK (item_type IN ('file', 'folder')),
-  volume_id TEXT,
   added_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE CASCADE,
   UNIQUE (collection_id, path)
@@ -29,7 +28,3 @@ CREATE INDEX IF NOT EXISTS idx_collection_items_collection_id
 -- Index for faster path lookups (for relinking across collections)
 CREATE INDEX IF NOT EXISTS idx_collection_items_path
   ON collection_items(path);
-
--- Index for volume-based queries (for external volume status)
-CREATE INDEX IF NOT EXISTS idx_collection_items_volume_id
-  ON collection_items(volume_id);

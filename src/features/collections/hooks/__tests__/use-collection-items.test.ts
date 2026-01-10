@@ -23,7 +23,6 @@ describe("useCollectionItems", () => {
       collection_id: mockCollectionId,
       path: "/Users/test/photo1.jpg",
       item_type: "file",
-      volume_id: null,
       added_at: "2024-01-15T10:00:00Z",
     },
     {
@@ -31,7 +30,6 @@ describe("useCollectionItems", () => {
       collection_id: mockCollectionId,
       path: "/Volumes/ExternalDrive/video.mp4",
       item_type: "file",
-      volume_id: "ExternalDrive",
       added_at: "2024-01-15T11:00:00Z",
     },
     {
@@ -39,7 +37,6 @@ describe("useCollectionItems", () => {
       collection_id: mockCollectionId,
       path: "/Users/test/documents",
       item_type: "folder",
-      volume_id: null,
       added_at: "2024-01-15T12:00:00Z",
     },
   ];
@@ -51,12 +48,10 @@ describe("useCollectionItems", () => {
   describe("initial state and loading", () => {
     it("should start with loading state", () => {
       vi.mocked(collectionsService.getCollectionItems).mockImplementation(
-        () => new Promise(() => { }) // Never resolves
+        () => new Promise(() => {}), // Never resolves
       );
 
-      const { result } = renderHook(() =>
-        useCollectionItems(mockCollectionId)
-      );
+      const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 
       expect(result.current.isLoading).toBe(true);
       expect(result.current.items).toEqual([]);
@@ -65,7 +60,7 @@ describe("useCollectionItems", () => {
 
     it("should load collection items on mount", async () => {
       vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(
-        mockItems
+        mockItems,
       );
 
       // Mock fsModule.stat to return success for all items (status: available)
@@ -74,9 +69,7 @@ describe("useCollectionItems", () => {
         mtime: new Date(),
       });
 
-      const { result } = renderHook(() =>
-        useCollectionItems(mockCollectionId)
-      );
+      const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -86,19 +79,17 @@ describe("useCollectionItems", () => {
       expect(result.current.items[0]).toHaveProperty("status", "available");
       expect(result.current.error).toBe(null);
       expect(collectionsService.getCollectionItems).toHaveBeenCalledWith(
-        mockCollectionId
+        mockCollectionId,
       );
     });
 
     it("should handle errors when loading items", async () => {
       const errorMessage = "Failed to load collection items";
       vi.mocked(collectionsService.getCollectionItems).mockRejectedValue(
-        new Error(errorMessage)
+        new Error(errorMessage),
       );
 
-      const { result } = renderHook(() =>
-        useCollectionItems(mockCollectionId)
-      );
+      const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -115,7 +106,7 @@ describe("useCollectionItems", () => {
 
       const { result, rerender } = renderHook(
         ({ collectionId }) => useCollectionItems(collectionId),
-        { initialProps: { collectionId: 1 } }
+        { initialProps: { collectionId: 1 } },
       );
 
       await waitFor(() => {
@@ -146,8 +137,13 @@ describe("useCollectionItems", () => {
     });
 
     it("should not set isLoading to true on window focus", async () => {
-      vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(mockItems);
-      vi.mocked(fsModule.stat!).mockResolvedValue({ size: 1024, mtime: new Date() });
+      vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(
+        mockItems,
+      );
+      vi.mocked(fsModule.stat!).mockResolvedValue({
+        size: 1024,
+        mtime: new Date(),
+      });
 
       const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 
@@ -174,7 +170,9 @@ describe("useCollectionItems", () => {
 
     it("should not set isLoading to true during background polling", async () => {
       // Setup: one item is missing to trigger polling
-      vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(mockItems);
+      vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(
+        mockItems,
+      );
 
       // First call returns error for stat (missing), subsequent calls return success
       vi.mocked(fsModule.stat!)
@@ -209,7 +207,6 @@ describe("useCollectionItems", () => {
         collection_id: mockCollectionId,
         path: "/Users/test/newfile.txt",
         item_type: "file",
-        volume_id: null,
         added_at: "2024-01-16T10:00:00Z",
       };
 
@@ -218,12 +215,10 @@ describe("useCollectionItems", () => {
         .mockResolvedValueOnce([newItem, ...mockItems]);
 
       vi.mocked(collectionsService.addItemToCollection).mockResolvedValue(
-        newItem
+        newItem,
       );
 
-      const { result } = renderHook(() =>
-        useCollectionItems(mockCollectionId)
-      );
+      const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -246,15 +241,13 @@ describe("useCollectionItems", () => {
 
     it("should handle errors when adding an item", async () => {
       vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(
-        mockItems
+        mockItems,
       );
       vi.mocked(collectionsService.addItemToCollection).mockRejectedValue(
-        new Error("Duplicate item")
+        new Error("Duplicate item"),
       );
 
-      const { result } = renderHook(() =>
-        useCollectionItems(mockCollectionId)
-      );
+      const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -264,7 +257,7 @@ describe("useCollectionItems", () => {
         result.current.addItem(mockCollectionId, {
           path: "/Users/test/photo1.jpg",
           item_type: "file",
-        })
+        }),
       ).rejects.toThrow("Duplicate item");
 
       // Items list should remain unchanged (with status fields)
@@ -279,11 +272,11 @@ describe("useCollectionItems", () => {
         .mockResolvedValueOnce(mockItems)
         .mockResolvedValueOnce([mockItems[0], mockItems[2]]);
 
-      vi.mocked(collectionsService.removeItemFromCollection).mockResolvedValue();
+      vi.mocked(
+        collectionsService.removeItemFromCollection,
+      ).mockResolvedValue();
 
-      const { result } = renderHook(() =>
-        useCollectionItems(mockCollectionId)
-      );
+      const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -296,7 +289,7 @@ describe("useCollectionItems", () => {
       });
 
       expect(collectionsService.removeItemFromCollection).toHaveBeenCalledWith(
-        2
+        2,
       );
       expect(result.current.items).toHaveLength(2);
     });
@@ -308,11 +301,11 @@ describe("useCollectionItems", () => {
         .mockResolvedValueOnce(mockItems)
         .mockResolvedValueOnce([mockItems[0], mockItems[2]]);
 
-      vi.mocked(collectionsService.removeItemFromCollection).mockResolvedValue();
+      vi.mocked(
+        collectionsService.removeItemFromCollection,
+      ).mockResolvedValue();
 
-      const { result } = renderHook(() =>
-        useCollectionItems(mockCollectionId)
-      );
+      const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -322,26 +315,30 @@ describe("useCollectionItems", () => {
 
       await act(async () => {
         // Remove item with ID 2 ("video.mp4") using its path
-        await result.current.removeItemByPath("/Volumes/ExternalDrive/video.mp4");
+        await result.current.removeItemByPath(
+          "/Volumes/ExternalDrive/video.mp4",
+        );
       });
 
-      expect(collectionsService.removeItemFromCollection).toHaveBeenCalledWith(2);
+      expect(collectionsService.removeItemFromCollection).toHaveBeenCalledWith(
+        2,
+      );
       expect(result.current.items).toHaveLength(2);
     });
 
     it("should throw error if item path not found", async () => {
-      vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(mockItems);
-
-      const { result } = renderHook(() =>
-        useCollectionItems(mockCollectionId)
+      vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(
+        mockItems,
       );
+
+      const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
       await expect(
-        result.current.removeItemByPath("/non/existent/path")
+        result.current.removeItemByPath("/non/existent/path"),
       ).rejects.toThrow("Item not found in collection");
     });
   });
@@ -352,9 +349,7 @@ describe("useCollectionItems", () => {
         .mockResolvedValueOnce(mockItems)
         .mockResolvedValueOnce([mockItems[0]]);
 
-      const { result } = renderHook(() =>
-        useCollectionItems(mockCollectionId)
-      );
+      const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);

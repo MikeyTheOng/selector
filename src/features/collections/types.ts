@@ -47,7 +47,6 @@ export interface CollectionItem {
   collection_id: number;
   path: string;
   item_type: CollectionItemType;
-  volume_id: string | null;
   added_at: string;
 }
 
@@ -65,5 +64,4 @@ export interface AddCollectionItemInput {
   collection_id: number;
   path: string;
   item_type: CollectionItemType;
-  volume_id?: string | null;
 }

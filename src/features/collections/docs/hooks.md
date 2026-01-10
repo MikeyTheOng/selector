@@ -170,7 +170,6 @@ interface CollectionItem {
   collection_id: number;
   path: string; // Full filesystem path
   item_type: "file" | "folder";
-  volume_id: string | null; // External volume name, or null for local items
   added_at: string; // ISO 8601 timestamp
 }
 
@@ -187,7 +186,6 @@ interface AddCollectionItemInput {
   collection_id: number;
   path: string;
   item_type: "file" | "folder";
-  volume_id?: string | null;
 }
 ```
 
@@ -223,7 +221,6 @@ async function handleAddFile(filePath: string) {
     await addItem(collectionId, {
       path: filePath,
       item_type: "file",
-      volume_id: null, // or "VolumeName" for external drives
     });
   } catch (error) {
     console.error("Failed to add:", error);
