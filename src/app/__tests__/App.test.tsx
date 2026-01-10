@@ -10,8 +10,8 @@ vi.mock('@/features/file-explorer/hooks/use-locations');
 vi.mock('@/features/collections/hooks/use-collections');
 
 // Mock child components to keep integration test focused on routing
-vi.mock('@/features/file-explorer/components/ExplorerPage', () => ({
-  ExplorerPage: vi.fn(() => <div data-testid="explorer-page">Explorer Page</div>)
+vi.mock('@/features/file-explorer/components/FileExplorerPage', () => ({
+  FileExplorerPage: vi.fn(() => <div data-testid="explorer-page">Explorer Page</div>)
 }));
 
 vi.mock('@/features/collections/components/CollectionsPage', () => ({
@@ -54,8 +54,8 @@ describe('App Routing Integration', () => {
   });
 
   it('renders collections page when route is collection', async () => {
-    const { FileExplorerPage: ExplorerPage } = await import('@/features/file-explorer/components/FileExplorerPage');
-    vi.mocked(ExplorerPage).mockImplementation(() => {
+    const { FileExplorerPage } = await import('@/features/file-explorer/components/FileExplorerPage');
+    vi.mocked(FileExplorerPage).mockImplementation(() => {
       const { navigateToCollection } = useNavigation();
       return (
         <button 
