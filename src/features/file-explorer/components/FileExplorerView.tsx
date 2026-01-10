@@ -152,6 +152,17 @@ export const FileExplorerView = ({
         return;
       }
 
+      // Cmd/Ctrl+A: Select all items
+      if (isMod && event.key.toLowerCase() === "a") {
+        event.preventDefault();
+        const allItems = [
+          ...listing.folders.map(folderToFileRow),
+          ...listing.files,
+        ];
+        selectMultiple(allItems);
+        return;
+      }
+
       // Navigation Logic
       if (
         ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(

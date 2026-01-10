@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getFilename } from "../hooks/use-collection-items";
 import { useCollections } from "../hooks/use-collections";
@@ -32,6 +32,22 @@ export const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === " ") {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown, { capture: true });
+    };
+  }, [isOpen]);
+
   const handleSelectTarget = async (targetId: number) => {
     if (isProcessing) return;
 
@@ -42,11 +58,11 @@ export const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
         entries.map((entry) => ({
           path: entry.path,
           item_type: entry.kind === "folder" ? "folder" : "file",
-        }))
+        })),
       );
 
       const duplicateCount = errors.filter(
-        ({ error }) => error instanceof DuplicateItemError
+        ({ error }) => error instanceof DuplicateItemError,
       ).length;
       const failureCount = errors.length - duplicateCount;
 
@@ -64,18 +80,18 @@ export const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
         const summaryParts: string[] = [];
         if (duplicateCount > 0) {
           summaryParts.push(
-            `skipped ${duplicateCount} duplicate${duplicateCount !== 1 ? "s" : ""}`
+            `skipped ${duplicateCount} duplicate${duplicateCount !== 1 ? "s" : ""}`,
           );
         }
         if (failureCount > 0) {
           summaryParts.push(
-            `failed to add ${failureCount} item${failureCount !== 1 ? "s" : ""}`
+            `failed to add ${failureCount} item${failureCount !== 1 ? "s" : ""}`,
           );
         }
         const summarySuffix =
           summaryParts.length > 0 ? ` (${summaryParts.join(", ")})` : "";
         toast.success(
-          `Added ${added.length} item${added.length !== 1 ? "s" : ""} to '${targetCollection?.name || "collection"}'${summarySuffix}`
+          `Added ${added.length} item${added.length !== 1 ? "s" : ""} to '${targetCollection?.name || "collection"}'${summarySuffix}`,
         );
       }
       onOpenChange(false);
