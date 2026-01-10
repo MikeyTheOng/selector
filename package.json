@@ -11,7 +11,9 @@
     "test": "vitest",
     "test:ci": "vitest run",
     "test:rust": "cd src-tauri && cargo test",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint:all": "yarn lint && yarn typecheck"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
