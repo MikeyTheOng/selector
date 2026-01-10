@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef } from "react";
 import type { FileRow, LastClickedFile } from "@/types/fs";
-import { useExplorerSelection } from "@/hooks/explorer/useExplorerSelection";
+import { useExplorerSelection } from "@/hooks/explorer/use-explorer-selection";
 import { fileRowToExplorerItem } from "@/lib/explorer-utils";
 
 export const useFileSelection = () => {

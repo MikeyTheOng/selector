@@ -1,5 +1,5 @@
 import { useCallback, useRef } from "react";
-import { useExplorerSelection } from "@/hooks/explorer/useExplorerSelection";
+import { useExplorerSelection } from "@/hooks/explorer/use-explorer-selection";
 import { getPathBaseName } from "@/lib/path-utils";
 import { formatDateTime } from "@/lib/formatters";
 import type { ExplorerItem } from "@/types/explorer";

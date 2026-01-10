@@ -1,11 +1,11 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { toast } from "sonner";
 import { useCollections } from "../hooks/use-collections";
 import { useCollectionItems, getFilename } from "../hooks/use-collection-items";
 import { DuplicateItemError } from "../errors";
 import { useCollectionSelection, collectionItemToExplorerItem } from "../hooks/use-collection-selection";
-import { useExplorerViewState } from "@/hooks/explorer/useExplorerViewState";
+import { useExplorerViewState } from "@/hooks/explorer/use-explorer-view-state";
 import { useNavigation } from "@/hooks/use-navigation";
 import { getParentPath } from "@/lib/path-utils";
 import { ExplorerListView } from "@/components/explorer/ExplorerListView";

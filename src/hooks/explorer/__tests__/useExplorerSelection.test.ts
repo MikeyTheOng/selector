@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { useExplorerSelection } from '../useExplorerSelection';
+import { useExplorerSelection } from '../use-explorer-selection';
 import type { ExplorerItem } from '@/types/explorer';
 
 const mockItem = (id: string, name: string): ExplorerItem => ({
