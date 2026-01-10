@@ -19,6 +19,7 @@ describe('ExplorerPage', () => {
     locations: [],
     folderId: '/test',
     onSelectFolder: vi.fn(),
+    SelectionPanel: () => <div data-testid="selection-panel" />,
   };
 
   it('renders ExplorerProvider wrapping FileExplorerView', () => {

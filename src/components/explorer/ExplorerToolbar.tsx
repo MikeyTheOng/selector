@@ -1,7 +1,6 @@
 import React from "react";
 import { Columns2, LayoutList, Grid2X2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import type { ExplorerViewMode } from "@/types/explorer";
@@ -15,12 +14,6 @@ export interface ExplorerToolbarProps {
   fileCount: number;
   /** Total number of folders */
   folderCount: number;
-  /** Number of currently selected items */
-  selectedCount: number;
-  /** Whether the selection sheet/panel is open */
-  isSelectionOpen: boolean;
-  /** Callback to toggle the selection sheet/panel */
-  onToggleSelection: () => void;
   /** Optional title to display on the left */
   title?: string;
   /** Optional custom content for the left side (e.g., navigation buttons) */
@@ -31,6 +24,8 @@ export interface ExplorerToolbarProps {
   className?: string;
   /** View modes to disable */
   disabledViewModes?: ExplorerViewMode[];
+  /** Optional slot for rendering selection UI (trigger + dialog/sheet) */
+  selectionPanel?: React.ReactNode;
 }
 
 export const ExplorerToolbar = ({
@@ -38,20 +33,18 @@ export const ExplorerToolbar = ({
   onViewModeChange,
   fileCount,
   folderCount,
-  selectedCount,
-  isSelectionOpen,
-  onToggleSelection,
   title,
   leftContent,
   rightContent,
   className,
-  disabledViewModes = [],
+  disabledViewModes = [], // TODO: Remove once disabled view modes are implemented
+  selectionPanel,
 }: ExplorerToolbarProps) => {
   return (
     <div
       className={cn(
         "flex cursor-default select-none flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3",
-        className
+        className,
       )}
     >
       <div className="flex min-w-0 items-center gap-2">
@@ -67,7 +60,9 @@ export const ExplorerToolbar = ({
         <ToggleGroup
           type="single"
           value={viewMode}
-          onValueChange={(value) => value && onViewModeChange(value as ExplorerViewMode)}
+          onValueChange={(value) =>
+            value && onViewModeChange(value as ExplorerViewMode)
+          }
           className="rounded-full border border-border/50 bg-background/70 p-1 text-[0.6875rem] font-semibold text-muted-foreground"
           aria-label="View mode"
         >
@@ -75,7 +70,9 @@ export const ExplorerToolbar = ({
             value="list"
             className={cn(
               "gap-1 rounded-full px-3 py-1",
-              viewMode === "list" ? "bg-foreground/10 text-foreground" : "hover:text-foreground",
+              viewMode === "list"
+                ? "bg-foreground/10 text-foreground"
+                : "hover:text-foreground",
             )}
             aria-label="List view"
             disabled={disabledViewModes.includes("list")}
@@ -87,7 +84,9 @@ export const ExplorerToolbar = ({
             value="column"
             className={cn(
               "gap-1 rounded-full px-3 py-1",
-              viewMode === "column" ? "bg-foreground/10 text-foreground" : "hover:text-foreground",
+              viewMode === "column"
+                ? "bg-foreground/10 text-foreground"
+                : "hover:text-foreground",
             )}
             aria-label="Column view"
             disabled={disabledViewModes.includes("column")}
@@ -99,7 +98,9 @@ export const ExplorerToolbar = ({
             value="grid"
             className={cn(
               "gap-1 rounded-full px-3 py-1",
-              viewMode === "grid" ? "bg-foreground/10 text-foreground" : "hover:text-foreground",
+              viewMode === "grid"
+                ? "bg-foreground/10 text-foreground"
+                : "hover:text-foreground",
             )}
             aria-label="Grid view"
             disabled={disabledViewModes.includes("grid")}
@@ -109,6 +110,7 @@ export const ExplorerToolbar = ({
           </ToggleGroupItem>
         </ToggleGroup>
 
+        {/* TODO: Move this to below header */}
         <Badge
           variant="secondary"
           className="rounded-full border border-border/50 bg-background/70 px-3 py-1 text-xs font-medium text-muted-foreground"
@@ -116,21 +118,7 @@ export const ExplorerToolbar = ({
           {fileCount} files - {folderCount} folders
         </Badge>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onToggleSelection}
-          className={cn(
-            "h-7 rounded-full border-border/50 px-3 py-1 text-xs font-semibold",
-            isSelectionOpen
-              ? "bg-foreground/10 text-foreground"
-              : "bg-background/70 text-muted-foreground hover:text-foreground",
-          )}
-          aria-expanded={isSelectionOpen}
-        >
-          {selectedCount} selected
-        </Button>
+        {selectionPanel}
 
         {rightContent}
       </div>

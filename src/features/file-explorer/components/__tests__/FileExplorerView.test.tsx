@@ -5,6 +5,7 @@ import { useExplorerContext } from '../../context/ExplorerContext';
 import { useNavigation } from '@/hooks/use-navigation';
 import { listen, type EventCallback } from '@tauri-apps/api/event';
 import type { FileRow, FolderListing } from '@/types/fs';
+import type { ExplorerSelectionPanelProps } from '@/components/explorer/ExplorerSelectionPanel';
 
 // Mock the context
 vi.mock('../../context/ExplorerContext');
@@ -16,6 +17,12 @@ describe('FileExplorerView Integration', () => {
   const mockFocusFile = vi.fn();
   const mockTogglePreview = vi.fn();
   const mockClosePreview = vi.fn();
+
+  const TestSelectionPanel = ({ selectedCount }: ExplorerSelectionPanelProps) => (
+    <button type="button" disabled={selectedCount === 0}>
+      {selectedCount} selected
+    </button>
+  );
 
   const mockFiles: FileRow[] = [
     {
@@ -60,6 +67,7 @@ describe('FileExplorerView Integration', () => {
     locations: [],
     folderId: '/test',
     onSelectFolder: vi.fn(),
+    SelectionPanel: TestSelectionPanel,
   };
 
   beforeEach(() => {
@@ -90,8 +98,6 @@ describe('FileExplorerView Integration', () => {
       closePreview: mockClosePreview,
       viewMode: 'list' as const,
       setViewMode: vi.fn(),
-      isSelectionOpen: false,
-      setIsSelectionOpen: vi.fn(),
       folderId: '/test',
       locations: [],
     };
@@ -203,8 +209,6 @@ describe('FileExplorerView Integration', () => {
       closePreview: mockClosePreview,
       viewMode: 'list' as const,
       setViewMode: vi.fn(),
-      isSelectionOpen: false,
-      setIsSelectionOpen: vi.fn(),
       folderId: '/test',
       locations: [],
     };
@@ -292,14 +296,20 @@ describe('FileExplorerView Integration', () => {
     expect(screen.getByText(/2 files/)).toBeDefined();
   });
 
-  it('renders selection sheet when open', () => {
-    vi.mocked(useExplorerContext).mockReturnValue({
+  it('disables selection trigger when no items are selected', () => {
+    render(<FileExplorerView {...defaultProps} />);
+    const trigger = screen.getByRole('button', { name: /selected/i });
+    expect(trigger).toBeDisabled();
+  });
+
+  it('renders selection panel with selected count', () => {
+    const mockContextValue = {
       listing: mockListing,
       ensureListing: vi.fn(),
       getListingForPath: vi.fn(),
       selectedFiles: {},
-      selectedEntries: [],
-      selectedCount: 0,
+      selectedEntries: mockFiles,
+      selectedCount: 2,
       lastClickedFile: null,
       focusedFile: { file: mockFiles[0] },
       selectFile: vi.fn(),
@@ -318,14 +328,13 @@ describe('FileExplorerView Integration', () => {
       closePreview: mockClosePreview,
       viewMode: 'list' as const,
       setViewMode: vi.fn(),
-      isSelectionOpen: true,
-      setIsSelectionOpen: vi.fn(),
       folderId: '/test',
       locations: [],
-    } as unknown as ReturnType<typeof useExplorerContext>);
+    };
+    vi.mocked(useExplorerContext).mockReturnValue(mockContextValue as unknown as ReturnType<typeof useExplorerContext>);
 
     render(<FileExplorerView {...defaultProps} />);
-    // "Selection" is the title in the sheet
-    expect(screen.getByText('Selection')).toBeDefined();
+
+    expect(screen.getByText('2 selected')).toBeDefined();
   });
 });

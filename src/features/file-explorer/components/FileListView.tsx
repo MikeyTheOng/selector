@@ -93,7 +93,7 @@ export const FileListView = ({
       focusedId={focusedFile?.file.path ?? null}
       onItemClick={handleItemClick}
       onItemDoubleClick={handleItemDoubleClick}
-      onItemContextMenu={(item, e) => e.preventDefault()}
+      onItemContextMenu={(_item, e) => e.preventDefault()}
       onContextMenu={(e) => e.preventDefault()}
       emptyMessage="No items found in this folder."
       renderItemLabel={({ item, isSelected }) => (

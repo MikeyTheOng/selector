@@ -1,8 +1,7 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, type ComponentType } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ExplorerToolbar } from "@/components/explorer/ExplorerToolbar";
-import { ExplorerSelectionSheet } from "@/components/explorer/ExplorerSelectionSheet";
-import { Button } from "@/components/ui/button";
+import type { ExplorerSelectionPanelProps } from "@/components/explorer/ExplorerSelectionPanel";
 import { useNavigation } from "@/hooks/use-navigation";
 import { ColumnView } from "./ColumnView";
 import { FileListView } from "./FileListView";
@@ -12,6 +11,7 @@ import { listen } from "@tauri-apps/api/event";
 import type { FileRow, LocationItem } from "@/types/fs";
 import { folderToFileRow, fileRowToExplorerItem } from "@/lib/explorer-utils";
 import { getPathBaseName } from "@/lib/path-utils";
+import { Button } from "@/components/ui/button";
 
 interface QuickLookEvent {
   key: string;
@@ -24,12 +24,14 @@ type FileExplorerViewProps = {
   locations: LocationItem[];
   folderId: string | null;
   onSelectFolder: (path: string) => void;
+  SelectionPanel: ComponentType<ExplorerSelectionPanelProps>;
 };
 
 export const FileExplorerView = ({
   locations,
   folderId,
   onSelectFolder,
+  SelectionPanel,
 }: FileExplorerViewProps) => {
   const {
     listing,
@@ -54,13 +56,13 @@ export const FileExplorerView = ({
     closePreview,
     viewMode,
     setViewMode,
-    isSelectionOpen,
-    setIsSelectionOpen,
   } = useExplorerContext();
 
   const { goBack, goForward, canGoBack, canGoForward } = useNavigation();
 
-  const currentFolderName = folderId ? getPathBaseName(folderId) : "Select a folder";
+  const currentFolderName = folderId
+    ? getPathBaseName(folderId)
+    : "Select a folder";
 
   const navigationButtons = (
     <div className="flex items-center gap-1">
@@ -108,7 +110,17 @@ export const FileExplorerView = ({
   }, [focusedFile, isPreviewActive, updatePreview]);
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent | { key: string, preventDefault: () => void, metaKey?: boolean, ctrlKey?: boolean, shiftKey?: boolean }) => {
+    const handleKeyDown = (
+      event:
+        | KeyboardEvent
+        | {
+            key: string;
+            preventDefault: () => void;
+            metaKey?: boolean;
+            ctrlKey?: boolean;
+            shiftKey?: boolean;
+          },
+    ) => {
       // ESC key: close preview if active, otherwise clear selections and close sheet
       if (event.key === "Escape") {
         event.preventDefault();
@@ -117,7 +129,6 @@ export const FileExplorerView = ({
         } else {
           clearSelections();
           clearFocus();
-          setIsSelectionOpen(false);
         }
         return;
       }
@@ -142,11 +153,15 @@ export const FileExplorerView = ({
       }
 
       // Navigation Logic
-      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(event.key)) {
+      if (
+        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(
+          event.key,
+        )
+      ) {
         if (viewMode === "list") {
           const allRows = [
             ...listing.folders.map(folderToFileRow),
-            ...listing.files
+            ...listing.files,
           ];
 
           if (allRows.length === 0) return;
@@ -158,7 +173,9 @@ export const FileExplorerView = ({
             if (!focusedFile) {
               nextIndex = event.key === "ArrowUp" ? allRows.length - 1 : 0;
             } else {
-              const currentIndex = allRows.findIndex(r => r.path === focusedFile.file.path);
+              const currentIndex = allRows.findIndex(
+                (r) => r.path === focusedFile.file.path,
+              );
               if (event.key === "ArrowUp") {
                 nextIndex = Math.max(0, currentIndex - 1);
               } else {
@@ -178,7 +195,9 @@ export const FileExplorerView = ({
           } else if (event.key === "Enter") {
             event.preventDefault();
             if (focusedFile) {
-              const isFolder = listing.folders.some(f => f.path === focusedFile.file.path);
+              const isFolder = listing.folders.some(
+                (f) => f.path === focusedFile.file.path,
+              );
               if (isFolder) {
                 onSelectFolder(focusedFile.file.path);
               }
@@ -199,7 +218,9 @@ export const FileExplorerView = ({
           } else if (event.key === "ArrowRight" || event.key === "Enter") {
             event.preventDefault();
             if (focusedFile) {
-              const isFolder = listing.folders.some(f => f.path === focusedFile.file.path);
+              const isFolder = listing.folders.some(
+                (f) => f.path === focusedFile.file.path,
+              );
               if (isFolder) {
                 onSelectFolder(focusedFile.file.path);
               }
@@ -211,7 +232,7 @@ export const FileExplorerView = ({
 
             const allRows = [
               ...currentListing.folders.map(folderToFileRow),
-              ...currentListing.files
+              ...currentListing.files,
             ];
 
             if (allRows.length === 0) return;
@@ -220,7 +241,9 @@ export const FileExplorerView = ({
             if (!focusedFile || focusedFile.columnPath !== folderId) {
               nextIndex = event.key === "ArrowUp" ? allRows.length - 1 : 0;
             } else {
-              const currentIndex = allRows.findIndex(r => r.path === focusedFile.file.path);
+              const currentIndex = allRows.findIndex(
+                (r) => r.path === focusedFile.file.path,
+              );
               if (event.key === "ArrowUp") {
                 nextIndex = Math.max(0, currentIndex - 1);
               } else {
@@ -230,7 +253,11 @@ export const FileExplorerView = ({
 
             if (nextIndex !== -1) {
               const nextRow = allRows[nextIndex];
-              if (isShift && lastClickedFile && lastClickedFile.columnPath === folderId) {
+              if (
+                isShift &&
+                lastClickedFile &&
+                lastClickedFile.columnPath === folderId
+              ) {
                 selectRange(lastClickedFile.file, nextRow, allRows);
                 focusFile(nextRow, folderId || undefined);
               } else {
@@ -254,17 +281,20 @@ export const FileExplorerView = ({
     };
 
     const setupListeners = async () => {
-      const unlisten = await listen<QuickLookEvent>("quicklook://navigate", (event) => {
-        const { key: rawKey, metaKey, ctrlKey, shiftKey } = event.payload;
-        const key = rawKey === "Space" ? " " : rawKey;
-        handleKeyDown({
-          key,
-          preventDefault: () => { },
-          metaKey,
-          ctrlKey,
-          shiftKey
-        });
-      });
+      const unlisten = await listen<QuickLookEvent>(
+        "quicklook://navigate",
+        (event) => {
+          const { key: rawKey, metaKey, ctrlKey, shiftKey } = event.payload;
+          const key = rawKey === "Space" ? " " : rawKey;
+          handleKeyDown({
+            key,
+            preventDefault: () => {},
+            metaKey,
+            ctrlKey,
+            shiftKey,
+          });
+        },
+      );
       return unlisten;
     };
 
@@ -273,9 +303,28 @@ export const FileExplorerView = ({
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      unlistenPromise.then(fn => fn());
+      unlistenPromise.then((fn) => fn());
     };
-  }, [listing, selectMultiple, clearSelections, clearFocus, focusedFile, viewMode, folderId, onSelectFolder, focusFile, toggleFileSelection, selectRange, lastClickedFile, getListingForPath, isPreviewActive, togglePreview, closePreview]);
+  }, [
+    listing,
+    selectMultiple,
+    clearSelections,
+    clearFocus,
+    focusedFile,
+    viewMode,
+    folderId,
+    onSelectFolder,
+    focusFile,
+    toggleFileSelection,
+    selectRange,
+    lastClickedFile,
+    getListingForPath,
+    isPreviewActive,
+    togglePreview,
+    closePreview,
+  ]);
+
+  const explorerEntries = selectedEntries.map(fileRowToExplorerItem);
 
   return (
     <section className="relative flex min-h-0 min-w-0 flex-1 flex-col">
@@ -286,18 +335,15 @@ export const FileExplorerView = ({
         onViewModeChange={setViewMode}
         fileCount={listing.fileCount}
         folderCount={listing.folderCount}
-        selectedCount={selectedCount}
-        isSelectionOpen={isSelectionOpen}
-        onToggleSelection={() => setIsSelectionOpen(!isSelectionOpen)}
         disabledViewModes={["grid"]}
-      />
-
-      <ExplorerSelectionSheet
-        isOpen={isSelectionOpen}
-        entries={selectedEntries.map(fileRowToExplorerItem)}
-        onClose={() => setIsSelectionOpen(false)}
-        onRemove={removeSelection}
-        onClear={clearSelections}
+        selectionPanel={
+          <SelectionPanel
+            selectedCount={selectedCount}
+            entries={explorerEntries}
+            onRemoveSelection={removeSelection}
+            onClearAllSelections={clearSelections}
+          />
+        }
       />
 
       <div className="flex-1 overflow-auto">
@@ -317,9 +363,13 @@ export const FileExplorerView = ({
             onToggleFileSelection={toggleFileSelection}
           />
         ) : listing.isLoading ? (
-          <div className="px-4 py-6 text-sm text-muted-foreground">Loading files...</div>
+          <div className="px-4 py-6 text-sm text-muted-foreground">
+            Loading files...
+          </div>
         ) : listing.error ? (
-          <div className="px-4 py-6 text-sm text-destructive">{listing.error}</div>
+          <div className="px-4 py-6 text-sm text-destructive">
+            {listing.error}
+          </div>
         ) : (
           <FileListView
             listing={listing}

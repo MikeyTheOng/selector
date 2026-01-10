@@ -8,9 +8,6 @@ describe("ExplorerToolbar", () => {
     onViewModeChange: vi.fn(),
     fileCount: 10,
     folderCount: 5,
-    selectedCount: 2,
-    isSelectionOpen: false,
-    onToggleSelection: vi.fn(),
   };
 
   it("should render item counts correctly", () => {
@@ -18,8 +15,13 @@ describe("ExplorerToolbar", () => {
     expect(screen.getByText(/10 files - 5 folders/)).toBeDefined();
   });
 
-  it("should render selected count", () => {
-    render(<ExplorerToolbar {...defaultProps} />);
+  it("should render selection panel slot when provided", () => {
+    render(
+      <ExplorerToolbar
+        {...defaultProps}
+        selectionPanel={<button>2 selected</button>}
+      />
+    );
     expect(screen.getByText(/2 selected/)).toBeDefined();
   });
 
@@ -31,20 +33,25 @@ describe("ExplorerToolbar", () => {
     expect(onViewModeChange).toHaveBeenCalledWith("column");
   });
 
-  it("should call onToggleSelection when selection button is clicked", () => {
-    const onToggleSelection = vi.fn();
-    render(<ExplorerToolbar {...defaultProps} onToggleSelection={onToggleSelection} />);
+  it("should handle click on selection panel slot", () => {
+    const onToggle = vi.fn();
+    render(
+      <ExplorerToolbar
+        {...defaultProps}
+        selectionPanel={<button onClick={onToggle}>2 selected</button>}
+      />
+    );
 
     fireEvent.click(screen.getByText(/2 selected/));
-    expect(onToggleSelection).toHaveBeenCalled();
+    expect(onToggle).toHaveBeenCalled();
   });
 
   it("should render title or left content if provided", () => {
     render(
-      <ExplorerToolbar 
-        {...defaultProps} 
-        title="My Collection" 
-        leftContent={<span>Left Action</span>} 
+      <ExplorerToolbar
+        {...defaultProps}
+        title="My Collection"
+        leftContent={<span>Left Action</span>}
       />
     );
     expect(screen.getByText("My Collection")).toBeDefined();
@@ -53,9 +60,9 @@ describe("ExplorerToolbar", () => {
 
   it("should render additional actions if provided", () => {
     render(
-      <ExplorerToolbar 
-        {...defaultProps} 
-        rightContent={<button>Extra Action</button>} 
+      <ExplorerToolbar
+        {...defaultProps}
+        rightContent={<button>Extra Action</button>}
       />
     );
     expect(screen.getByText("Extra Action")).toBeDefined();

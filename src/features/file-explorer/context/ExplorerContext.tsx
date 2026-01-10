@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, ReactNode } from "react";
 import { useFolderListing } from "../hooks/use-folder-listing";
 import { useFileSelection } from "../hooks/use-file-selection";
 import { useQuickLook } from "../hooks/use-quick-look";
@@ -16,7 +16,6 @@ interface ExplorerContextType {
   focusedFile: { file: FileRow; columnPath?: string } | null;
   isPreviewActive: boolean;
   viewMode: ExplorerViewMode;
-  isSelectionOpen: boolean;
   folderId: string | null;
   locations: LocationItem[];
 
@@ -37,7 +36,6 @@ interface ExplorerContextType {
   updatePreview: (path: string) => void;
   closePreview: () => void;
   setViewMode: (mode: ExplorerViewMode) => void;
-  setIsSelectionOpen: (isOpen: boolean) => void;
 }
 
 const ExplorerContext = createContext<ExplorerContextType | undefined>(undefined);
@@ -83,8 +81,6 @@ export const ExplorerProvider = ({
   } = useFileSelection();
   const { isPreviewActive, togglePreview, updatePreview, closePreview } = useQuickLook();
   const { viewMode, setViewMode } = useExplorerViewState({ initialViewMode: "list" });
-  const [isSelectionOpen, setIsSelectionOpen] = useState(false);
-
   useEffect(() => {
     if (viewMode === "column") return;
     clearLastClickedFile();
@@ -109,7 +105,6 @@ export const ExplorerProvider = ({
       focusedFile,
       isPreviewActive,
       viewMode,
-      isSelectionOpen,
       folderId,
       locations,
       ensureListing,
@@ -128,7 +123,6 @@ export const ExplorerProvider = ({
       updatePreview,
       closePreview,
       setViewMode,
-      setIsSelectionOpen,
     }),
     [
       listing,
@@ -139,7 +133,6 @@ export const ExplorerProvider = ({
       focusedFile,
       isPreviewActive,
       viewMode,
-      isSelectionOpen,
       folderId,
       locations,
       ensureListing,

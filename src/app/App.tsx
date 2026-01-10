@@ -1,10 +1,14 @@
-import { ExplorerPage, useLocations } from "@/features/file-explorer";
-import { CollectionsSidebarSection, CollectionsPage } from "@/features/collections";
-import { useNavigation, NavigationProvider } from "@/hooks/use-navigation";
-import { MainLayout } from "./MainLayout";
-import { LocationsSidebar } from "@/features/file-explorer/components/LocationsSidebar";
-import { TextScaleProvider } from "@/providers/TextScaleProvider";
 import { Toaster } from "@/components/ui/sonner";
+import {
+    AddToCollectionSelectionPanel,
+    CollectionsPage,
+    CollectionsSidebarSection,
+} from "@/features/collections";
+import { ExplorerPage, useLocations } from "@/features/file-explorer";
+import { LocationsSidebar } from "@/features/file-explorer/components/LocationsSidebar";
+import { NavigationProvider, useNavigation } from "@/hooks/use-navigation";
+import { TextScaleProvider } from "@/providers/TextScaleProvider";
+import { MainLayout } from "./MainLayout";
 
 function AppInner() {
   const { locations, error: locationsError } = useLocations();
@@ -27,6 +31,7 @@ function AppInner() {
             folderId={currentRoute.folderId}
             focusItemPath={currentRoute.focusItemPath}
             onSelectFolder={navigateToExplorer}
+            SelectionPanel={AddToCollectionSelectionPanel}
           />
         );
       case "collection":
