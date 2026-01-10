@@ -4,7 +4,7 @@ import {
     CollectionsPage,
     CollectionsSidebarSection,
 } from "@/features/collections";
-import { ExplorerPage, useLocations } from "@/features/file-explorer";
+import { FileExplorerPage, useLocations } from "@/features/file-explorer";
 import { LocationsSidebar } from "@/features/file-explorer/components/LocationsSidebar";
 import { NavigationProvider, useNavigation } from "@/hooks/use-navigation";
 import { TextScaleProvider } from "@/providers/TextScaleProvider";
@@ -26,7 +26,7 @@ function AppInner() {
     switch (currentRoute.type) {
       case "explorer":
         return (
-          <ExplorerPage
+          <FileExplorerPage
             locations={locations}
             folderId={currentRoute.folderId}
             focusItemPath={currentRoute.focusItemPath}

@@ -4,7 +4,7 @@ import { FileExplorerView } from "./FileExplorerView";
 import type { LocationItem } from "@/types/fs";
 import type { ExplorerSelectionPanelProps } from "@/components/explorer/ExplorerSelectionPanel";
 
-type ExplorerPageProps = {
+type FileExplorerPageProps = {
   locations: LocationItem[];
   folderId: string | null;
   focusItemPath?: string;
@@ -12,13 +12,13 @@ type ExplorerPageProps = {
   SelectionPanel: ComponentType<ExplorerSelectionPanelProps>;
 };
 
-export const ExplorerPage = ({
+export const FileExplorerPage = ({
   locations,
   folderId,
   focusItemPath,
   onSelectFolder,
   SelectionPanel,
-}: ExplorerPageProps) => {
+}: FileExplorerPageProps) => {
   return (
     <ExplorerProvider folderId={folderId} locations={locations} focusItemPath={focusItemPath}>
       <FileExplorerView

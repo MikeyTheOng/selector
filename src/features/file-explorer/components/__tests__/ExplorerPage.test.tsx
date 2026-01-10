@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { ExplorerPage } from '../ExplorerPage';
+import { FileExplorerPage } from '../FileExplorerPage';
 
 // Mock the child components to verify they are rendered
 vi.mock('../FileExplorerView', () => ({
@@ -14,7 +14,7 @@ vi.mock('../../context/ExplorerContext', () => ({
   ),
 }));
 
-describe('ExplorerPage', () => {
+describe('FileExplorerPage', () => {
   const defaultProps = {
     locations: [],
     folderId: '/test',
@@ -23,7 +23,7 @@ describe('ExplorerPage', () => {
   };
 
   it('renders ExplorerProvider wrapping FileExplorerView', () => {
-    render(<ExplorerPage {...defaultProps} />);
+    render(<FileExplorerPage {...defaultProps} />);
     
     const provider = screen.getByTestId('explorer-provider');
     const view = screen.getByTestId('file-explorer-view');

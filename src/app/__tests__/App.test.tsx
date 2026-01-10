@@ -54,7 +54,7 @@ describe('App Routing Integration', () => {
   });
 
   it('renders collections page when route is collection', async () => {
-    const { ExplorerPage } = await import('@/features/file-explorer/components/ExplorerPage');
+    const { FileExplorerPage: ExplorerPage } = await import('@/features/file-explorer/components/FileExplorerPage');
     vi.mocked(ExplorerPage).mockImplementation(() => {
       const { navigateToCollection } = useNavigation();
       return (
