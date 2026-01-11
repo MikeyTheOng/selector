@@ -1,6 +1,8 @@
 import { useMemo } from "react";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { FileRowLabel } from "./FileRowLabel";
 import { ExplorerListView } from "@/components/explorer/ExplorerListView";
+import { useExplorerContextMenu } from "@/components/explorer/ExplorerContextMenu";
 import { fileRowToExplorerItem, folderRowToExplorerItem } from "@/lib/explorer-utils";
 import type { FileRow, FolderListing, LastClickedFile } from "@/types/fs";
 import type { ExplorerViewMode, ExplorerItem } from "@/types/explorer";
@@ -32,6 +34,8 @@ export const FileListView = ({
   onToggleFileSelection,
   onActivateItem,
 }: FileListViewProps) => {
+  const { showContextMenu } = useExplorerContextMenu();
+
   const explorerItems = useMemo(() => [
     ...listing.folders.map(folderRowToExplorerItem),
     ...listing.files.map(fileRowToExplorerItem),
@@ -48,6 +52,22 @@ export const FileListView = ({
     } as FileRow)),
     ...listing.files
   ], [listing]);
+
+  const getContextMenuItems = (item: ExplorerItem) => [
+    {
+      type: "item" as const,
+      id: "reveal-in-finder",
+      text: "Reveal in Finder",
+      enabled: item.status === "available",
+      action: async () => {
+        try {
+          await revealItemInDir(item.path);
+        } catch (error) {
+          console.error("Failed to reveal item:", error);
+        }
+      },
+    },
+  ];
 
   const handleItemClick = (item: ExplorerItem, event: React.MouseEvent) => {
     const row = allRowItems.find(r => r.path === item.id);
@@ -93,7 +113,9 @@ export const FileListView = ({
       focusedId={focusedFile?.file.path ?? null}
       onItemClick={handleItemClick}
       onItemDoubleClick={handleItemDoubleClick}
-      onItemContextMenu={(_item, e) => e.preventDefault()}
+      onItemContextMenu={(item) => {
+        showContextMenu(getContextMenuItems(item));
+      }}
       onContextMenu={(e) => e.preventDefault()}
       emptyMessage="No items found in this folder."
       renderItemLabel={({ item, isSelected }) => (
