@@ -51,7 +51,7 @@ export default [
                 {
                     mode: "full",
                     type: "app",
-                    capture: ["_", "fileName"],
+                    capture: ["folder", "fileName"],
                     pattern: ["src/app/**/*", "src/App.tsx"],
                 },
                 {
@@ -64,7 +64,7 @@ export default [
                     type: "neverImport",
                     capture: ["fileName"],
                     pattern: ["src/*"],
-                },  
+                },
             ],
         },
         rules: {
@@ -88,8 +88,12 @@ export default [
                             ],
                         },
                         {
+                            from: [["app", { folder: "__tests__" }]],
+                            allow: ["shared", "feature", "app", "test-utils"],
+                        },
+                        {
                             from: ["app"],
-                            allow: ["shared", "feature", ["app", { fileName: "*.css" }]],
+                            allow: ["shared", "feature", "app"],
                         },
                         {
                             from: ["neverImport"],

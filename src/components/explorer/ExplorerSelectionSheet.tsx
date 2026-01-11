@@ -4,38 +4,55 @@ import { invoke } from "@tauri-apps/api/core";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import type { FileRow } from "@/types/fs";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import type { ExplorerItem } from "@/types/explorer";
 
-type SelectionSheetProps = {
+export interface ExplorerSelectionSheetProps {
   isOpen: boolean;
-  entries: FileRow[];
+  entries: ExplorerItem[];
   onClose: () => void;
-  onRemove: (path: string) => void;
+  onRemove: (id: string) => void;
   onClear: () => void;
-};
+  /** Optional slot for injecting external action UI (e.g., Collections widget) */
+  renderActions?: (entries: ExplorerItem[]) => React.ReactNode;
+  /** Optional label for the main action button */
+  actionLabel?: string;
+  /** Optional callback for the main action button */
+  onAction?: (entries: ExplorerItem[]) => Promise<void>;
+  /** Optional additional class names */
+  className?: string;
+}
 
-export const SelectionSheet = ({
+export const ExplorerSelectionSheet = ({
   isOpen,
   entries,
   onClose,
   onRemove,
   onClear,
-}: SelectionSheetProps) => {
-  const [isImporting, setIsImporting] = useState(false);
+  renderActions,
+  actionLabel = "Import to LrC",
+  onAction,
+}: ExplorerSelectionSheetProps) => {
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleImportToLrc = useCallback(async () => {
+  const handleAction = useCallback(async () => {
     if (entries.length === 0) return;
-    setIsImporting(true);
-    const paths = entries.map((entry) => entry.path);
+    setIsProcessing(true);
+    
     try {
-      await invoke("import_to_lrc", { files: paths });
+      if (onAction) {
+        await onAction(entries);
+      } else {
+        // Fallback to default LrC import if no action provided (maintaining current behavior)
+        const paths = entries.map((entry) => entry.path);
+        await invoke("import_to_lrc", { files: paths });
+      }
     } catch (err) {
-      console.error("Failed to import to Lightroom Classic:", err);
+      console.error("SelectionSheet action failed:", err);
     } finally {
-      setIsImporting(false);
+      setIsProcessing(false);
     }
-  }, [entries]);
+  }, [entries, onAction]);
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -47,15 +64,18 @@ export const SelectionSheet = ({
           <SheetTitle className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Selection
           </SheetTitle>
+          <SheetDescription className="sr-only">
+            Manage your selected items
+          </SheetDescription>
         </SheetHeader>
         <ScrollArea className="mt-4 min-h-0 flex-1 pr-3">
           {entries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No files selected yet.</p>
+            <p className="text-sm text-muted-foreground">No items selected yet.</p>
           ) : (
             <div className="grid gap-2">
               {entries.map((entry) => (
                 <div
-                  key={entry.path}
+                  key={entry.id}
                   className="flex min-w-0 items-center gap-3 rounded-lg border border-border/60 bg-card/70 px-3 py-2 transition-colors hover:bg-card"
                 >
                   <div className="min-w-0 flex-1">
@@ -72,7 +92,7 @@ export const SelectionSheet = ({
                     size="icon"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onRemove(entry.path);
+                      onRemove(entry.id);
                     }}
                     className="h-7 w-7 shrink-0 rounded-full border border-border/60 text-muted-foreground hover:text-foreground"
                     aria-label={`Remove ${entry.name}`}
@@ -85,21 +105,23 @@ export const SelectionSheet = ({
           )}
         </ScrollArea>
         <div className="mt-4 flex flex-col gap-3 border-t border-border/60 pt-3">
+          {/* External actions slot (e.g., Collections widget) */}
+          {renderActions?.(entries)}
           <Button
             type="button"
             variant="default"
             size="sm"
-            onClick={handleImportToLrc}
-            disabled={entries.length === 0 || isImporting}
-            className={`w-full ${isImporting ? "cursor-wait" : "cursor-pointer"}`}
+            onClick={handleAction}
+            disabled={entries.length === 0 || isProcessing}
+            className={`w-full ${isProcessing ? "cursor-wait" : "cursor-pointer"}`}
           >
-            {isImporting ? (
+            {isProcessing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Importing...
+                Processing...
               </>
             ) : (
-              "Import to LrC"
+              actionLabel
             )}
           </Button>
           <div className="flex items-center justify-between">

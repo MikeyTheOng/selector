@@ -182,7 +182,7 @@ export const useFolderListing = (
   );
 
   useEffect(() => {
-    if (!selectedFolder) {
+    if (!selectedFolder || selectedFolder.startsWith("collection://")) {
       return;
     }
 
@@ -221,7 +221,7 @@ export const useFolderListing = (
   }, [applyListingError, applyListingUpdate, readFolderListing, selectedFolder]);
 
   useEffect(() => {
-    if (!selectedFolder || locations.length === 0) {
+    if (!selectedFolder || locations.length === 0 || selectedFolder.startsWith("collection://")) {
       return;
     }
 
@@ -290,7 +290,7 @@ export const useFolderListing = (
   }, [locations, refreshListingForPath, selectedFolder]);
 
   useEffect(() => {
-    if (!selectedFolder) {
+    if (!selectedFolder || selectedFolder.startsWith("collection://")) {
       return;
     }
 

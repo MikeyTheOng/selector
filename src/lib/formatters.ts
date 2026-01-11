@@ -19,22 +19,51 @@ const formatSize = (value?: number) => {
   return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`;
 };
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
+const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
   month: "short",
   year: "numeric",
 });
 
-const timeFormatter = new Intl.DateTimeFormat(undefined, {
+const timeFormatter = new Intl.DateTimeFormat("en-US", {
   hour: "numeric",
   minute: "2-digit",
+  hour12: true,
 });
 
 const formatDateTime = (value?: Date | null) => {
   if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
     return "-";
   }
-  return `${dateFormatter.format(value)} at ${timeFormatter.format(value)}`;
+
+  const now = new Date();
+
+  // Day boundaries (local time)
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setDate(startOfToday.getDate() + 1);
+
+  const startOfYesterday = new Date(startOfToday);
+  startOfYesterday.setDate(startOfToday.getDate() - 1);
+
+  // "1:20pm" (no space, lowercase am/pm)
+  const parts = timeFormatter.formatToParts(value);
+  const hour = parts.find((p) => p.type === "hour")?.value ?? "";
+  const minute = parts.find((p) => p.type === "minute")?.value ?? "";
+  const dayPeriod = (parts.find((p) => p.type === "dayPeriod")?.value ?? "").toLowerCase();
+  const timeStr = `${hour}:${minute}${dayPeriod}`;
+
+  if (value >= startOfToday && value < startOfTomorrow) {
+    return `Today at ${timeStr}`;
+  }
+
+  if (value >= startOfYesterday && value < startOfToday) {
+    return `Yesterday at ${timeStr}`;
+  }
+
+  return `${dateFormatter.format(value)} at ${timeStr}`;
 };
 
 const getExtension = (name: string) => {

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   getErrorMessage,
   getPathBaseName,
+  getParentPath,
   getEntryName,
   getEntryPath,
   resolveEntry,
@@ -35,6 +36,27 @@ describe('path-utils', () => {
     it('returns the path itself if no segments', () => {
       expect(getPathBaseName('')).toBe('');
       expect(getPathBaseName('/')).toBe('/');
+    });
+  });
+
+  describe('getParentPath', () => {
+    it('returns the parent directory of a file path', () => {
+      expect(getParentPath('/home/user/documents/file.txt')).toBe('/home/user/documents');
+      expect(getParentPath('/Users/test/photo.jpg')).toBe('/Users/test');
+    });
+
+    it('returns the parent directory of a folder path', () => {
+      expect(getParentPath('/home/user/documents')).toBe('/home/user');
+      expect(getParentPath('/home/user/documents/')).toBe('/home/user');
+    });
+
+    it('returns "/" for root-level items', () => {
+      expect(getParentPath('/file.txt')).toBe('/');
+      expect(getParentPath('/folder')).toBe('/');
+    });
+
+    it('returns "/" for root itself', () => {
+      expect(getParentPath('/')).toBe('/');
     });
   });
 

@@ -1,16 +1,15 @@
-import { render, act } from '@testing-library/react';
+import { render, act, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FileExplorerView } from '../FileExplorerView';
-import { useFolderListing } from '../../hooks/use-folder-listing';
-import { useFileSelection } from '../../hooks/use-file-selection';
-import { useQuickLook } from '../../hooks/use-quick-look';
+import { useExplorerContext } from '../../context/ExplorerContext';
+import { useNavigation } from '@/hooks/use-navigation';
 import { listen, type EventCallback } from '@tauri-apps/api/event';
 import type { FileRow, FolderListing } from '@/types/fs';
+import type { ExplorerSelectionPanelProps } from '@/components/explorer/ExplorerSelectionPanel';
 
-// Mock the hooks
-vi.mock('../../hooks/use-folder-listing');
-vi.mock('../../hooks/use-file-selection');
-vi.mock('../../hooks/use-quick-look');
+// Mock the context
+vi.mock('../../context/ExplorerContext');
+vi.mock('@/hooks/use-navigation');
 vi.mock('@tauri-apps/api/event');
 
 describe('FileExplorerView Integration', () => {
@@ -18,6 +17,12 @@ describe('FileExplorerView Integration', () => {
   const mockFocusFile = vi.fn();
   const mockTogglePreview = vi.fn();
   const mockClosePreview = vi.fn();
+
+  const TestSelectionPanel = ({ selectedCount }: ExplorerSelectionPanelProps) => (
+    <button type="button" disabled={selectedCount === 0}>
+      {selectedCount} selected
+    </button>
+  );
 
   const mockFiles: FileRow[] = [
     {
@@ -60,25 +65,18 @@ describe('FileExplorerView Integration', () => {
 
   const defaultProps = {
     locations: [],
-    locationsError: null,
-    selectedFolder: '/test',
+    folderId: '/test',
     onSelectFolder: vi.fn(),
-    canGoBack: false,
-    canGoForward: false,
-    onBack: vi.fn(),
-    onForward: vi.fn(),
+    SelectionPanel: TestSelectionPanel,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
 
-    const folderListingReturn: ReturnType<typeof useFolderListing> = {
+    const mockContextValue = {
       listing: mockListing,
       ensureListing: vi.fn(),
       getListingForPath: vi.fn(),
-    };
-
-    const fileSelectionReturn: ReturnType<typeof useFileSelection> = {
       selectedFiles: {},
       selectedEntries: [],
       selectedCount: 0,
@@ -94,18 +92,27 @@ describe('FileExplorerView Integration', () => {
       clearLastClickedFile: vi.fn(),
       focusFile: mockFocusFile,
       clearFocus: vi.fn(),
-    };
-
-    const quickLookReturn: ReturnType<typeof useQuickLook> = {
       isPreviewActive: true,
       togglePreview: mockTogglePreview,
       updatePreview: vi.fn(),
       closePreview: mockClosePreview,
+      viewMode: 'list' as const,
+      setViewMode: vi.fn(),
+      folderId: '/test',
+      locations: [],
     };
 
-    vi.mocked(useFolderListing).mockReturnValue(folderListingReturn);
-    vi.mocked(useFileSelection).mockReturnValue(fileSelectionReturn);
-    vi.mocked(useQuickLook).mockReturnValue(quickLookReturn);
+    vi.mocked(useExplorerContext).mockReturnValue(mockContextValue as unknown as ReturnType<typeof useExplorerContext>);
+
+    vi.mocked(useNavigation).mockReturnValue({
+      currentRoute: { type: 'explorer', folderId: '/test' },
+      navigateToExplorer: vi.fn(),
+      navigateToCollection: vi.fn(),
+      canGoBack: true,
+      canGoForward: true,
+      goBack: vi.fn(),
+      goForward: vi.fn(),
+    });
 
     vi.mocked(listen).mockResolvedValue(() => { });
   });
@@ -177,7 +184,10 @@ describe('FileExplorerView Integration', () => {
     });
 
     // Focus second file
-    const fileSelectionReturn: ReturnType<typeof useFileSelection> = {
+    const mockContextValue = {
+      listing: mockListing,
+      ensureListing: vi.fn(),
+      getListingForPath: vi.fn(),
       selectedFiles: {},
       selectedEntries: [],
       selectedCount: 0,
@@ -193,8 +203,16 @@ describe('FileExplorerView Integration', () => {
       clearLastClickedFile: vi.fn(),
       focusFile: mockFocusFile,
       clearFocus: vi.fn(),
+      isPreviewActive: true,
+      togglePreview: mockTogglePreview,
+      updatePreview: vi.fn(),
+      closePreview: mockClosePreview,
+      viewMode: 'list' as const,
+      setViewMode: vi.fn(),
+      folderId: '/test',
+      locations: [],
     };
-    vi.mocked(useFileSelection).mockReturnValue(fileSelectionReturn);
+    vi.mocked(useExplorerContext).mockReturnValue(mockContextValue as unknown as ReturnType<typeof useExplorerContext>);
 
     render(<FileExplorerView {...defaultProps} />);
 
@@ -270,5 +288,53 @@ describe('FileExplorerView Integration', () => {
     });
 
     expect(mockTogglePreview).toHaveBeenCalledWith(mockListing.files[0].path);
+  });
+
+  it('renders toolbar with correct file count', () => {
+    render(<FileExplorerView {...defaultProps} />);
+    // The toolbar displays "X files - Y folders"
+    expect(screen.getByText(/2 files/)).toBeDefined();
+  });
+
+  it('disables selection trigger when no items are selected', () => {
+    render(<FileExplorerView {...defaultProps} />);
+    const trigger = screen.getByRole('button', { name: /selected/i });
+    expect(trigger).toBeDisabled();
+  });
+
+  it('renders selection panel with selected count', () => {
+    const mockContextValue = {
+      listing: mockListing,
+      ensureListing: vi.fn(),
+      getListingForPath: vi.fn(),
+      selectedFiles: {},
+      selectedEntries: mockFiles,
+      selectedCount: 2,
+      lastClickedFile: null,
+      focusedFile: { file: mockFiles[0] },
+      selectFile: vi.fn(),
+      selectMultiple: vi.fn(),
+      selectRange: vi.fn(),
+      toggleFileSelection: mockToggleFileSelection,
+      removeSelection: vi.fn(),
+      clearSelections: vi.fn(),
+      updateLastClickedFile: vi.fn(),
+      clearLastClickedFile: vi.fn(),
+      focusFile: mockFocusFile,
+      clearFocus: vi.fn(),
+      isPreviewActive: true,
+      togglePreview: mockTogglePreview,
+      updatePreview: vi.fn(),
+      closePreview: mockClosePreview,
+      viewMode: 'list' as const,
+      setViewMode: vi.fn(),
+      folderId: '/test',
+      locations: [],
+    };
+    vi.mocked(useExplorerContext).mockReturnValue(mockContextValue as unknown as ReturnType<typeof useExplorerContext>);
+
+    render(<FileExplorerView {...defaultProps} />);
+
+    expect(screen.getByText('2 selected')).toBeDefined();
   });
 });

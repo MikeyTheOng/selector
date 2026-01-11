@@ -35,11 +35,37 @@ describe('formatters', () => {
       expect(formatDateTime(new Date('invalid'))).toBe('-');
     });
 
-    it('formats valid dates correctly', () => {
+    it('formats older dates with full date and time', () => {
+      // A date that's definitely not today or yesterday
       const date = new Date('2024-01-01T12:00:00');
-      // The exact output depends on locale, but it should contain year and time
       const result = formatDateTime(date);
       expect(result).toContain('2024');
+      expect(result).toContain('at');
+      expect(result).not.toContain('Today');
+      expect(result).not.toContain('Yesterday');
+    });
+
+    it('formats today\'s date as "Today at [time]"', () => {
+      const now = new Date();
+      const todayAt3pm = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 30, 0);
+      const result = formatDateTime(todayAt3pm);
+      expect(result).toMatch(/^Today at/);
+      expect(result).toContain('at');
+    });
+
+    it('formats yesterday\'s date as "Yesterday at [time]"', () => {
+      const now = new Date();
+      const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 18, 13, 0);
+      const result = formatDateTime(yesterday);
+      expect(result).toMatch(/^Yesterday at/);
+    });
+
+    it('formats dates from 2+ days ago with full date', () => {
+      const now = new Date();
+      const twoDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2, 10, 0, 0);
+      const result = formatDateTime(twoDaysAgo);
+      expect(result).not.toContain('Today');
+      expect(result).not.toContain('Yesterday');
       expect(result).toContain('at');
     });
   });

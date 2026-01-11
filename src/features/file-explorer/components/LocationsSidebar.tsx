@@ -1,22 +1,24 @@
 import { Folder, HardDrive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNavigation } from "@/hooks/use-navigation";
 import { cn } from "@/lib/utils";
 import type { LocationItem } from "@/types/fs";
 
 type LocationsSidebarProps = {
   locations: LocationItem[];
   locationsError: string | null;
-  selectedFolder: string | null;
-  onSelectFolder: (path: string) => void;
+  renderCollections?: () => React.ReactNode;
 };
 
 export const LocationsSidebar = ({
   locations,
   locationsError,
-  selectedFolder,
-  onSelectFolder,
+  renderCollections,
 }: LocationsSidebarProps) => {
+  const { currentRoute, navigateToExplorer } = useNavigation();
+  const selectedFolder = currentRoute.type === "explorer" ? currentRoute.folderId : null;
+
   const homeLocation = locations.find((node) => node.kind === "home") ?? null;
   const locationNodes = locations.filter((node) => node.kind === "volume");
 
@@ -37,7 +39,7 @@ export const LocationsSidebar = ({
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => onSelectFolder(homeLocation.path)}
+                  onClick={() => navigateToExplorer(homeLocation.path)}
                   className={cn(
                     "h-auto w-full justify-start gap-2 rounded-lg px-2 py-2 text-left text-sm hover:text-foreground",
                     selectedFolder === homeLocation.path
@@ -50,6 +52,14 @@ export const LocationsSidebar = ({
                 </Button>
               </div>
             ) : null}
+            
+            {/* Collections Slot */}
+            {renderCollections && (
+              <div>
+                {renderCollections()}
+              </div>
+            )}
+
             <div>
               <p className="cursor-default select-none px-2 pb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Locations
@@ -64,7 +74,7 @@ export const LocationsSidebar = ({
                     key={node.path}
                     type="button"
                     variant="ghost"
-                    onClick={() => onSelectFolder(node.path)}
+                    onClick={() => navigateToExplorer(node.path)}
                     className={cn(
                       "h-auto w-full justify-start gap-2 rounded-lg px-2 py-2 text-left text-sm hover:text-foreground",
                       selectedFolder === node.path

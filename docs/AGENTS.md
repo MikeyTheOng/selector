@@ -33,6 +33,9 @@ This repository uses **Yarn**.
 
 ## Coding Standards
 
+### General
+- Agents should only add comments where necessary to explain complex code, as code should often be self-explanatory.
+
 ### Frontend (React / TypeScript)
 - 2-space indentation, double quotes, semicolons.
 - Prefer functional components and hooks.
@@ -88,10 +91,13 @@ This repository uses `eslint-plugin-boundaries` to enforce the [File Structure](
 - Include a short bullet list (1–3 bullets) describing intent and impact.
 - Keep commits narrowly scoped; avoid unrelated changes.
 
-**Examples**
-- `feat: Add column view toggle`
-- `feat/refactor: Simplify navigation stack`
-- `fix: Handle null paths on import`
+---
+
+## Documentation Standards
+
+- **Global Hub (`docs/`):** Infrastructure, architecture notes, and shared strategies (e.g., `docs/database.md`).
+- **Feature Spoke (`src/features/<feature>/docs/`):** Technical schemas, invariants, and API surfaces specific to a feature.
+- **Continuous Update:** Documentation must be updated in tandem with code changes during each implementation phase.
 
 ---
 

@@ -1,20 +1,22 @@
-import { FileRowLabel } from "./FileRowLabel";
-import { TreeNode, TreeProvider, TreeView } from "@/components/kibo-ui/tree";
-import type { LastClickedFile } from "../hooks/use-file-selection";
-import { cn } from "@/lib/utils";
-import type { FileRow, FolderListing } from "@/types/fs";
 import { useMemo } from "react";
+import { FileRowLabel } from "./FileRowLabel";
+import { ExplorerListView } from "@/components/explorer/ExplorerListView";
+import { fileRowToExplorerItem, folderRowToExplorerItem } from "@/lib/explorer-utils";
+import type { FileRow, FolderListing, LastClickedFile } from "@/types/fs";
+import type { ExplorerViewMode, ExplorerItem } from "@/types/explorer";
 
 type FileListViewProps = {
   listing: FolderListing;
   selectedFiles: Record<string, FileRow>;
   lastClickedFile: LastClickedFile | null;
   focusedFile: LastClickedFile | null;
+  viewMode?: ExplorerViewMode;
   onSelectFolder: (path: string) => void;
   onSelectFile: (row: FileRow, options?: { additive?: boolean }) => void;
   onSelectRange: (from: FileRow, to: FileRow, allFiles: FileRow[]) => void;
   onFocusFile: (file: FileRow) => void;
   onToggleFileSelection: (file: FileRow) => void;
+  onActivateItem?: (row: FileRow) => void;
 };
 
 export const FileListView = ({
@@ -22,37 +24,35 @@ export const FileListView = ({
   selectedFiles,
   lastClickedFile,
   focusedFile,
+  viewMode = "list",
   onSelectFolder,
   onSelectFile,
   onSelectRange,
   onFocusFile,
   onToggleFileSelection,
+  onActivateItem,
 }: FileListViewProps) => {
-  const rows = useMemo(() => [
-    ...listing.folders.map((folder) => ({
-      ...folder,
-      type: "folder" as const,
-      row: {
-        path: folder.path,
-        name: folder.name,
-        size: 0,
-        sizeLabel: "",
-        dateModified: folder.dateModified,
-        extension: "",
-        kindLabel: "Folder",
-        dateModifiedLabel: folder.dateModifiedLabel,
-      } as FileRow,
-    })),
-    ...listing.files.map((file) => ({
-      ...file,
-      type: "file" as const,
-      row: file,
-    })),
+  const explorerItems = useMemo(() => [
+    ...listing.folders.map(folderRowToExplorerItem),
+    ...listing.files.map(fileRowToExplorerItem),
   ], [listing]);
 
-  const allRowItems = useMemo(() => rows.map(r => r.row), [rows]);
+  // Map back from ExplorerItem to FileRow for compatibility
+  const allRowItems = useMemo(() => [
+    ...listing.folders.map(f => ({
+      ...f,
+      size: 0,
+      sizeLabel: "",
+      extension: "",
+      kindLabel: "Folder",
+    } as FileRow)),
+    ...listing.files
+  ], [listing]);
 
-  const handleItemClick = (event: React.MouseEvent, row: FileRow) => {
+  const handleItemClick = (item: ExplorerItem, event: React.MouseEvent) => {
+    const row = allRowItems.find(r => r.path === item.id);
+    if (!row) return;
+
     // Shift+click for range selection
     if (event.shiftKey && lastClickedFile) {
       onSelectRange(lastClickedFile.file, row, allRowItems);
@@ -68,83 +68,45 @@ export const FileListView = ({
     onFocusFile(row);
   };
 
+  const handleItemDoubleClick = (item: ExplorerItem) => {
+    const row = allRowItems.find(r => r.path === item.id);
+    if (!row) return;
+
+    if (row.status === "missing" || row.status === "offline") {
+      onActivateItem?.(row);
+      return;
+    }
+
+    if (item.kind === "folder") {
+      onSelectFolder(item.path);
+    } else if (onActivateItem) {
+      onActivateItem(row);
+    }
+  };
+
   return (
-    <div tabIndex={0} className="outline-none focus:outline-none">
-      <div className="grid cursor-default select-none grid-cols-[minmax(0,1fr)_160px_170px] gap-3 border-b border-border/50 px-3 py-2 text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-        <span>Name</span>
-        <span>Kind</span>
-        <span>Date modified</span>
-      </div>
-      {rows.length === 0 ? (
-        <div className="px-3 py-4 text-sm text-muted-foreground">No items found in this folder.</div>
-      ) : (
-        <TreeProvider selectable={false} showLines={false} className="w-full">
-          <TreeView className="p-0">
-            <div className="divide-y divide-border/40">
-              {rows.map((row) => {
-                const isSelected = Boolean(selectedFiles[row.path]);
-                const isFocused = focusedFile?.file.path === row.path;
-
-                return (
-                  <TreeNode key={row.path} nodeId={row.path} level={0}>
-                    <button
-                      type="button"
-                      onClick={(event) => handleItemClick(event, row.row)}
-                      onDoubleClick={() => {
-                        if (row.type === "folder") {
-                          onSelectFolder(row.path);
-                        }
-                      }}
-                      className={cn(
-                        "grid w-full grid-cols-[minmax(0,1fr)_160px_170px] items-center gap-3 px-2 py-1 text-left text-xs transition outline-none",
-                        isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "text-foreground hover:bg-muted/60",
-                        isFocused && "ring-1 ring-inset ring-ring ring-offset-0 z-10",
-                      )}
-                      aria-selected={isSelected}
-                    >
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <FileRowLabel
-                          name={row.name}
-                          type={row.type}
-                          iconClassName={cn(
-                            row.type === "folder"
-                              ? isSelected ? "text-primary-foreground" : "text-primary"
-                              : isSelected
-                                ? "text-primary-foreground"
-                                : "text-muted-foreground",
-                          )}
-                          labelClassName={
-                            isSelected ? "text-primary-foreground" : "text-foreground"
-                          }
-                        />
-                      </div>
-                      <span
-                        className={cn(
-                          "cursor-default select-text truncate text-xs",
-                          isSelected ? "text-primary-foreground/80" : "text-muted-foreground",
-                        )}
-                      >
-                        {row.row.kindLabel || "-"}
-                      </span>
-                      <span
-                        className={cn(
-                          "cursor-default select-text truncate text-xs",
-                          isSelected ? "text-primary-foreground/80" : "text-muted-foreground",
-                        )}
-                      >
-                        {row.row.dateModifiedLabel || "-"}
-                      </span>
-                    </button>
-                  </TreeNode>
-                );
-              })}
-            </div>
-          </TreeView>
-        </TreeProvider>
+    <ExplorerListView
+      items={explorerItems}
+      viewMode={viewMode}
+      selectedIds={selectedFiles as unknown as Record<string, ExplorerItem>}
+      lastClickedId={lastClickedFile?.file.path ?? null}
+      focusedId={focusedFile?.file.path ?? null}
+      onItemClick={handleItemClick}
+      onItemDoubleClick={handleItemDoubleClick}
+      onItemContextMenu={(_item, e) => e.preventDefault()}
+      onContextMenu={(e) => e.preventDefault()}
+      emptyMessage="No items found in this folder."
+      renderItemLabel={({ item, isSelected }) => (
+        <FileRowLabel
+          name={item.name}
+          type={item.kind as "file" | "folder"}
+          iconClassName={item.kind === "folder" 
+            ? isSelected ? "text-primary-foreground" : "text-primary"
+            : isSelected ? "text-primary-foreground" : "text-muted-foreground"
+          }
+          labelClassName={isSelected ? "text-primary-foreground" : "text-foreground"}
+        />
       )}
-
-    </div>
+    />
   );
 };

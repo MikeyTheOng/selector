@@ -12,11 +12,16 @@ prevents cross-feature coupling, and scales from small tools to larger products.
 ## High-Level Structure
 ```
 .
-├── docs/               # Architecture notes, ADRs, dev docs
+├── docs/               # Architecture notes, ADRs, dev docs (Global Hub)
 ├── public/             # Static assets (icons, preload files)
 ├── src/                # React (frontend)
 │   ├── app/            # App composition (screens, routing)
 │   ├── features/       # Feature modules (vertical slices)
+│   │   └── <feature>/
+│   │       ├── docs/   # Feature-specific documentation (Feature Spoke)
+│   │       ├── components/
+│   │       ├── hooks/
+│   │       └── ...
 │   ├── components/     # Shared UI primitives
 │   ├── hooks/          # Shared hooks (non-feature-specific)
 │   ├── lib/            # Shared frontend infrastructure
@@ -24,37 +29,38 @@ prevents cross-feature coupling, and scales from small tools to larger products.
 │   ├── assets/         # Images, fonts, static UI assets
 │   └── types/          # Shared TS types (optional)
 └── src-tauri/          # Tauri / Rust backend
-    ├── src/
-    │   ├── commands/   # Tauri commands (API surface)
-    │   ├── features/   # Feature-specific Rust logic
-    │   ├── services/   # Shared Rust services (fs, db, ipc)
-    │   └── main.rs
-    ├── capabilities/  # Tauri permissions
-    ├── icons/
-    └── gen/
 ```
 
 ## Frontend Architecture
 
 ### Layer 1 — Shared (Global)
 Folders:
-- `src/components/`
+- `docs/`
+- `src/components/` (specifically `src/components/ui/`)
 - `src/hooks/`
 - `src/lib/`
 
 Purpose:
-- Reusable, domain-agnostic code.
-- UI primitives, design system wrappers, infrastructure helpers.
+- Reusable, domain-agnostic code and global infrastructure documentation.
 
 Rules:
 - Do not import from `src/features/` or `src/app/`.
 - May import from other shared folders.
 - Avoid business logic.
 
-Examples:
-- `src/components/ui/button.tsx`
-- `src/lib/tauri.ts` (thin IPC wrapper)
-- `src/hooks/useDebounce.ts`
+### Layer 1.2 — Shared Domain Components
+Folders:
+- `src/components/explorer/`
+- `src/hooks/explorer/`
+
+Purpose:
+- Domain-aware UI primitives and logic shared between multiple features (e.g., `file-explorer` and `collections`).
+- These are more specialized than generic UI components but more generic than feature-specific components.
+
+Rules:
+- Do not import from `src/features/` or `src/app/`.
+- May import from Layer 1 (Shared Global).
+- Used by multiple features to enforce UI/UX consistency across similar domain concepts (like "browsing items").
 
 ### Layer 1.5 — Test Utilities
 Folder: `src/test/`
@@ -69,27 +75,17 @@ Rules:
 - Can import from `shared`, `features`, and `app` (for integration testing).
 
 ### Layer 2 — Features
-Each feature owns its UI and logic end-to-end.
+Each feature owns its UI, logic, and documentation end-to-end.
 
 ```
 src/features/file-explorer/
+├── docs/           # Feature-specific documentation (Spoke)
 ├── components/     # Feature-specific UI
 ├── hooks/          # Feature-specific hooks
 ├── tauri/          # IPC calls for this feature
 ├── state.ts        # Local state / reducers
 ├── permissions.ts  # Feature-level rules
 └── index.ts        # Public exports
-```
-
-Rules:
-- May import from shared (`components`, `hooks`, `lib`) and itself.
-- Must not import from other features.
-- Cross-feature interaction is data-only (IDs, payloads).
-
-Example:
-```ts
-// src/features/file-explorer/tauri/readDirectory.ts
-invoke("read_directory", { path });
 ```
 
 ### Layer 3 — App (Composition)

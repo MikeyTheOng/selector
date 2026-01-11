@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useState } from "react";
-import { BrowserToolbar } from "./BrowserToolbar";
+import { useCallback, useEffect, type ComponentType } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ExplorerToolbar } from "@/components/explorer/ExplorerToolbar";
+import type { ExplorerSelectionPanelProps } from "@/components/explorer/ExplorerSelectionPanel";
+import { useNavigation } from "@/hooks/use-navigation";
 import { ColumnView } from "./ColumnView";
 import { FileListView } from "./FileListView";
-import { LocationsSidebar } from "./LocationsSidebar";
 import { PathBar } from "./PathBar";
-import { SelectionSheet } from "./SelectionSheet";
-import { useFileSelection } from "../hooks/use-file-selection";
-import { useFolderListing } from "../hooks/use-folder-listing";
-import { useQuickLook } from "../hooks/use-quick-look";
+import { useExplorerContext } from "../context/ExplorerContext";
 import { listen } from "@tauri-apps/api/event";
-import type { FileRow, FolderRow, LocationItem } from "@/types/fs";
+import type { FileRow, LocationItem } from "@/types/fs";
+import { folderToFileRow, fileRowToExplorerItem } from "@/lib/explorer-utils";
 import { getPathBaseName } from "@/lib/path-utils";
+import { Button } from "@/components/ui/button";
 
 interface QuickLookEvent {
   key: string;
@@ -21,27 +22,21 @@ interface QuickLookEvent {
 
 type FileExplorerViewProps = {
   locations: LocationItem[];
-  locationsError: string | null;
-  selectedFolder: string | null;
+  folderId: string | null;
   onSelectFolder: (path: string) => void;
-  canGoBack: boolean;
-  canGoForward: boolean;
-  onBack: () => void;
-  onForward: () => void;
+  SelectionPanel: ComponentType<ExplorerSelectionPanelProps>;
 };
 
 export const FileExplorerView = ({
   locations,
-  locationsError,
-  selectedFolder,
+  folderId,
   onSelectFolder,
-  canGoBack,
-  canGoForward,
-  onBack,
-  onForward,
+  SelectionPanel,
 }: FileExplorerViewProps) => {
-  const { listing, ensureListing, getListingForPath } = useFolderListing(selectedFolder, locations);
   const {
+    listing,
+    ensureListing,
+    getListingForPath,
     selectedFiles,
     selectedEntries,
     selectedCount,
@@ -53,15 +48,44 @@ export const FileExplorerView = ({
     toggleFileSelection,
     removeSelection,
     clearSelections,
-    clearLastClickedFile,
     focusFile,
     clearFocus,
-  } = useFileSelection();
-  const { isPreviewActive, togglePreview, updatePreview, closePreview } = useQuickLook();
-  const [viewMode, setViewMode] = useState<"list" | "column">("list");
-  const [isSelectionOpen, setIsSelectionOpen] = useState(false);
+    isPreviewActive,
+    togglePreview,
+    updatePreview,
+    closePreview,
+    viewMode,
+    setViewMode,
+  } = useExplorerContext();
 
-  const currentFolderName = selectedFolder ? getPathBaseName(selectedFolder) : "Select a folder";
+  const { goBack, goForward, canGoBack, canGoForward } = useNavigation();
+
+  const currentFolderName = folderId
+    ? getPathBaseName(folderId)
+    : "Select a folder";
+
+  const navigationButtons = (
+    <div className="flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7"
+        onClick={goBack}
+        disabled={!canGoBack}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7"
+        onClick={goForward}
+        disabled={!canGoForward}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
 
   const handleFileSelection = useCallback(
     (row: FileRow, options?: { additive?: boolean }) => {
@@ -86,7 +110,17 @@ export const FileExplorerView = ({
   }, [focusedFile, isPreviewActive, updatePreview]);
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent | { key: string, preventDefault: () => void, metaKey?: boolean, ctrlKey?: boolean, shiftKey?: boolean }) => {
+    const handleKeyDown = (
+      event:
+        | KeyboardEvent
+        | {
+            key: string;
+            preventDefault: () => void;
+            metaKey?: boolean;
+            ctrlKey?: boolean;
+            shiftKey?: boolean;
+          },
+    ) => {
       // ESC key: close preview if active, otherwise clear selections and close sheet
       if (event.key === "Escape") {
         event.preventDefault();
@@ -95,7 +129,6 @@ export const FileExplorerView = ({
         } else {
           clearSelections();
           clearFocus();
-          setIsSelectionOpen(false);
         }
         return;
       }
@@ -119,24 +152,27 @@ export const FileExplorerView = ({
         return;
       }
 
-      // Helper to map a FolderRow to a FileRow for selection/focus consistency
-      const folderToFileRow = (f: FolderRow): FileRow => ({
-        path: f.path,
-        name: f.name,
-        size: 0,
-        sizeLabel: "",
-        extension: "",
-        kindLabel: "Folder",
-        dateModified: f.dateModified,
-        dateModifiedLabel: f.dateModifiedLabel,
-      });
+      // Cmd/Ctrl+A: Select all items
+      if (isMod && event.key.toLowerCase() === "a") {
+        event.preventDefault();
+        const allItems = [
+          ...listing.folders.map(folderToFileRow),
+          ...listing.files,
+        ];
+        selectMultiple(allItems);
+        return;
+      }
 
       // Navigation Logic
-      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(event.key)) {
+      if (
+        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(
+          event.key,
+        )
+      ) {
         if (viewMode === "list") {
           const allRows = [
             ...listing.folders.map(folderToFileRow),
-            ...listing.files
+            ...listing.files,
           ];
 
           if (allRows.length === 0) return;
@@ -148,7 +184,9 @@ export const FileExplorerView = ({
             if (!focusedFile) {
               nextIndex = event.key === "ArrowUp" ? allRows.length - 1 : 0;
             } else {
-              const currentIndex = allRows.findIndex(r => r.path === focusedFile.file.path);
+              const currentIndex = allRows.findIndex(
+                (r) => r.path === focusedFile.file.path,
+              );
               if (event.key === "ArrowUp") {
                 nextIndex = Math.max(0, currentIndex - 1);
               } else {
@@ -168,7 +206,9 @@ export const FileExplorerView = ({
           } else if (event.key === "Enter") {
             event.preventDefault();
             if (focusedFile) {
-              const isFolder = listing.folders.some(f => f.path === focusedFile.file.path);
+              const isFolder = listing.folders.some(
+                (f) => f.path === focusedFile.file.path,
+              );
               if (isFolder) {
                 onSelectFolder(focusedFile.file.path);
               }
@@ -179,8 +219,8 @@ export const FileExplorerView = ({
           if (event.key === "ArrowLeft") {
             event.preventDefault();
             // Go up to parent folder
-            if (selectedFolder) {
-              const segments = selectedFolder.split("/").filter(Boolean);
+            if (folderId) {
+              const segments = folderId.split("/").filter(Boolean);
               if (segments.length > 1) {
                 const parentPath = "/" + segments.slice(0, -1).join("/");
                 onSelectFolder(parentPath);
@@ -189,28 +229,32 @@ export const FileExplorerView = ({
           } else if (event.key === "ArrowRight" || event.key === "Enter") {
             event.preventDefault();
             if (focusedFile) {
-              const isFolder = listing.folders.some(f => f.path === focusedFile.file.path);
+              const isFolder = listing.folders.some(
+                (f) => f.path === focusedFile.file.path,
+              );
               if (isFolder) {
                 onSelectFolder(focusedFile.file.path);
               }
             }
           } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
             event.preventDefault();
-            const currentListing = getListingForPath(selectedFolder || "");
+            const currentListing = getListingForPath(folderId || "");
             if (!currentListing) return;
 
             const allRows = [
               ...currentListing.folders.map(folderToFileRow),
-              ...currentListing.files
+              ...currentListing.files,
             ];
 
             if (allRows.length === 0) return;
 
             let nextIndex = -1;
-            if (!focusedFile || focusedFile.columnPath !== selectedFolder) {
+            if (!focusedFile || focusedFile.columnPath !== folderId) {
               nextIndex = event.key === "ArrowUp" ? allRows.length - 1 : 0;
             } else {
-              const currentIndex = allRows.findIndex(r => r.path === focusedFile.file.path);
+              const currentIndex = allRows.findIndex(
+                (r) => r.path === focusedFile.file.path,
+              );
               if (event.key === "ArrowUp") {
                 nextIndex = Math.max(0, currentIndex - 1);
               } else {
@@ -220,11 +264,15 @@ export const FileExplorerView = ({
 
             if (nextIndex !== -1) {
               const nextRow = allRows[nextIndex];
-              if (isShift && lastClickedFile && lastClickedFile.columnPath === selectedFolder) {
+              if (
+                isShift &&
+                lastClickedFile &&
+                lastClickedFile.columnPath === folderId
+              ) {
                 selectRange(lastClickedFile.file, nextRow, allRows);
-                focusFile(nextRow, selectedFolder || undefined);
+                focusFile(nextRow, folderId || undefined);
               } else {
-                focusFile(nextRow, selectedFolder || undefined);
+                focusFile(nextRow, folderId || undefined);
               }
             }
           }
@@ -244,17 +292,20 @@ export const FileExplorerView = ({
     };
 
     const setupListeners = async () => {
-      const unlisten = await listen<QuickLookEvent>("quicklook://navigate", (event) => {
-        const { key: rawKey, metaKey, ctrlKey, shiftKey } = event.payload;
-        const key = rawKey === "Space" ? " " : rawKey;
-        handleKeyDown({
-          key,
-          preventDefault: () => { },
-          metaKey,
-          ctrlKey,
-          shiftKey
-        });
-      });
+      const unlisten = await listen<QuickLookEvent>(
+        "quicklook://navigate",
+        (event) => {
+          const { key: rawKey, metaKey, ctrlKey, shiftKey } = event.payload;
+          const key = rawKey === "Space" ? " " : rawKey;
+          handleKeyDown({
+            key,
+            preventDefault: () => {},
+            metaKey,
+            ctrlKey,
+            shiftKey,
+          });
+        },
+      );
       return unlisten;
     };
 
@@ -263,94 +314,94 @@ export const FileExplorerView = ({
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      unlistenPromise.then(fn => fn());
+      unlistenPromise.then((fn) => fn());
     };
-  }, [listing, selectMultiple, clearSelections, clearFocus, focusedFile, viewMode, selectedFolder, onSelectFolder, focusFile, toggleFileSelection, selectRange, lastClickedFile, getListingForPath, isPreviewActive, togglePreview, closePreview]);
+  }, [
+    listing,
+    selectMultiple,
+    clearSelections,
+    clearFocus,
+    focusedFile,
+    viewMode,
+    folderId,
+    onSelectFolder,
+    focusFile,
+    toggleFileSelection,
+    selectRange,
+    lastClickedFile,
+    getListingForPath,
+    isPreviewActive,
+    togglePreview,
+    closePreview,
+  ]);
 
-  // Clear last clicked file and focus when folder or view mode changes
-  useEffect(() => {
-    if (viewMode === "column") return;
-
-    clearLastClickedFile();
-    clearFocus();
-  }, [selectedFolder, viewMode, clearLastClickedFile, clearFocus]);
+  const explorerEntries = selectedEntries.map(fileRowToExplorerItem);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-      <LocationsSidebar
-        locations={locations}
-        locationsError={locationsError}
-        selectedFolder={selectedFolder}
-        onSelectFolder={onSelectFolder}
+    <section className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+      <ExplorerToolbar
+        title={currentFolderName}
+        leftContent={navigationButtons}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        fileCount={listing.fileCount}
+        folderCount={listing.folderCount}
+        disabledViewModes={["grid"]}
+        selectionPanel={
+          <SelectionPanel
+            selectedCount={selectedCount}
+            entries={explorerEntries}
+            onRemoveSelection={removeSelection}
+            onClearAllSelections={clearSelections}
+          />
+        }
       />
 
-      <section className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-        <BrowserToolbar
-          currentFolderName={currentFolderName}
-          canGoBack={canGoBack}
-          canGoForward={canGoForward}
-          onBack={onBack}
-          onForward={onForward}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          fileCount={listing.fileCount}
-          folderCount={listing.folderCount}
-          selectedCount={selectedCount}
-          isSelectionOpen={isSelectionOpen}
-          onToggleSelection={() => setIsSelectionOpen((prev) => !prev)}
-        />
+      <div className="flex-1 overflow-auto">
+        {viewMode === "column" ? (
+          <ColumnView
+            locations={locations}
+            selectedFolder={folderId}
+            selectedFiles={selectedFiles}
+            lastClickedFile={lastClickedFile}
+            focusedFile={focusedFile}
+            getListingForPath={getListingForPath}
+            onEnsureListing={ensureListing}
+            onSelectFolder={onSelectFolder}
+            onSelectFile={handleFileSelection}
+            onSelectRange={selectRange}
+            onFocusFile={focusFile}
+            onToggleFileSelection={toggleFileSelection}
+          />
+        ) : listing.isLoading ? (
+          <div className="px-4 py-6 text-sm text-muted-foreground">
+            Loading files...
+          </div>
+        ) : listing.error ? (
+          <div className="px-4 py-6 text-sm text-destructive">
+            {listing.error}
+          </div>
+        ) : (
+          <FileListView
+            listing={listing}
+            selectedFiles={selectedFiles}
+            lastClickedFile={lastClickedFile}
+            focusedFile={focusedFile}
+            viewMode={viewMode}
+            onSelectFolder={onSelectFolder}
+            onSelectFile={handleFileSelection}
+            onSelectRange={selectRange}
+            onFocusFile={focusFile}
+            onToggleFileSelection={toggleFileSelection}
+          />
+        )}
+      </div>
 
-        <SelectionSheet
-          isOpen={isSelectionOpen}
-          entries={selectedEntries}
-          onClose={() => setIsSelectionOpen(false)}
-          onRemove={removeSelection}
-          onClear={clearSelections}
-        />
-
-        <div className="flex-1 overflow-auto">
-          {viewMode === "list" ? (
-            listing.isLoading ? (
-              <div className="px-4 py-6 text-sm text-muted-foreground">Loading files...</div>
-            ) : listing.error ? (
-              <div className="px-4 py-6 text-sm text-destructive">{listing.error}</div>
-            ) : (
-              <FileListView
-                listing={listing}
-                selectedFiles={selectedFiles}
-                lastClickedFile={lastClickedFile}
-                focusedFile={focusedFile}
-                onSelectFolder={onSelectFolder}
-                onSelectFile={handleFileSelection}
-                onSelectRange={selectRange}
-                onFocusFile={focusFile}
-                onToggleFileSelection={toggleFileSelection}
-              />
-            )
-          ) : (
-            <ColumnView
-              locations={locations}
-              selectedFolder={selectedFolder}
-              selectedFiles={selectedFiles}
-              lastClickedFile={lastClickedFile}
-              focusedFile={focusedFile}
-              getListingForPath={getListingForPath}
-              onEnsureListing={ensureListing}
-              onSelectFolder={onSelectFolder}
-              onSelectFile={handleFileSelection}
-              onSelectRange={selectRange}
-              onFocusFile={focusFile}
-              onToggleFileSelection={toggleFileSelection}
-            />
-          )}
-        </div>
-
-        <PathBar
-          selectedFolder={selectedFolder}
-          locations={locations}
-          onSelectFolder={onSelectFolder}
-        />
-      </section>
-    </div>
+      <PathBar
+        selectedFolder={folderId}
+        locations={locations}
+        onSelectFolder={onSelectFolder}
+      />
+    </section>
   );
 };

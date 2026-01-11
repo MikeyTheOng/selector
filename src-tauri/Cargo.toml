@@ -23,7 +23,9 @@ tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 objc2 = "0.6.3"
 objc2-app-kit = { version = "0.3.2", features = ["NSWindow", "NSResponder", "NSEvent"] }
 objc2-foundation = { version = "0.3.2", features = ["NSURL", "NSString", "NSNotification"] }
 objc2-quick-look-ui = { version = "0.3.2", features = ["QLPreviewPanel", "QLPreviewItem"] }
+tauri-plugin-dialog = "2.4.2"
