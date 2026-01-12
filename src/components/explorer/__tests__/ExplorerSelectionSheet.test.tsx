@@ -1,7 +1,6 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ExplorerSelectionSheet } from "../ExplorerSelectionSheet";
-import { invoke } from "@tauri-apps/api/core";
 import type { ExplorerItem } from "@/types/explorer";
 
 // Mock Tauri invoke
@@ -9,27 +8,58 @@ vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
 }));
 
+// Mock sonner toast
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+// Mock recent-apps module
+vi.mock("@/lib/recent-apps", () => ({
+  getRecentApps: vi.fn().mockResolvedValue([]),
+  addRecentApp: vi.fn(),
+}));
+
+// Mock file-groups module
+vi.mock("@/lib/file-groups", () => ({
+  groupFilesByMediaType: vi.fn((files) => ({
+    images: { type: "image", files: [], extensions: new Set() },
+    videos: { type: "video", files: [], extensions: new Set() },
+    others: { type: "other", files: files, extensions: new Set() },
+    hasImages: false,
+    hasVideos: false,
+    hasOthers: files.length > 0,
+    hasMultipleTypes: false,
+  })),
+  getFirstExtension: vi.fn((files) => files[0]?.extension),
+  getFileCountLabel: vi.fn((count, type) => `${count} ${type}s`),
+}));
+
 describe("ExplorerSelectionSheet", () => {
   const mockEntries: ExplorerItem[] = [
     {
       id: "1",
-      path: "/path/to/file1.txt",
-      name: "file1.txt",
+      path: "/path/to/file1.jpg",
+      name: "file1.jpg",
       kind: "file",
       status: "available",
+      extension: "jpg",
       dateModified: new Date(),
       dateModifiedLabel: "Today",
-      kindLabel: "File",
+      kindLabel: "Image",
     },
     {
       id: "2",
-      path: "/path/to/folder",
-      name: "folder",
-      kind: "folder",
+      path: "/path/to/file2.jpg",
+      name: "file2.jpg",
+      kind: "file",
       status: "available",
+      extension: "jpg",
       dateModified: new Date(),
       dateModifiedLabel: "Today",
-      kindLabel: "Folder",
+      kindLabel: "Image",
     },
   ];
 
@@ -47,9 +77,9 @@ describe("ExplorerSelectionSheet", () => {
 
   it("renders entries correctly", () => {
     render(<ExplorerSelectionSheet {...defaultProps} />);
-    expect(screen.getByText("file1.txt")).toBeDefined();
-    expect(screen.getByText("folder")).toBeDefined();
-    expect(screen.getByText("/path/to/file1.txt")).toBeDefined();
+    expect(screen.getByText("file1.jpg")).toBeDefined();
+    expect(screen.getByText("file2.jpg")).toBeDefined();
+    expect(screen.getByText("/path/to/file1.jpg")).toBeDefined();
   });
 
   it("shows empty state when no entries", () => {
@@ -71,35 +101,15 @@ describe("ExplorerSelectionSheet", () => {
     expect(defaultProps.onClear).toHaveBeenCalled();
   });
 
-  it("calls default invoke action when main button is clicked without custom onAction", async () => {
+  it("shows Open All with button", () => {
     render(<ExplorerSelectionSheet {...defaultProps} />);
-    const mainButton = screen.getByText("Import to LrC");
-    fireEvent.click(mainButton);
-    
-    await waitFor(() => {
-      expect(invoke).toHaveBeenCalledWith("import_to_lrc", {
-        files: ["/path/to/file1.txt", "/path/to/folder"],
-      });
-    });
+    expect(screen.getByText("Open All with...")).toBeDefined();
   });
 
-  it("calls custom onAction when provided", async () => {
-    const onAction = vi.fn().mockResolvedValue(undefined);
-    render(
-      <ExplorerSelectionSheet
-        {...defaultProps}
-        actionLabel="Custom Action"
-        onAction={onAction}
-      />
-    );
-    
-    const mainButton = screen.getByText("Custom Action");
-    fireEvent.click(mainButton);
-    
-    await waitFor(() => {
-      expect(onAction).toHaveBeenCalledWith(mockEntries);
-    });
-    expect(invoke).not.toHaveBeenCalled();
+  it("disables button when no entries", () => {
+    render(<ExplorerSelectionSheet {...defaultProps} entries={[]} />);
+    const button = screen.getByText("Open All with...") as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
   });
 
   it("renders custom actions slot", () => {
@@ -107,8 +117,13 @@ describe("ExplorerSelectionSheet", () => {
       <ExplorerSelectionSheet
         {...defaultProps}
         renderActions={() => <button>Custom Widget</button>}
-      />
+      />,
     );
     expect(screen.getByText("Custom Widget")).toBeDefined();
+  });
+
+  it("displays correct item count", () => {
+    render(<ExplorerSelectionSheet {...defaultProps} />);
+    expect(screen.getByText("2 items")).toBeDefined();
   });
 });
