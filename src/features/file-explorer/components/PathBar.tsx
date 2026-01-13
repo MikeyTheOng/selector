@@ -3,7 +3,7 @@ import {
   ExplorerPathBar,
   type PathSegment as GenericPathSegment,
 } from "@/components/explorer/ExplorerPathBar";
-import type { LocationItem } from "@/types/fs";
+import type { LocationItem } from "@/types/explorer";
 import { getPathBaseName } from "@/lib/path-utils";
 
 type PathBarProps = {

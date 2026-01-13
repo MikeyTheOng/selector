@@ -20,4 +20,4 @@ export type {
   FolderRow,
   LocationItem,
   FolderListing,
-} from "@/types/fs";
+} from "@/types/explorer";

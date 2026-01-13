@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { useFileSelection } from '../use-file-selection';
-import type { FileRow } from '@/types/fs';
+import type { FileRow } from '@/types/explorer';
 
 const mockFile = (path: string, name: string): FileRow => ({
   path,

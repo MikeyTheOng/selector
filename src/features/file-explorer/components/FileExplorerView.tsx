@@ -8,7 +8,7 @@ import { FileListView } from "./FileListView";
 import { PathBar } from "./PathBar";
 import { useExplorerContext } from "../context/ExplorerContext";
 import { listen } from "@tauri-apps/api/event";
-import type { FileRow, LocationItem } from "@/types/fs";
+import type { FileRow, LocationItem } from "@/types/explorer";
 import { folderToFileRow, fileRowToExplorerItem } from "@/lib/explorer-utils";
 import { getPathBaseName } from "@/lib/path-utils";
 import { Button } from "@/components/ui/button";

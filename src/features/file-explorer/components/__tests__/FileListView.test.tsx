@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FileListView } from '../FileListView';
-import type { FolderListing, FileRow } from '@/types/fs';
+import type { FolderListing, FileRow } from '@/types/explorer';
 
 // Simple mock for FileRowLabel
 vi.mock('../FileRowLabel', () => ({

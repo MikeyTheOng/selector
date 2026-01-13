@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useFolderListing } from '../use-folder-listing';
 import { fsModule } from '@/lib/tauri/fs';
 import { watch, type WatchEvent } from '@tauri-apps/plugin-fs';
-import type { FsDirEntry, LocationItem } from '@/types/fs';
+import type { FsDirEntry, LocationItem } from '@/types/explorer';
 
 // Mock the fsModule
 vi.mock('@/lib/tauri/fs', () => ({

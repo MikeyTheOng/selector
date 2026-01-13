@@ -1,4 +1,4 @@
-import type { FsDirEntry, LocationItem } from "@/types/fs";
+import type { FsDirEntry, LocationItem } from "@/types/explorer";
 
 const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) {
@@ -89,8 +89,6 @@ export {
   getErrorMessage,
   getPathBaseName,
   getParentPath,
-  getEntryName,
-  getEntryPath,
   resolveEntry,
   isHiddenName,
   getPathHierarchy,

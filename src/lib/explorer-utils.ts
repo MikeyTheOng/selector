@@ -1,4 +1,4 @@
-import type { FileRow, FolderRow } from "@/types/fs";
+import type { FileRow, FolderRow } from "@/types/explorer";
 import type { ExplorerItem } from "@/types/explorer";
 
 /**

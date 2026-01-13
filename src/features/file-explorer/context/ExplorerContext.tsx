@@ -3,7 +3,7 @@ import { useFolderListing } from "../hooks/use-folder-listing";
 import { useFileSelection } from "../hooks/use-file-selection";
 import { useQuickLook } from "../hooks/use-quick-look";
 import { useExplorerViewState } from "@/hooks/explorer/use-explorer-view-state";
-import type { LocationItem, FolderListing, FileRow } from "@/types/fs";
+import type { LocationItem, FolderListing, FileRow } from "@/types/explorer";
 import type { ExplorerViewMode } from "@/types/explorer";
 
 interface ExplorerContextType {

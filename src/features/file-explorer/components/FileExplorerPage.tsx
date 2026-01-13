@@ -1,7 +1,7 @@
 import { ExplorerProvider } from "../context/ExplorerContext";
 import type { ComponentType } from "react";
 import { FileExplorerView } from "./FileExplorerView";
-import type { LocationItem } from "@/types/fs";
+import type { LocationItem } from "@/types/explorer";
 import type { ExplorerSelectionPanelProps } from "@/components/explorer/ExplorerSelectionPanel";
 
 type FileExplorerPageProps = {

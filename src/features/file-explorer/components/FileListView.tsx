@@ -4,7 +4,7 @@ import { FileRowLabel } from "./FileRowLabel";
 import { ExplorerListView } from "@/components/explorer/ExplorerListView";
 import { useExplorerContextMenu } from "@/components/explorer/ExplorerContextMenu";
 import { fileRowToExplorerItem, folderRowToExplorerItem } from "@/lib/explorer-utils";
-import type { FileRow, FolderListing, LastClickedFile } from "@/types/fs";
+import type { FileRow, FolderListing, LastClickedFile } from "@/types/explorer";
 import type { ExplorerViewMode, ExplorerItem } from "@/types/explorer";
 
 type FileListViewProps = {

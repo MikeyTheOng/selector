@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LocationsSidebar } from '../LocationsSidebar';
 import { useNavigation } from '@/hooks/use-navigation';
-import type { LocationItem } from '@/types/fs';
+import type { LocationItem } from '@/types/explorer';
 
 vi.mock('@/hooks/use-navigation');
 

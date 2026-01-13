@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { PathBar } from '../PathBar';
-import type { LocationItem } from '@/types/fs';
+import type { LocationItem } from '@/types/explorer';
 
 describe('PathBar', () => {
   const mockLocations: LocationItem[] = [

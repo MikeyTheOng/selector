@@ -3,13 +3,11 @@ import {
   getErrorMessage,
   getPathBaseName,
   getParentPath,
-  getEntryName,
-  getEntryPath,
   resolveEntry,
   isHiddenName,
   getPathHierarchy,
 } from '../path-utils';
-import type { LocationItem } from '@/types/fs';
+import type { LocationItem } from '@/types/explorer';
 
 describe('path-utils', () => {
   describe('getErrorMessage', () => {
@@ -57,31 +55,6 @@ describe('path-utils', () => {
 
     it('returns "/" for root itself', () => {
       expect(getParentPath('/')).toBe('/');
-    });
-  });
-
-  describe('getEntryName', () => {
-    it('returns name if provided', () => {
-      expect(getEntryName({ name: 'test.txt', path: '/path/test.txt' })).toBe('test.txt');
-    });
-
-    it('derives name from path if name is missing', () => {
-      expect(getEntryName({ path: '/path/derived.txt' })).toBe('derived.txt');
-    });
-  });
-
-  describe('getEntryPath', () => {
-    it('returns path if provided', () => {
-      expect(getEntryPath({ path: '/explicit/path.txt' }, '/parent')).toBe('/explicit/path.txt');
-    });
-
-    it('constructs path from name and parentPath if path is missing', () => {
-      // @ts-expect-error - testing missing path case handled in logic
-      expect(getEntryPath({ name: 'file.txt' }, '/parent')).toBe('/parent/file.txt');
-      // @ts-expect-error - name-only entry supported in tests
-      expect(getEntryPath({ name: 'file.txt' }, '/parent/')).toBe('/parent/file.txt');
-      // @ts-expect-error - name-only entry with empty parent
-      expect(getEntryPath({ name: 'file.txt' }, '')).toBe('/file.txt');
     });
   });
 

@@ -1,8 +1,8 @@
 import { TreeNode, TreeProvider, TreeView } from "@/components/kibo-ui/tree";
 import { FileRowLabel } from "./FileRowLabel";
-import type { LastClickedFile } from "@/types/fs";
+import type { LastClickedFile } from "@/types/explorer";
 import { cn } from "@/lib/utils";
-import type { FileRow, FolderListing, LocationItem } from "@/types/fs";
+import type { FileRow, FolderListing, LocationItem } from "@/types/explorer";
 import { useEffect, useMemo } from "react";
 
 type ColumnViewProps = {

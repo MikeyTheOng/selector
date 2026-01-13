@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigation } from "@/hooks/use-navigation";
 import { cn } from "@/lib/utils";
-import type { LocationItem } from "@/types/fs";
+import type { LocationItem } from "@/types/explorer";
 
 type LocationsSidebarProps = {
   locations: LocationItem[];

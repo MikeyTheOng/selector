@@ -8,7 +8,7 @@ import {
   isHiddenName,
   resolveEntry,
 } from "@/lib/path-utils";
-import type { FileRow, FolderListing, LocationItem } from "@/types/fs";
+import type { FileRow, FolderListing, LocationItem } from "@/types/explorer";
 
 const createListing = (overrides: Partial<FolderListing> = {}): FolderListing => ({
   folders: [],
