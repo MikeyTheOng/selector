@@ -1,19 +1,18 @@
 import { createContext, useContext, useEffect, useMemo, ReactNode } from "react";
 import { useFolderListing } from "../hooks/use-folder-listing";
-import { useFileSelection } from "../hooks/use-file-selection";
+import { useExplorerSelection } from "@/hooks/explorer/use-explorer-selection";
 import { useQuickLook } from "../hooks/use-quick-look";
 import { useExplorerViewState } from "@/hooks/explorer/use-explorer-view-state";
-import type { LocationItem, FolderListing, FileRow } from "@/types/explorer";
-import type { ExplorerViewMode } from "@/types/explorer";
+import type { LocationItem, FolderListing, ExplorerItem, ExplorerViewMode } from "@/types/explorer";
 
 interface ExplorerContextType {
   // State
   listing: FolderListing;
-  selectedFiles: Record<string, FileRow>;
-  selectedEntries: FileRow[];
+  selectedPaths: Record<string, ExplorerItem>;
+  selectedEntries: ExplorerItem[];
   selectedCount: number;
-  lastClickedFile: { file: FileRow; columnPath?: string } | null;
-  focusedFile: { file: FileRow; columnPath?: string } | null;
+  lastClickedPath: string | null;
+  focusedPath: string | null;
   isPreviewActive: boolean;
   viewMode: ExplorerViewMode;
   folderId: string | null;
@@ -22,15 +21,15 @@ interface ExplorerContextType {
   // Actions
   ensureListing: (path: string) => void;
   getListingForPath: (path: string) => FolderListing | undefined;
-  selectFile: (row: FileRow) => void;
-  selectMultiple: (rows: FileRow[], options?: { additive?: boolean }) => void;
-  selectRange: (start: FileRow, end: FileRow, allRows: FileRow[]) => void;
-  toggleFileSelection: (row: FileRow) => void;
+  selectItem: (item: ExplorerItem) => void;
+  selectMultiple: (items: ExplorerItem[], options?: { additive?: boolean }) => void;
+  selectRange: (start: ExplorerItem, end: ExplorerItem, allItems: ExplorerItem[]) => void;
+  toggleSelection: (item: ExplorerItem) => void;
   removeSelection: (path: string) => void;
   clearSelections: () => void;
-  updateLastClickedFile: (file: FileRow, columnPath?: string) => void;
-  clearLastClickedFile: () => void;
-  focusFile: (row: FileRow, columnPath?: string) => void;
+  updateLastClickedItem: (item: ExplorerItem) => void;
+  clearLastClickedItem: () => void;
+  focusItem: (item: ExplorerItem) => void;
   clearFocus: () => void;
   togglePreview: (path: string) => void;
   updatePreview: (path: string) => void;
@@ -63,61 +62,79 @@ export const ExplorerProvider = ({
 }: ExplorerProviderProps) => {
   const { listing, ensureListing, getListingForPath } = useFolderListing(folderId, locations);
   const {
-    selectedFiles,
+    selectedPaths,
     selectedEntries,
     selectedCount,
-    lastClickedFile,
-    focusedFile,
-    selectFile,
+    lastClickedPath,
+    focusedPath,
+    selectItem,
     selectMultiple,
     selectRange,
-    toggleFileSelection,
+    toggleSelection,
     removeSelection,
     clearSelections,
-    updateLastClickedFile,
-    clearLastClickedFile,
-    focusFile,
+    updateLastClickedItem,
+    clearLastClickedItem,
+    focusItem,
     clearFocus,
-  } = useFileSelection();
+  } = useExplorerSelection();
   const { isPreviewActive, togglePreview, updatePreview, closePreview } = useQuickLook();
   const { viewMode, setViewMode } = useExplorerViewState({ initialViewMode: "list" });
   useEffect(() => {
     if (viewMode === "column") return;
-    clearLastClickedFile();
+    clearLastClickedItem();
     clearFocus();
-  }, [folderId, viewMode, clearLastClickedFile, clearFocus]);
+  }, [folderId, viewMode, clearLastClickedItem, clearFocus]);
 
   useEffect(() => {
     if (!focusItemPath || listing.isLoading || listing.error) return;
+    // We need to convert the FileRow to an ExplorerItem to focus it
+    // Or we find it in the listing which is composed of FileRow/FolderRow
+    // listing.files contains FileRows. FileRow is compatible with ExplorerItem (as ExplorerFileItem if we add kind)
+    // But listing.files elements might NOT have 'kind' property if they come from useFolderListing directly?
+    // Let's check useFolderListing.
+    
+    // Assuming listing.files are FileRows.
+    // If FileRow doesn't have 'kind', we can't pass it to focusItem (expects ExplorerItem).
+    // We might need to cast or map.
+    
     const fileToFocus = listing.files.find(f => f.path === focusItemPath);
     if (fileToFocus) {
-      focusFile(fileToFocus);
+      // In Phase 1 we updated types, but did we update useFolderListing to return ExplorerItems?
+      // No, useFolderListing returns FolderListing which has files: FileRow[].
+      // And FileRow has been updated in types/explorer.ts?
+      // Yes, FileRow = BaseExplorerItem & { ... }.
+      // But it does NOT have `kind: 'file'`.
+      // ExplorerFileItem = FileRow & { kind: 'file' }.
+      
+      // So we need to construct the ExplorerItem.
+      focusItem({ ...fileToFocus, kind: 'file' });
     }
-  }, [focusItemPath, listing.isLoading, listing.error, listing.files, focusFile]);
+  }, [focusItemPath, listing.isLoading, listing.error, listing.files, focusItem]);
 
   const value = useMemo(
     () => ({
       listing,
-      selectedFiles,
+      selectedPaths,
       selectedEntries,
       selectedCount,
-      lastClickedFile,
-      focusedFile,
+      lastClickedPath,
+      focusedPath,
       isPreviewActive,
       viewMode,
       folderId,
       locations,
       ensureListing,
       getListingForPath,
-      selectFile,
+      selectItem,
       selectMultiple,
       selectRange,
-      toggleFileSelection,
+      toggleSelection,
       removeSelection,
       clearSelections,
-      updateLastClickedFile,
-      clearLastClickedFile,
-      focusFile,
+      updateLastClickedItem,
+      clearLastClickedItem,
+      focusItem,
       clearFocus,
       togglePreview,
       updatePreview,
@@ -126,26 +143,26 @@ export const ExplorerProvider = ({
     }),
     [
       listing,
-      selectedFiles,
+      selectedPaths,
       selectedEntries,
       selectedCount,
-      lastClickedFile,
-      focusedFile,
+      lastClickedPath,
+      focusedPath,
       isPreviewActive,
       viewMode,
       folderId,
       locations,
       ensureListing,
       getListingForPath,
-      selectFile,
+      selectItem,
       selectMultiple,
       selectRange,
-      toggleFileSelection,
+      toggleSelection,
       removeSelection,
       clearSelections,
-      updateLastClickedFile,
-      clearLastClickedFile,
-      focusFile,
+      updateLastClickedItem,
+      clearLastClickedItem,
+      focusItem,
       clearFocus,
       togglePreview,
       updatePreview,
