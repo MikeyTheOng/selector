@@ -6,17 +6,14 @@ import type { ExplorerItem } from '@/types/explorer';
 describe('ExplorerListView', () => {
   const mockItems: ExplorerItem[] = [
     {
-      id: 'folder1',
       path: '/test/folder1',
       name: 'folder1',
       kind: 'folder',
       status: 'available',
       dateModified: new Date(),
       dateModifiedLabel: 'Jan 1, 2024',
-      kindLabel: 'Folder'
-    },
+    } as ExplorerItem,
     {
-      id: 'file1',
       path: '/test/file1.txt',
       name: 'file1.txt',
       kind: 'file',
@@ -27,15 +24,15 @@ describe('ExplorerListView', () => {
       sizeLabel: '1 KB',
       dateModified: new Date(),
       dateModifiedLabel: 'Jan 1, 2024'
-    }
+    } as ExplorerItem
   ];
 
   const defaultProps = {
     items: mockItems,
     viewMode: 'list' as const,
-    selectedIds: {},
-    lastClickedId: null,
-    focusedId: null,
+    selectedPaths: {},
+    lastClickedPath: null,
+    focusedPath: null,
     onItemClick: vi.fn(),
     onItemDoubleClick: vi.fn(),
     emptyMessage: 'No items found.',
@@ -63,7 +60,7 @@ describe('ExplorerListView', () => {
     fireEvent.click(fileButton!);
 
     expect(defaultProps.onItemClick).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'file1' }),
+      expect.objectContaining({ path: '/test/file1.txt' }),
       expect.anything()
     );
   });
@@ -74,12 +71,12 @@ describe('ExplorerListView', () => {
     fireEvent.doubleClick(folderButton!);
 
     expect(defaultProps.onItemDoubleClick).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'folder1' })
+      expect.objectContaining({ path: '/test/folder1' })
     );
   });
 
   it('applies selected styles', () => {
-    render(<ExplorerListView {...defaultProps} selectedIds={{ 'file1': mockItems[1] }} />);
+    render(<ExplorerListView {...defaultProps} selectedPaths={{ '/test/file1.txt': mockItems[1] }} />);
     const fileButton = screen.getByText('file1.txt').closest('button');
     expect(fileButton?.getAttribute('aria-selected')).toBe('true');
     expect(fileButton?.className).toContain('bg-primary');
@@ -95,7 +92,7 @@ describe('ExplorerListView', () => {
 
   it('dimmed missing/offline items', () => {
     const missingItems: ExplorerItem[] = [
-      { ...mockItems[0], id: 'missing', status: 'missing' }
+      { ...mockItems[0], status: 'missing' } as ExplorerItem
     ];
     render(<ExplorerListView {...defaultProps} items={missingItems} />);
     const button = screen.getByText('folder1').closest('button');

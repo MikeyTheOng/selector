@@ -92,9 +92,9 @@ export const FileListView = ({
     <ExplorerListView
       items={explorerItems}
       viewMode={viewMode}
-      selectedIds={selectedPaths}
-      lastClickedId={lastClickedPath}
-      focusedId={focusedPath}
+      selectedPaths={selectedPaths}
+      lastClickedPath={lastClickedPath}
+      focusedPath={focusedPath}
       onItemClick={handleItemClick}
       onItemDoubleClick={handleItemDoubleClick}
       onItemContextMenu={(item) => {

@@ -63,10 +63,10 @@ describe('CollectionToolbar', () => {
   it('displays selection count badge', () => {
     const selectionWithItems = {
       ...mockSelection,
-      selectedItems: { '1': true, '2': true },
+      selectedItems: { '/1': true, '/2': true },
       selectedEntries: [
-        { id: '1', name: 'Item 1', path: '/1', kind: 'file', status: 'available' } as ExplorerItem,
-        { id: '2', name: 'Item 2', path: '/2', kind: 'file', status: 'available' } as ExplorerItem
+        { path: '/1', name: 'Item 1', kind: 'file', status: 'available' } as ExplorerItem,
+        { path: '/2', name: 'Item 2', kind: 'file', status: 'available' } as ExplorerItem
       ],
     };
 
@@ -83,8 +83,8 @@ describe('CollectionToolbar', () => {
   it('calls onToggleSelection when clicked', () => {
     const selectionWithItems = {
       ...mockSelection,
-      selectedItems: { '1': true },
-      selectedEntries: [{ id: '1', path: '/1', kind: 'file', name: 'Item 1', status: 'available' } as ExplorerItem],
+      selectedItems: { '/1': true },
+      selectedEntries: [{ path: '/1', kind: 'file', name: 'Item 1', status: 'available' } as ExplorerItem],
     };
 
     render(<CollectionToolbar {...defaultProps} selection={selectionWithItems as unknown as ReturnType<typeof useExplorerSelection>} />);

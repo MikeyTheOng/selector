@@ -63,7 +63,7 @@ vi.mock("@/components/explorer/ExplorerListView", () => ({
     return (
       <div data-testid="explorer-list-view">
         {items.map((f) => (
-          <div key={f.id} data-testid={`item-${f.id}`}>
+          <div key={f.path} data-testid={`item-${f.path}`}>
             {f.name} - {f.kindLabel} - {f.status}
           </div>
         ))}
@@ -304,7 +304,6 @@ describe("CollectionsView", () => {
 
       // Simulate double-click on the file
       const explorerItem = {
-        id: "/Users/test/documents/photo.jpg",
         path: "/Users/test/documents/photo.jpg",
         name: "photo.jpg",
         kind: "file" as const,
@@ -313,7 +312,7 @@ describe("CollectionsView", () => {
         dateModifiedLabel: "Today at 1:00pm",
         kindLabel: "File",
         extension: "jpg",
-      };
+      } as ExplorerItem;
 
       capturedDoubleClickHandler?.(explorerItem);
 
@@ -356,7 +355,6 @@ describe("CollectionsView", () => {
       );
 
       const explorerItem = {
-        id: "/Users/test/documents",
         path: "/Users/test/documents",
         name: "documents",
         kind: "folder" as const,
@@ -364,7 +362,7 @@ describe("CollectionsView", () => {
         dateModified: new Date(),
         dateModifiedLabel: "Today at 1:00pm",
         kindLabel: "Folder",
-      };
+      } as ExplorerItem;
 
       capturedDoubleClickHandler?.(explorerItem);
 
@@ -404,7 +402,6 @@ describe("CollectionsView", () => {
       );
 
       const explorerItem = {
-        id: "/Volumes/External/file.txt",
         path: "/Volumes/External/file.txt",
         name: "file.txt",
         kind: "file" as const,
@@ -413,7 +410,7 @@ describe("CollectionsView", () => {
         dateModifiedLabel: "Today at 1:00pm",
         kindLabel: "File",
         extension: "txt",
-      };
+      } as ExplorerItem;
 
       capturedDoubleClickHandler?.(explorerItem);
 
@@ -438,12 +435,11 @@ describe("CollectionsView", () => {
       );
 
       const itemToClick = {
-        id: "/test/file1.txt",
         path: "/test/file1.txt",
         name: "file1.txt",
         kind: "file" as const,
         status: "available" as const,
-      };
+      } as ExplorerItem;
 
       const mockEvent = {
         preventDefault: vi.fn(),
@@ -476,12 +472,11 @@ describe("CollectionsView", () => {
       );
 
       const itemToClick = {
-        id: "/test/file1.txt",
         path: "/test/file1.txt",
         name: "file1.txt",
         kind: "file" as const,
         status: "available" as const,
-      };
+      } as ExplorerItem;
 
       const mockEvent = {
         preventDefault: vi.fn(),
@@ -520,12 +515,11 @@ describe("CollectionsView", () => {
       );
 
       const itemToClick = {
-        id: "/test/file1.txt",
         path: "/test/file1.txt",
         name: "file1.txt",
         kind: "file" as const,
         status: "available" as const,
-      };
+      } as ExplorerItem;
 
       const mockEvent = {
         preventDefault: vi.fn(),
@@ -562,12 +556,11 @@ describe("CollectionsView", () => {
       render(
         capturedSelectionSheetProps!.renderActions!([
           {
-            id: "1",
             name: "Item 1",
             path: "/1",
             kind: "file",
             status: "available",
-          },
+          } as ExplorerItem,
         ]),
       );
 

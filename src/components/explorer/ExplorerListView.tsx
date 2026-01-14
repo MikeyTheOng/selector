@@ -8,12 +8,12 @@ export interface ExplorerListViewProps {
   items: ExplorerItem[];
   /** Current view mode */
   viewMode: ExplorerViewMode;
-  /** Map of selected item IDs to their item data */
-  selectedIds: Record<string, ExplorerItem>;
-  /** The item that was most recently clicked (used for range selection) */
-  lastClickedId?: string | null;
-  /** The item that currently has focus */
-  focusedId?: string | null;
+  /** Map of selected item paths to their item data */
+  selectedPaths: Record<string, ExplorerItem>;
+  /** The item path that was most recently clicked (used for range selection) */
+  lastClickedPath?: string | null;
+  /** The item path that currently has focus */
+  focusedPath?: string | null;
   /** Callback when an item is clicked */
   onItemClick: (item: ExplorerItem, event: React.MouseEvent) => void;
   /** Callback when an item is double clicked */
@@ -33,8 +33,8 @@ export interface ExplorerListViewProps {
 export const ExplorerListView = ({
   items,
   viewMode,
-  selectedIds,
-  focusedId,
+  selectedPaths,
+  focusedPath,
   onItemClick,
   onItemDoubleClick,
   onItemContextMenu,
@@ -66,12 +66,12 @@ export const ExplorerListView = ({
         )}
       >
         {items.map((item) => {
-          const isSelected = Boolean(selectedIds[item.id]);
-          const isFocused = focusedId === item.id;
+          const isSelected = Boolean(selectedPaths[item.path]);
+          const isFocused = focusedPath === item.path;
 
           return (
             <button
-              key={item.id}
+              key={item.path}
               type="button"
               onClick={(e) => onItemClick(item, e)}
               onDoubleClick={() => onItemDoubleClick(item)}
@@ -123,11 +123,11 @@ export const ExplorerListView = ({
         <TreeView className="p-0">
           <div className={cn("divide-y divide-border/40", !isList && "divide-none")}>
             {items.map((item) => {
-              const isSelected = Boolean(selectedIds[item.id]);
-              const isFocused = focusedId === item.id;
+              const isSelected = Boolean(selectedPaths[item.path]);
+              const isFocused = focusedPath === item.path;
 
               return (
-                <TreeNode key={item.id} nodeId={item.id} level={0}>
+                <TreeNode key={item.path} nodeId={item.path} level={0}>
                   <button
                     type="button"
                     onClick={(e) => onItemClick(item, e)}

@@ -226,13 +226,9 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
         <ExplorerListView
           items={explorerItems}
           viewMode={viewMode}
-          // Mapping back to what ExplorerListView (currently broken) expects
-          // selectedIds expects Record<string, ExplorerItem> -> selectedPaths fits this signature!
-          selectedIds={selectedPaths} 
-          // focusedId expects string -> focusedPath fits
-          focusedId={focusedPath}
-          // lastClickedId expects string -> lastClickedPath fits
-          lastClickedId={lastClickedPath}
+          selectedPaths={selectedPaths} 
+          focusedPath={focusedPath}
+          lastClickedPath={lastClickedPath}
           onItemClick={handleItemClick}
           onItemDoubleClick={handleActivateItem}
           emptyMessage="No items found in this collection."

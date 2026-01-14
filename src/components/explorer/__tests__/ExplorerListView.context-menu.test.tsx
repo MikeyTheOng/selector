@@ -6,21 +6,24 @@ import type { ExplorerItem } from '@/types/explorer';
 describe('ExplorerListView Context Menu', () => {
   const mockItems: ExplorerItem[] = [
     {
-      id: 'file1',
       path: '/test/file1.txt',
       name: 'file1.txt',
       kind: 'file',
       status: 'available',
       dateModified: new Date(),
-    }
+      dateModifiedLabel: '2023-01-01',
+      kindLabel: 'Text Document',
+      sizeLabel: '1 KB',
+      extension: 'txt',
+    } as ExplorerItem
   ];
 
   const defaultProps = {
     items: mockItems,
     viewMode: 'list' as const,
-    selectedIds: {},
-    lastClickedId: null,
-    focusedId: null,
+    selectedPaths: {},
+    lastClickedPath: null,
+    focusedPath: null,
     onItemClick: vi.fn(),
     onItemDoubleClick: vi.fn(),
     emptyMessage: 'No items found.',
@@ -34,7 +37,7 @@ describe('ExplorerListView Context Menu', () => {
     fireEvent.contextMenu(fileRow!);
 
     expect(onItemContextMenu).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'file1' }),
+      expect.objectContaining({ path: '/test/file1.txt' }),
       expect.anything()
     );
   });
