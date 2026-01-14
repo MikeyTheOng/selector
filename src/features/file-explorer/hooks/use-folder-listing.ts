@@ -112,6 +112,7 @@ export const useFolderListing = (
           status: 'available',
           dateModified: mtime,
           dateModifiedLabel: formatDateTime(mtime),
+          kindLabel: 'Folder',
         };
       }),
     );

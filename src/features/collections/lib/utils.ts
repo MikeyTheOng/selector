@@ -19,6 +19,7 @@ export function collectionItemToExplorerItem(item: CollectionItemWithStatus): Ex
       status: item.status,
       dateModified,
       dateModifiedLabel,
+      kindLabel: "Folder",
     };
   }
 

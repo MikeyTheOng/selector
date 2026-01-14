@@ -30,20 +30,17 @@ export type LocationItem = {
   kind: "home" | "volume";
 };
 
-/**
- * Base properties shared by all explorer items
- */
 export interface BaseExplorerItem {
   path: string;
   name: string;
   status: ExplorerItemStatus;
   dateModified: Date | null;
   dateModifiedLabel: string;
+  kindLabel: string;
 }
 
 export type FileRow = BaseExplorerItem & {
   extension: string;
-  kindLabel: string;
   size?: number;
   sizeLabel: string;
 };

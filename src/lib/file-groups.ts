@@ -76,7 +76,7 @@ export function getMediaType(extension: string | undefined): MediaType {
 
 export function getFirstExtension(files: ExplorerItem[]): string | undefined {
   for (const file of files) {
-    if (file.extension) {
+    if (file.kind === "file" && file.extension) {
       return file.extension;
     }
   }
@@ -93,20 +93,21 @@ export function groupFilesByMediaType(files: ExplorerItem[]): GroupedFiles {
   const otherExtensions = new Set<string>();
 
   for (const file of files) {
-    const mediaType = getMediaType(file.extension);
+    const extension = file.kind === "file" ? file.extension : undefined;
+    const mediaType = getMediaType(extension);
 
     switch (mediaType) {
       case "image":
         images.push(file);
-        if (file.extension) imageExtensions.add(file.extension);
+        if (extension) imageExtensions.add(extension);
         break;
       case "video":
         videos.push(file);
-        if (file.extension) videoExtensions.add(file.extension);
+        if (extension) videoExtensions.add(extension);
         break;
       case "other":
         others.push(file);
-        if (file.extension) otherExtensions.add(file.extension);
+        if (extension) otherExtensions.add(extension);
         break;
     }
   }
