@@ -439,6 +439,10 @@ describe("CollectionsView", () => {
         name: "file1.txt",
         kind: "file" as const,
         status: "available" as const,
+        dateModified: new Date(),
+        dateModifiedLabel: "Jan 1, 2024",
+        kindLabel: "Text document",
+        extension: "txt",
       } as ExplorerItem;
 
       const mockEvent = {
@@ -476,6 +480,10 @@ describe("CollectionsView", () => {
         name: "file1.txt",
         kind: "file" as const,
         status: "available" as const,
+        dateModified: new Date(),
+        dateModifiedLabel: "Jan 1, 2024",
+        kindLabel: "Text document",
+        extension: "txt",
       } as ExplorerItem;
 
       const mockEvent = {
@@ -519,6 +527,10 @@ describe("CollectionsView", () => {
         name: "file1.txt",
         kind: "file" as const,
         status: "available" as const,
+        dateModified: new Date(),
+        dateModifiedLabel: "Jan 1, 2024",
+        kindLabel: "Text document",
+        extension: "txt",
       } as ExplorerItem;
 
       const mockEvent = {
@@ -560,6 +572,10 @@ describe("CollectionsView", () => {
             path: "/1",
             kind: "file",
             status: "available",
+            dateModified: new Date(),
+            dateModifiedLabel: "Jan 1, 2024",
+            kindLabel: "Text document",
+            extension: "txt",
           } as ExplorerItem,
         ]),
       );

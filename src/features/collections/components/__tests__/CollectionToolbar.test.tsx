@@ -65,8 +65,28 @@ describe('CollectionToolbar', () => {
       ...mockSelection,
       selectedItems: { '/1': true, '/2': true },
       selectedEntries: [
-        { path: '/1', name: 'Item 1', kind: 'file', status: 'available' } as ExplorerItem,
-        { path: '/2', name: 'Item 2', kind: 'file', status: 'available' } as ExplorerItem
+        { 
+          path: '/1', 
+          name: 'Item 1', 
+          kind: 'file', 
+          status: 'available',
+          dateModified: new Date(),
+          dateModifiedLabel: 'Today',
+          kindLabel: 'File',
+          extension: 'txt',
+          sizeLabel: '0 KB',
+        } as ExplorerItem,
+        { 
+          path: '/2', 
+          name: 'Item 2', 
+          kind: 'file', 
+          status: 'available',
+          dateModified: new Date(),
+          dateModifiedLabel: 'Today',
+          kindLabel: 'File',
+          extension: 'txt',
+          sizeLabel: '0 KB',
+        } as ExplorerItem
       ],
     };
 
@@ -84,7 +104,17 @@ describe('CollectionToolbar', () => {
     const selectionWithItems = {
       ...mockSelection,
       selectedItems: { '/1': true },
-      selectedEntries: [{ path: '/1', kind: 'file', name: 'Item 1', status: 'available' } as ExplorerItem],
+      selectedEntries: [{ 
+        path: '/1', 
+        kind: 'file', 
+        name: 'Item 1', 
+        status: 'available',
+        dateModified: new Date(),
+        dateModifiedLabel: 'Today',
+        kindLabel: 'File',
+        extension: 'txt',
+        sizeLabel: '0 KB',
+      } as ExplorerItem],
     };
 
     render(<CollectionToolbar {...defaultProps} selection={selectionWithItems as unknown as ReturnType<typeof useExplorerSelection>} />);

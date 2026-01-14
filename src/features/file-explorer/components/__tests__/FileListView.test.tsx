@@ -11,7 +11,7 @@ vi.mock('../FileRowLabel', () => ({
 describe('FileListView', () => {
   const mockListing: FolderListing = {
     folders: [
-      { path: '/test/folder1', name: 'folder1', dateModified: new Date(), dateModifiedLabel: 'Jan 1, 2024', status: 'available' }
+      { path: '/test/folder1', name: 'folder1', dateModified: new Date(), dateModifiedLabel: 'Jan 1, 2024', status: 'available', kindLabel: 'Folder' }
     ],
     files: [
       {

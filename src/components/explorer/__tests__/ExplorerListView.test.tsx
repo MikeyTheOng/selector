@@ -12,6 +12,7 @@ describe('ExplorerListView', () => {
       status: 'available',
       dateModified: new Date(),
       dateModifiedLabel: 'Jan 1, 2024',
+      kindLabel: 'Folder',
     } as ExplorerItem,
     {
       path: '/test/file1.txt',
