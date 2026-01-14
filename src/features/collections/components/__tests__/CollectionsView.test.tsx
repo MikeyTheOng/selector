@@ -4,7 +4,7 @@ import { CollectionsView } from "../CollectionsView";
 import { useCollections } from "../../hooks/use-collections";
 import { useCollectionItems } from "../../hooks/use-collection-items";
 import { useNavigation } from "@/hooks/use-navigation";
-import { useCollectionSelection } from "../../hooks/use-collection-selection";
+import { useExplorerSelection } from "@/hooks/explorer/use-explorer-selection";
 import type { CollectionItemWithStatus } from "../../types";
 import type { ExplorerItem } from "@/types/explorer";
 
@@ -157,7 +157,7 @@ describe("CollectionsView", () => {
         isSelectionOpen={false}
         setIsSelectionOpen={vi.fn()}
         selection={
-          mockSelection as unknown as ReturnType<typeof useCollectionSelection>
+          mockSelection as unknown as ReturnType<typeof useExplorerSelection>
         }
       />,
     );
@@ -171,7 +171,7 @@ describe("CollectionsView", () => {
         isSelectionOpen={false}
         setIsSelectionOpen={vi.fn()}
         selection={
-          mockSelection as unknown as ReturnType<typeof useCollectionSelection>
+          mockSelection as unknown as ReturnType<typeof useExplorerSelection>
         }
       />,
     );
@@ -196,7 +196,7 @@ describe("CollectionsView", () => {
         isSelectionOpen={false}
         setIsSelectionOpen={vi.fn()}
         selection={
-          mockSelection as unknown as ReturnType<typeof useCollectionSelection>
+          mockSelection as unknown as ReturnType<typeof useExplorerSelection>
         }
       />,
     );
@@ -210,7 +210,7 @@ describe("CollectionsView", () => {
         isSelectionOpen={false}
         setIsSelectionOpen={vi.fn()}
         selection={
-          mockSelection as unknown as ReturnType<typeof useCollectionSelection>
+          mockSelection as unknown as ReturnType<typeof useExplorerSelection>
         }
       />,
     );
@@ -240,7 +240,7 @@ describe("CollectionsView", () => {
         isSelectionOpen={false}
         setIsSelectionOpen={vi.fn()}
         selection={
-          mockSelection as unknown as ReturnType<typeof useCollectionSelection>
+          mockSelection as unknown as ReturnType<typeof useExplorerSelection>
         }
       />,
     );
@@ -264,7 +264,7 @@ describe("CollectionsView", () => {
         isSelectionOpen={false}
         setIsSelectionOpen={vi.fn()}
         selection={
-          mockSelection as unknown as ReturnType<typeof useCollectionSelection>
+          mockSelection as unknown as ReturnType<typeof useExplorerSelection>
         }
       />,
     );
@@ -296,7 +296,7 @@ describe("CollectionsView", () => {
           setIsSelectionOpen={vi.fn()}
           selection={
             mockSelection as unknown as ReturnType<
-              typeof useCollectionSelection
+              typeof useExplorerSelection
             >
           }
         />,
@@ -349,7 +349,7 @@ describe("CollectionsView", () => {
           setIsSelectionOpen={vi.fn()}
           selection={
             mockSelection as unknown as ReturnType<
-              typeof useCollectionSelection
+              typeof useExplorerSelection
             >
           }
         />,
@@ -397,7 +397,7 @@ describe("CollectionsView", () => {
           setIsSelectionOpen={vi.fn()}
           selection={
             mockSelection as unknown as ReturnType<
-              typeof useCollectionSelection
+              typeof useExplorerSelection
             >
           }
         />,
@@ -431,7 +431,7 @@ describe("CollectionsView", () => {
           setIsSelectionOpen={vi.fn()}
           selection={
             mockSelection as unknown as ReturnType<
-              typeof useCollectionSelection
+              typeof useExplorerSelection
             >
           }
         />,
@@ -469,7 +469,7 @@ describe("CollectionsView", () => {
           setIsSelectionOpen={vi.fn()}
           selection={
             mockSelection as unknown as ReturnType<
-              typeof useCollectionSelection
+              typeof useExplorerSelection
             >
           }
         />,
@@ -513,7 +513,7 @@ describe("CollectionsView", () => {
           setIsSelectionOpen={vi.fn()}
           selection={
             mockSelection as unknown as ReturnType<
-              typeof useCollectionSelection
+              typeof useExplorerSelection
             >
           }
         />,
@@ -550,7 +550,7 @@ describe("CollectionsView", () => {
           setIsSelectionOpen={vi.fn()}
           selection={
             mockSelection as unknown as ReturnType<
-              typeof useCollectionSelection
+              typeof useExplorerSelection
             >
           }
         />,

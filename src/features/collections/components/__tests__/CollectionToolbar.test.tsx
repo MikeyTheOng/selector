@@ -1,11 +1,11 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CollectionToolbar } from '../CollectionToolbar';
-import { useCollectionSelection } from '../../hooks/use-collection-selection';
+import { useExplorerSelection } from '@/hooks/explorer/use-explorer-selection';
 import { useCollections } from '../../hooks/use-collections';
 import type { ExplorerItem } from '@/types/explorer';
 
-vi.mock('../../hooks/use-collection-selection');
+vi.mock('@/hooks/explorer/use-explorer-selection');
 vi.mock('../../hooks/use-collections');
 
 describe('CollectionToolbar', () => {
@@ -47,7 +47,7 @@ describe('CollectionToolbar', () => {
     collectionId: '1',
     isSelectionOpen: false,
     onToggleSelection: vi.fn(),
-    selection: mockSelection as unknown as ReturnType<typeof useCollectionSelection>,
+    selection: mockSelection as unknown as ReturnType<typeof useExplorerSelection>,
   };
 
   beforeEach(() => {
@@ -70,7 +70,7 @@ describe('CollectionToolbar', () => {
       ],
     };
 
-    render(<CollectionToolbar {...defaultProps} selection={selectionWithItems as unknown as ReturnType<typeof useCollectionSelection>} />);
+    render(<CollectionToolbar {...defaultProps} selection={selectionWithItems as unknown as ReturnType<typeof useExplorerSelection>} />);
     expect(screen.getByText('2')).toBeDefined();
   });
 
@@ -87,7 +87,7 @@ describe('CollectionToolbar', () => {
       selectedEntries: [{ id: '1', path: '/1', kind: 'file', name: 'Item 1', status: 'available' } as ExplorerItem],
     };
 
-    render(<CollectionToolbar {...defaultProps} selection={selectionWithItems as unknown as ReturnType<typeof useCollectionSelection>} />);
+    render(<CollectionToolbar {...defaultProps} selection={selectionWithItems as unknown as ReturnType<typeof useExplorerSelection>} />);
     const button = screen.getByRole('button', { name: /selection/i });
     fireEvent.click(button);
     expect(defaultProps.onToggleSelection).toHaveBeenCalled();

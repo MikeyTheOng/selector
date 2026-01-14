@@ -4,7 +4,7 @@ import { FileExplorerView } from '../FileExplorerView';
 import { useExplorerContext } from '../../context/ExplorerContext';
 import { useNavigation } from '@/hooks/use-navigation';
 import { listen, type EventCallback } from '@tauri-apps/api/event';
-import type { FolderListing, ExplorerItem } from '@/types/explorer';
+import type { FolderListing, ExplorerFileItem } from '@/types/explorer';
 import type { ExplorerSelectionPanelProps } from '@/components/explorer/ExplorerSelectionPanel';
 
 // Mock the context
@@ -24,7 +24,7 @@ describe('FileExplorerView Integration', () => {
     </button>
   );
 
-  const mockFiles: ExplorerItem[] = [
+  const mockFiles: ExplorerFileItem[] = [
     {
       path: '/test/file1.txt',
       name: 'file1.txt',
@@ -54,7 +54,7 @@ describe('FileExplorerView Integration', () => {
   // We need to match FolderListing shape which uses FileRow/FolderRow, but in tests we can cast or mock
   const mockListing: FolderListing = {
     folders: [],
-    files: mockFiles as any, 
+    files: mockFiles, 
     isLoading: false,
     fileCount: 2,
     folderCount: 0,
