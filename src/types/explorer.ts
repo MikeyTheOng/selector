@@ -60,31 +60,13 @@ export type FolderListing = {
   isTruncated: boolean;
 };
 
-export type LastClickedFile = {
-  file: FileRow;
-  columnPath?: string;
-};
-
-// ------------------------------------------------------------------
-// Unified Explorer Types
-// ------------------------------------------------------------------
-
 export type ExplorerFileItem = FileRow & { kind: 'file' };
 export type ExplorerFolderItem = FolderRow & { kind: 'folder' };
 
-/**
- * Generic item that can be displayed in an Explorer view
- */
 export type ExplorerItem = ExplorerFileItem | ExplorerFolderItem;
 
-/**
- * View modes supported by explorer components
- */
 export type ExplorerViewMode = "grid" | "list" | "column";
 
-/**
- * Generic listing state for explorer views
- */
 export interface ExplorerListing {
   /** All items in the current view */
   items: ExplorerItem[];

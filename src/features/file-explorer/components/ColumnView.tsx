@@ -1,38 +1,39 @@
 import { TreeNode, TreeProvider, TreeView } from "@/components/kibo-ui/tree";
 import { FileRowLabel } from "./FileRowLabel";
-import type { LastClickedFile } from "@/types/explorer";
 import { cn } from "@/lib/utils";
-import type { FileRow, FolderListing, LocationItem } from "@/types/explorer";
+import { getParentPath } from "@/lib/path-utils";
+import { fileRowToExplorerItem, folderRowToExplorerItem } from "@/lib/explorer-utils";
+import type { FolderListing, LocationItem, ExplorerItem } from "@/types/explorer";
 import { useEffect, useMemo } from "react";
 
 type ColumnViewProps = {
   locations: LocationItem[];
   selectedFolder: string | null;
-  selectedFiles: Record<string, FileRow>;
-  lastClickedFile: LastClickedFile | null;
-  focusedFile: LastClickedFile | null;
+  selectedPaths: Record<string, ExplorerItem>;
+  lastClickedPath: string | null;
+  focusedPath: string | null;
   getListingForPath: (path: string) => FolderListing | undefined;
   onEnsureListing: (path: string) => void;
   onSelectFolder: (path: string) => void;
-  onSelectFile: (row: FileRow, options?: { additive?: boolean }) => void;
-  onSelectRange: (from: FileRow, to: FileRow, allFiles: FileRow[]) => void;
-  onFocusFile: (file: FileRow, columnPath?: string) => void;
-  onToggleFileSelection: (file: FileRow) => void;
+  onSelectItem: (item: ExplorerItem, options?: { additive?: boolean }) => void;
+  onSelectRange: (from: ExplorerItem, to: ExplorerItem, allItems: ExplorerItem[]) => void;
+  onFocusItem: (item: ExplorerItem) => void;
+  onToggleSelection: (item: ExplorerItem) => void;
 };
 
 export const ColumnView = ({
   locations,
   selectedFolder,
-  selectedFiles,
-  lastClickedFile,
-  focusedFile,
+  selectedPaths,
+  lastClickedPath,
+  focusedPath,
   getListingForPath,
   onEnsureListing,
   onSelectFolder,
-  onSelectFile,
+  onSelectItem,
   onSelectRange,
-  onFocusFile,
-  onToggleFileSelection,
+  onFocusItem,
+  onToggleSelection,
 }: ColumnViewProps) => {
   const rootPath = useMemo(() => {
     if (!selectedFolder) {
@@ -95,30 +96,11 @@ export const ColumnView = ({
           {columnPaths.map((path, columnIndex) => {
             const listing = getListingForPath(path);
             const selectedChildPath = selectedChildPaths[columnIndex];
-            const rows =
-              listing?.folders && listing?.files
-                ? [
-                    ...listing.folders.map((folder) => ({
-                      ...folder,
-                      type: "folder" as const,
-                      row: {
-                        path: folder.path,
-                        name: folder.name,
-                        size: 0,
-                        sizeLabel: "",
-                        extension: "",
-                        kindLabel: "Folder",
-                        dateModified: folder.dateModified,
-                        dateModifiedLabel: folder.dateModifiedLabel,
-                      } as FileRow,
-                    })),
-                    ...listing.files.map((file) => ({
-                      ...file,
-                      type: "file" as const,
-                      row: file,
-                    })),
-                  ]
-                : [];
+            
+            const columnItems = listing ? [
+                ...listing.folders.map(folderRowToExplorerItem),
+                ...listing.files.map(fileRowToExplorerItem)
+            ] : [];
 
             return (
               <div key={path} className="h-full w-64 shrink-0 min-h-0">
@@ -128,52 +110,52 @@ export const ColumnView = ({
                       <div className="px-3 py-4 text-sm text-muted-foreground">Loading...</div>
                     ) : listing.error ? (
                       <div className="px-3 py-4 text-sm text-destructive">{listing.error}</div>
-                    ) : rows.length === 0 ? (
+                    ) : columnItems.length === 0 ? (
                       <div className="px-3 py-4 text-sm text-muted-foreground">
                         No items found.
                       </div>
                     ) : (
                       <div className="divide-y divide-border/40">
-                        {rows.map((row) => {
-                          const isSelected = Boolean(selectedFiles[row.path]);
+                        {columnItems.map((item) => {
+                          const isSelected = Boolean(selectedPaths[item.path]);
                           const isInActivePath =
-                            row.type === "folder" && selectedChildPath === row.path;
-                          const isFocused = focusedFile?.file.path === row.path && focusedFile?.columnPath === path;
-
-                          // Get files only for this column (for shift+click range selection)
-                          const columnFiles = rows.map(r => r.row);
+                            item.kind === "folder" && selectedChildPath === item.path;
+                          const isFocused = focusedPath === item.path;
 
                           return (
-                            <TreeNode key={row.path} nodeId={row.path} level={0}>
+                            <TreeNode key={item.path} nodeId={item.path} level={0}>
                               <button
                                 type="button"
                                 onClick={(event) => {
-                                  if (row.type === "folder") {
-                                    onSelectFolder(row.path);
+                                  if (item.kind === "folder") {
+                                    onSelectFolder(item.path);
                                     if (event.metaKey || event.ctrlKey) {
-                                      onToggleFileSelection(row.row);
+                                      onToggleSelection(item);
                                     }
-                                    onFocusFile(row.row, path);
+                                    onFocusItem(item);
                                     return;
                                   }
 
                                   // Shift+click for range selection (only within same column)
                                   if (
                                     event.shiftKey &&
-                                    lastClickedFile &&
-                                    lastClickedFile.columnPath === path
+                                    lastClickedPath &&
+                                    getParentPath(lastClickedPath) === path
                                   ) {
-                                    onSelectRange(lastClickedFile.file, row.row, columnFiles);
-                                    onFocusFile(row.row, path);
-                                    return;
+                                    const fromItem = columnItems.find(i => i.path === lastClickedPath);
+                                    if (fromItem) {
+                                        onSelectRange(fromItem, item, columnItems);
+                                        onFocusItem(item);
+                                        return;
+                                    }
                                   }
 
                                   if (event.metaKey || event.ctrlKey) {
-                                    onToggleFileSelection(row.row);
+                                    onToggleSelection(item);
                                   } else {
-                                    onSelectFile(row.row);
+                                    onSelectItem(item);
                                   }
-                                  onFocusFile(row.row, path);
+                                  onFocusItem(item);
                                 }}
                                 className={cn(
                                   "flex w-full items-center px-2 py-1 text-left text-xs transition outline-none",
@@ -187,10 +169,10 @@ export const ColumnView = ({
                                 aria-selected={isSelected || isInActivePath}
                               >
                                 <FileRowLabel
-                                  name={row.name}
-                                  type={row.type}
+                                  name={item.name}
+                                  type={item.kind}
                                   iconClassName={cn(
-                                    row.type === "folder"
+                                    item.kind === "folder"
                                       ? isSelected ? "text-primary-foreground" : "text-primary"
                                       : isSelected
                                         ? "text-primary-foreground"

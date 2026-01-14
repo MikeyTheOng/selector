@@ -8,8 +8,8 @@ import { FileListView } from "./FileListView";
 import { PathBar } from "./PathBar";
 import { useExplorerContext } from "../context/ExplorerContext";
 import { listen } from "@tauri-apps/api/event";
-import type { FileRow, LocationItem } from "@/types/explorer";
-import { folderToFileRow, fileRowToExplorerItem } from "@/lib/explorer-utils";
+import type { LocationItem, ExplorerItem } from "@/types/explorer";
+import { fileRowToExplorerItem, folderRowToExplorerItem } from "@/lib/explorer-utils";
 import { getPathBaseName } from "@/lib/path-utils";
 import { Button } from "@/components/ui/button";
 
@@ -37,18 +37,18 @@ export const FileExplorerView = ({
     listing,
     ensureListing,
     getListingForPath,
-    selectedFiles,
+    selectedPaths,
     selectedEntries,
     selectedCount,
-    lastClickedFile,
-    focusedFile,
-    selectFile,
+    lastClickedPath,
+    focusedPath,
+    selectItem,
     selectMultiple,
     selectRange,
-    toggleFileSelection,
+    toggleSelection,
     removeSelection,
     clearSelections,
-    focusFile,
+    focusItem,
     clearFocus,
     isPreviewActive,
     togglePreview,
@@ -87,27 +87,46 @@ export const FileExplorerView = ({
     </div>
   );
 
-  const handleFileSelection = useCallback(
-    (row: FileRow, options?: { additive?: boolean }) => {
+  const handleItemSelection = useCallback(
+    (item: ExplorerItem, options?: { additive?: boolean }) => {
       if (options?.additive) {
-        toggleFileSelection(row);
+        toggleSelection(item);
       } else {
-        selectFile(row);
+        selectItem(item);
       }
-      focusFile(row);
+      focusItem(item);
     },
-    [selectFile, toggleFileSelection, focusFile],
+    [selectItem, toggleSelection, focusItem],
   );
 
   // Sync Quick Preview with focused item
   useEffect(() => {
-    if (isPreviewActive && focusedFile) {
+    if (isPreviewActive && focusedPath) {
       const timer = setTimeout(() => {
-        updatePreview(focusedFile.file.path);
+        updatePreview(focusedPath);
       }, 150);
       return () => clearTimeout(timer);
     }
-  }, [focusedFile, isPreviewActive, updatePreview]);
+  }, [focusedPath, isPreviewActive, updatePreview]);
+
+  // Helper to get items for the current active view context (for keyboard nav)
+  const getCurrentViewItems = useCallback(() => {
+    // In list view, it's just the current listing
+    if (viewMode === "list") {
+      return [
+        ...listing.folders.map(folderRowToExplorerItem),
+        ...listing.files.map(fileRowToExplorerItem),
+      ];
+    }
+
+    const currentListing = getListingForPath(folderId || "");
+    if (!currentListing) return [];
+    
+    return [
+      ...currentListing.folders.map(folderRowToExplorerItem),
+      ...currentListing.files.map(fileRowToExplorerItem),
+    ];
+  }, [listing, viewMode, folderId, getListingForPath]);
 
   useEffect(() => {
     const handleKeyDown = (
@@ -121,7 +140,7 @@ export const FileExplorerView = ({
             shiftKey?: boolean;
           },
     ) => {
-      // ESC key: close preview if active, otherwise clear selections and close sheet
+      // ESC key
       if (event.key === "Escape") {
         event.preventDefault();
         if (isPreviewActive) {
@@ -133,21 +152,25 @@ export const FileExplorerView = ({
         return;
       }
 
-      // Space key: toggle quick preview
-      if (event.key === " " && focusedFile) {
+      // Space key
+      if (event.key === " " && focusedPath) {
         event.preventDefault();
-        togglePreview(focusedFile.file.path);
+        togglePreview(focusedPath);
         return;
       }
 
       const isMod = event.metaKey || event.ctrlKey;
       const isShift = event.shiftKey;
+      const currentItems = getCurrentViewItems();
 
       // Cmd/Ctrl+Enter: Toggle selection of focused item
       if (isMod && event.key === "Enter") {
         event.preventDefault();
-        if (focusedFile) {
-          toggleFileSelection(focusedFile.file);
+        if (focusedPath) {
+          const item = currentItems.find(i => i.path === focusedPath);
+          if (item) {
+            toggleSelection(item);
+          }
         }
         return;
       }
@@ -155,11 +178,9 @@ export const FileExplorerView = ({
       // Cmd/Ctrl+A: Select all items
       if (isMod && event.key.toLowerCase() === "a") {
         event.preventDefault();
-        const allItems = [
-          ...listing.folders.map(folderToFileRow),
-          ...listing.files,
-        ];
-        selectMultiple(allItems);
+        if (currentItems.length > 0) {
+          selectMultiple(currentItems, { additive: true });
+        }
         return;
       }
 
@@ -169,48 +190,45 @@ export const FileExplorerView = ({
           event.key,
         )
       ) {
+        if (currentItems.length === 0 && viewMode === "list") return;
+
         if (viewMode === "list") {
-          const allRows = [
-            ...listing.folders.map(folderToFileRow),
-            ...listing.files,
-          ];
-
-          if (allRows.length === 0) return;
-
           if (event.key === "ArrowUp" || event.key === "ArrowDown") {
             event.preventDefault();
             let nextIndex = -1;
 
-            if (!focusedFile) {
-              nextIndex = event.key === "ArrowUp" ? allRows.length - 1 : 0;
+            if (!focusedPath) {
+              nextIndex = event.key === "ArrowUp" ? currentItems.length - 1 : 0;
             } else {
-              const currentIndex = allRows.findIndex(
-                (r) => r.path === focusedFile.file.path,
+              const currentIndex = currentItems.findIndex(
+                (i) => i.path === focusedPath,
               );
               if (event.key === "ArrowUp") {
                 nextIndex = Math.max(0, currentIndex - 1);
               } else {
-                nextIndex = Math.min(allRows.length - 1, currentIndex + 1);
+                nextIndex = Math.min(currentItems.length - 1, currentIndex + 1);
               }
             }
 
             if (nextIndex !== -1) {
-              const nextRow = allRows[nextIndex];
-              if (isShift && lastClickedFile) {
-                selectRange(lastClickedFile.file, nextRow, allRows);
-                focusFile(nextRow);
+              const nextItem = currentItems[nextIndex];
+              if (isShift && lastClickedPath) {
+                // Find anchor in current items
+                const anchorItem = currentItems.find(i => i.path === lastClickedPath);
+                if (anchorItem) {
+                    selectRange(anchorItem, nextItem, currentItems);
+                }
+                focusItem(nextItem);
               } else {
-                focusFile(nextRow);
+                focusItem(nextItem);
               }
             }
           } else if (event.key === "Enter") {
             event.preventDefault();
-            if (focusedFile) {
-              const isFolder = listing.folders.some(
-                (f) => f.path === focusedFile.file.path,
-              );
-              if (isFolder) {
-                onSelectFolder(focusedFile.file.path);
+            if (focusedPath) {
+              const item = currentItems.find(i => i.path === focusedPath);
+              if (item && item.kind === "folder") {
+                onSelectFolder(item.path);
               }
             }
           }
@@ -224,71 +242,61 @@ export const FileExplorerView = ({
               if (segments.length > 1) {
                 const parentPath = "/" + segments.slice(0, -1).join("/");
                 onSelectFolder(parentPath);
+              } else if (segments.length === 1) {
+                 // Volume root -> root
+                 onSelectFolder("/");
               }
             }
           } else if (event.key === "ArrowRight" || event.key === "Enter") {
             event.preventDefault();
-            if (focusedFile) {
-              const isFolder = listing.folders.some(
-                (f) => f.path === focusedFile.file.path,
-              );
-              if (isFolder) {
-                onSelectFolder(focusedFile.file.path);
+            if (focusedPath) {
+              const item = currentItems.find(i => i.path === focusedPath);
+              if (item && item.kind === "folder") {
+                onSelectFolder(item.path);
               }
             }
           } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
             event.preventDefault();
-            const currentListing = getListingForPath(folderId || "");
-            if (!currentListing) return;
-
-            const allRows = [
-              ...currentListing.folders.map(folderToFileRow),
-              ...currentListing.files,
-            ];
-
-            if (allRows.length === 0) return;
+            
+            if (currentItems.length === 0) return;
 
             let nextIndex = -1;
-            if (!focusedFile || focusedFile.columnPath !== folderId) {
-              nextIndex = event.key === "ArrowUp" ? allRows.length - 1 : 0;
+            // Check if focused item is in current list (active column)
+            // If focusedPath is set but not in currentItems, it means focus is in another column.
+            // In that case, we should probably start from 0 or keep focus there?
+            // Standard Finder behavior: up/down moves in active column.
+            
+            const currentIndex = focusedPath 
+                ? currentItems.findIndex(i => i.path === focusedPath) 
+                : -1;
+
+            if (currentIndex === -1) {
+              // Focus not in current column, start fresh
+              nextIndex = event.key === "ArrowUp" ? currentItems.length - 1 : 0;
             } else {
-              const currentIndex = allRows.findIndex(
-                (r) => r.path === focusedFile.file.path,
-              );
               if (event.key === "ArrowUp") {
                 nextIndex = Math.max(0, currentIndex - 1);
               } else {
-                nextIndex = Math.min(allRows.length - 1, currentIndex + 1);
+                nextIndex = Math.min(currentItems.length - 1, currentIndex + 1);
               }
             }
 
             if (nextIndex !== -1) {
-              const nextRow = allRows[nextIndex];
-              if (
-                isShift &&
-                lastClickedFile &&
-                lastClickedFile.columnPath === folderId
-              ) {
-                selectRange(lastClickedFile.file, nextRow, allRows);
-                focusFile(nextRow, folderId || undefined);
+              const nextItem = currentItems[nextIndex];
+              if (isShift && lastClickedPath) {
+                 const anchorItem = currentItems.find(i => i.path === lastClickedPath);
+                 if (anchorItem) {
+                    selectRange(anchorItem, nextItem, currentItems);
+                 }
+                 focusItem(nextItem);
               } else {
-                focusFile(nextRow, folderId || undefined);
+                focusItem(nextItem);
               }
             }
           }
         }
         return;
       }
-
-      // Cmd/Ctrl+A: select all files
-      if (!isMod) return;
-      if (event.key.toLowerCase() !== "a") return;
-
-      if (listing.isLoading || listing.error || listing.files.length === 0) {
-        return;
-      }
-
-      selectMultiple(listing.files, { additive: true });
     };
 
     const setupListeners = async () => {
@@ -317,25 +325,22 @@ export const FileExplorerView = ({
       unlistenPromise.then((fn) => fn());
     };
   }, [
-    listing,
+    getCurrentViewItems,
     selectMultiple,
     clearSelections,
     clearFocus,
-    focusedFile,
+    focusedPath,
     viewMode,
     folderId,
     onSelectFolder,
-    focusFile,
-    toggleFileSelection,
+    focusItem,
+    toggleSelection,
     selectRange,
-    lastClickedFile,
-    getListingForPath,
+    lastClickedPath,
     isPreviewActive,
     togglePreview,
     closePreview,
   ]);
-
-  const explorerEntries = selectedEntries.map(fileRowToExplorerItem);
 
   return (
     <section className="relative flex min-h-0 min-w-0 flex-1 flex-col">
@@ -350,7 +355,7 @@ export const FileExplorerView = ({
         selectionPanel={
           <SelectionPanel
             selectedCount={selectedCount}
-            entries={explorerEntries}
+            entries={selectedEntries}
             onRemoveSelection={removeSelection}
             onClearAllSelections={clearSelections}
           />
@@ -362,16 +367,16 @@ export const FileExplorerView = ({
           <ColumnView
             locations={locations}
             selectedFolder={folderId}
-            selectedFiles={selectedFiles}
-            lastClickedFile={lastClickedFile}
-            focusedFile={focusedFile}
+            selectedPaths={selectedPaths}
+            lastClickedPath={lastClickedPath}
+            focusedPath={focusedPath}
             getListingForPath={getListingForPath}
             onEnsureListing={ensureListing}
             onSelectFolder={onSelectFolder}
-            onSelectFile={handleFileSelection}
+            onSelectItem={handleItemSelection}
             onSelectRange={selectRange}
-            onFocusFile={focusFile}
-            onToggleFileSelection={toggleFileSelection}
+            onFocusItem={focusItem}
+            onToggleSelection={toggleSelection}
           />
         ) : listing.isLoading ? (
           <div className="px-4 py-6 text-sm text-muted-foreground">
@@ -384,15 +389,15 @@ export const FileExplorerView = ({
         ) : (
           <FileListView
             listing={listing}
-            selectedFiles={selectedFiles}
-            lastClickedFile={lastClickedFile}
-            focusedFile={focusedFile}
+            selectedPaths={selectedPaths}
+            lastClickedPath={lastClickedPath}
+            focusedPath={focusedPath}
             viewMode={viewMode}
             onSelectFolder={onSelectFolder}
-            onSelectFile={handleFileSelection}
+            onSelectItem={handleItemSelection}
             onSelectRange={selectRange}
-            onFocusFile={focusFile}
-            onToggleFileSelection={toggleFileSelection}
+            onFocusItem={focusItem}
+            onToggleSelection={toggleSelection}
           />
         )}
       </div>
