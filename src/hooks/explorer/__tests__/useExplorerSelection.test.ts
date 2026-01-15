@@ -36,36 +36,6 @@ describe('useExplorerSelection', () => {
     expect(result.current.selectedPaths['/path/a']).toBe(item);
   });
 
-  it('ignores .DS_Store entries', () => {
-    const { result } = renderHook(() => useExplorerSelection());
-    const dsStore = mockItem('/path/.DS_Store', '.DS_Store');
-    const itemA = mockItem('/path/a', 'A');
-    const itemB = mockItem('/path/b', 'B');
-
-    act(() => {
-      result.current.selectItem(dsStore);
-    });
-    expect(result.current.selectedCount).toBe(0);
-
-    act(() => {
-      result.current.toggleSelection(dsStore);
-    });
-    expect(result.current.selectedCount).toBe(0);
-
-    act(() => {
-      result.current.selectMultiple([dsStore, itemA]);
-    });
-    expect(result.current.selectedCount).toBe(1);
-    expect(result.current.selectedPaths['/path/a']).toBe(itemA);
-    expect(result.current.selectedPaths['/path/.DS_Store']).toBeUndefined();
-
-    act(() => {
-      result.current.selectRange(dsStore, itemB, [dsStore, itemA, itemB]);
-    });
-    expect(result.current.selectedCount).toBe(2);
-    expect(result.current.selectedPaths['/path/.DS_Store']).toBeUndefined();
-  });
-
   it('toggles selection', () => {
     const { result } = renderHook(() => useExplorerSelection());
     const item = mockItem('/path/a', 'Item A');

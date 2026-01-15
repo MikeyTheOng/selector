@@ -24,7 +24,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { ExportResolutionModal } from "@/components/explorer/ExportResolutionModal";
+import { ExportResolutionModal } from "./ExportResolutionModal";
 import { RecentAppsPicker } from "@/components/explorer/RecentAppsPicker";
 import { detectAmbiguity } from "../lib/export-resolution";
 import { getExtension } from "@/lib/formatters";

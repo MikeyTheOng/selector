@@ -113,6 +113,17 @@ describe("resolveExpandFolders", () => {
     );
   });
 
+  it("ignores .DS_Store entries", async () => {
+    vi.mocked(fsModule.readDir).mockResolvedValue([
+      { path: "/path/to/folder/.DS_Store", name: ".DS_Store", isFile: true },
+      { path: "/path/to/folder/photo.jpg", name: "photo.jpg", isFile: true },
+    ]);
+
+    const result = await resolveExpandFolders([createFolder("/path/to/folder")]);
+
+    expect(result.map((item) => item.path)).toEqual(["/path/to/folder/photo.jpg"]);
+  });
+
   it("includes top-level files", async () => {
     vi.mocked(fsModule.readDir).mockResolvedValue([]);
 

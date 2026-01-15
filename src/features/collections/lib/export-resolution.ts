@@ -37,6 +37,11 @@ const isChildPath = (parent: string, child: string) => {
   return child.startsWith(`${parent}/`);
 };
 
+const isIgnoredPath = (path: string) => {
+  const name = path.split("/").filter(Boolean).pop() ?? path;
+  return name.toLowerCase() === ".ds_store";
+};
+
 const createFileItem = (path: string): ExplorerItem => {
   const name = path.split("/").filter(Boolean).pop() ?? path;
   const extension = getExtension(name);
@@ -71,7 +76,10 @@ export const resolveExpandFolders = async (
         .filter((entry) => entry.isFile ?? !entry.isDirectory)
         .map((entry) => {
           const path = getEntryPath(entry, folder.path);
-          return path ? createFileItem(path) : null;
+          if (!path || isIgnoredPath(path)) {
+            return null;
+          }
+          return createFileItem(path);
         })
         .filter((entry): entry is ExplorerItem => Boolean(entry));
     }),
@@ -82,11 +90,11 @@ export const resolveExpandFolders = async (
 
 export const deduplicateByPath = (items: ExplorerItem[]): ExplorerItem[] => {
   // Output list: the minimal set of non-overlapping selections we want to keep.
-  // Important: order matters — we keep the first occurrence and skip later duplicates/overlaps.
+  // Important: order matters - we keep the first occurrence and skip later duplicates/overlaps.
   const deduped: ExplorerItem[] = [];
 
   // Tracks exact paths we've already accepted (after normalization). This only prevents
-  // exact duplicates like "/docs" + "/docs" or "/docs/" + "/docs".
+  // exact duplicates like "/docs" + "/docs/" or "/docs/" + "/docs".
   const seen = new Set<string>();
 
   for (const item of items) {
