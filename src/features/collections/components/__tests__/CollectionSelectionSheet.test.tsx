@@ -1,14 +1,12 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ExplorerSelectionSheet } from "../ExplorerSelectionSheet";
+import { CollectionSelectionSheet } from "../CollectionSelectionSheet";
 import type { ExplorerItem } from "@/types/explorer";
 
-// Mock Tauri invoke
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
 }));
 
-// Mock sonner toast
 vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),
@@ -16,13 +14,18 @@ vi.mock("sonner", () => ({
   },
 }));
 
-// Mock recent-apps module
 vi.mock("@/lib/recent-apps", () => ({
   getRecentApps: vi.fn().mockResolvedValue([]),
   addRecentApp: vi.fn(),
 }));
 
-vi.mock("../RecentAppsPicker", () => ({
+vi.mock("../../hooks/use-collection-items", () => ({
+  useCollectionItems: () => ({
+    removeItemByPath: vi.fn(),
+  }),
+}));
+
+vi.mock("@/components/explorer/RecentAppsPicker", () => ({
   RecentAppsPicker: ({
     isOpen,
     extension,
@@ -46,7 +49,6 @@ vi.mock("../RecentAppsPicker", () => ({
     ) : null,
 }));
 
-// Mock file-groups module
 vi.mock("@/lib/file-groups", () => ({
   groupFilesByMediaType: vi.fn((files) => ({
     images: { type: "image", files: [], extensions: new Set() },
@@ -61,7 +63,7 @@ vi.mock("@/lib/file-groups", () => ({
   getFileCountLabel: vi.fn((count, type) => `${count} ${type}s`),
 }));
 
-describe("ExplorerSelectionSheet", () => {
+describe("CollectionSelectionSheet", () => {
   const mockEntries: ExplorerItem[] = [
     {
       path: "/path/to/file1.jpg",
@@ -86,11 +88,14 @@ describe("ExplorerSelectionSheet", () => {
   ];
 
   const defaultProps = {
+    collectionId: 1,
     isOpen: true,
     entries: mockEntries,
     onClose: vi.fn(),
     onRemove: vi.fn(),
     onClear: vi.fn(),
+    onRequestMove: vi.fn(),
+    onRequestCopy: vi.fn(),
   };
 
   beforeEach(() => {
@@ -98,59 +103,56 @@ describe("ExplorerSelectionSheet", () => {
   });
 
   it("renders entries correctly", () => {
-    render(<ExplorerSelectionSheet {...defaultProps} />);
+    render(<CollectionSelectionSheet {...defaultProps} />);
     expect(screen.getByText("file1.jpg")).toBeDefined();
     expect(screen.getByText("file2.jpg")).toBeDefined();
     expect(screen.getByText("/path/to/file1.jpg")).toBeDefined();
   });
 
   it("shows empty state when no entries", () => {
-    render(<ExplorerSelectionSheet {...defaultProps} entries={[]} />);
+    render(<CollectionSelectionSheet {...defaultProps} entries={[]} />);
     expect(screen.getByText("No items selected yet.")).toBeDefined();
     expect(screen.getByText("0 items")).toBeDefined();
   });
 
   it("calls onRemove when remove button is clicked", () => {
-    render(<ExplorerSelectionSheet {...defaultProps} />);
+    render(<CollectionSelectionSheet {...defaultProps} />);
     const removeButtons = screen.getAllByLabelText(/Remove/);
     fireEvent.click(removeButtons[0]);
     expect(defaultProps.onRemove).toHaveBeenCalledWith("/path/to/file1.jpg");
   });
 
   it("calls onClear when clear button is clicked", () => {
-    render(<ExplorerSelectionSheet {...defaultProps} />);
+    render(<CollectionSelectionSheet {...defaultProps} />);
     fireEvent.click(screen.getByText("Clear all"));
     expect(defaultProps.onClear).toHaveBeenCalled();
   });
 
   it("shows Open All with button", () => {
-    render(<ExplorerSelectionSheet {...defaultProps} />);
+    render(<CollectionSelectionSheet {...defaultProps} />);
     expect(screen.getByText("Open All with...")).toBeDefined();
   });
 
   it("disables button when no entries", () => {
-    render(<ExplorerSelectionSheet {...defaultProps} entries={[]} />);
+    render(<CollectionSelectionSheet {...defaultProps} entries={[]} />);
     const button = screen.getByText("Open All with...") as HTMLButtonElement;
     expect(button.disabled).toBe(true);
   });
 
-  it("renders custom actions slot", () => {
-    render(
-      <ExplorerSelectionSheet
-        {...defaultProps}
-        renderActions={() => <button>Custom Widget</button>}
-      />,
-    );
-    expect(screen.getByText("Custom Widget")).toBeDefined();
+  it("renders collection actions", () => {
+    render(<CollectionSelectionSheet {...defaultProps} />);
+    expect(screen.getByText(/Move to/i)).toBeDefined();
+    expect(screen.getByText(/Copy to/i)).toBeDefined();
+    expect(screen.getByText(/Remove from Collection/i)).toBeDefined();
   });
 
   it("displays correct item count", () => {
-    render(<ExplorerSelectionSheet {...defaultProps} />);
+    render(<CollectionSelectionSheet {...defaultProps} />);
     expect(screen.getByText("2 items")).toBeDefined();
   });
 
   it("opens app picker directly for files-only selection", async () => {
-    render(<ExplorerSelectionSheet {...defaultProps} />);
+    render(<CollectionSelectionSheet {...defaultProps} />);
 
     fireEvent.click(screen.getByRole("button", { name: /open all with/i }));
 
@@ -174,7 +176,7 @@ describe("ExplorerSelectionSheet", () => {
       } as ExplorerItem,
     ];
 
-    render(<ExplorerSelectionSheet {...defaultProps} entries={entries} />);
+    render(<CollectionSelectionSheet {...defaultProps} entries={entries} />);
 
     fireEvent.click(screen.getByRole("button", { name: /open all with/i }));
 
@@ -196,7 +198,7 @@ describe("ExplorerSelectionSheet", () => {
       } as ExplorerItem,
     ];
 
-    render(<ExplorerSelectionSheet {...defaultProps} entries={entries} />);
+    render(<CollectionSelectionSheet {...defaultProps} entries={entries} />);
 
     fireEvent.click(screen.getByRole("button", { name: /open all with/i }));
     fireEvent.click(screen.getByLabelText(/files only/i));
@@ -229,7 +231,7 @@ describe("ExplorerSelectionSheet", () => {
       } as ExplorerItem,
     ];
 
-    render(<ExplorerSelectionSheet {...defaultProps} entries={entries} />);
+    render(<CollectionSelectionSheet {...defaultProps} entries={entries} />);
 
     fireEvent.click(screen.getByRole("button", { name: /open all with/i }));
     fireEvent.click(screen.getByRole("button", { name: /cancel/i }));

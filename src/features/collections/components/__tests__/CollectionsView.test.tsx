@@ -13,25 +13,15 @@ vi.mock("../../hooks/use-collections");
 vi.mock("../../hooks/use-collection-items");
 vi.mock("@/hooks/use-navigation");
 
-// Mock components
-let capturedSelectionSheetProps: {
-  renderActions?: (entries: ExplorerItem[]) => React.ReactNode;
-} | null = null;
-
-vi.mock("@/components/explorer/ExplorerSelectionSheet", () => ({
-  ExplorerSelectionSheet: (props: {
-    renderActions?: (entries: ExplorerItem[]) => React.ReactNode;
-  }) => {
-    capturedSelectionSheetProps = props;
-    return <div data-testid="selection-sheet" />;
-  },
-}));
-
 vi.mock("@tauri-apps/plugin-dialog", () => ({
   open: vi.fn(),
   ask: vi.fn(),
   message: vi.fn(),
   save: vi.fn(),
+}));
+
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: vi.fn(),
 }));
 
 // Store handlers so tests can invoke them
@@ -548,25 +538,10 @@ describe("CollectionsView", () => {
   });
 
   describe("selection sheet actions", () => {
-    it("passes collection actions to ExplorerSelectionSheet", () => {
-      render(
-        <CollectionsView
-          collectionId="1"
-          isSelectionOpen={true}
-          setIsSelectionOpen={vi.fn()}
-          selection={
-            mockSelection as unknown as ReturnType<
-              typeof useExplorerSelection
-            >
-          }
-        />,
-      );
-
-      expect(capturedSelectionSheetProps).not.toBeNull();
-      expect(capturedSelectionSheetProps!.renderActions).toBeDefined();
-
-      render(
-        capturedSelectionSheetProps!.renderActions!([
+    it("renders collection actions in the selection sheet", () => {
+      const selectionWithEntries = {
+        ...mockSelection,
+        selectedEntries: [
           {
             name: "Item 1",
             path: "/1",
@@ -577,7 +552,33 @@ describe("CollectionsView", () => {
             kindLabel: "Text document",
             extension: "txt",
           } as ExplorerItem,
-        ]),
+        ],
+        selectedPaths: {
+          "/1": {
+            name: "Item 1",
+            path: "/1",
+            kind: "file",
+            status: "available",
+            dateModified: new Date(),
+            dateModifiedLabel: "Jan 1, 2024",
+            kindLabel: "Text document",
+            extension: "txt",
+          } as ExplorerItem,
+        },
+        selectedCount: 1,
+      };
+
+      render(
+        <CollectionsView
+          collectionId="1"
+          isSelectionOpen={true}
+          setIsSelectionOpen={vi.fn()}
+          selection={
+            selectionWithEntries as unknown as ReturnType<
+              typeof useExplorerSelection
+            >
+          }
+        />,
       );
 
       expect(screen.getByText(/Move to/i)).toBeDefined();
