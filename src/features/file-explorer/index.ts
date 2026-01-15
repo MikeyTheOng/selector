@@ -8,7 +8,6 @@ export {
 } from "./context/ExplorerContext";
 
 // Hooks
-export { useFileSelection } from "./hooks/use-file-selection";
 export { useFolderListing } from "./hooks/use-folder-listing";
 export { useLocations } from "./hooks/use-locations";
 export { useQuickLook } from "./hooks/use-quick-look";
@@ -20,4 +19,4 @@ export type {
   FolderRow,
   LocationItem,
   FolderListing,
-} from "@/types/fs";
+} from "@/types/explorer";

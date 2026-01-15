@@ -32,7 +32,7 @@ export interface ExplorerSelectionSheetProps {
   isOpen: boolean;
   entries: ExplorerItem[];
   onClose: () => void;
-  onRemove: (id: string) => void;
+  onRemove: (path: string) => void;
   onClear: () => void;
   /** Optional slot for injecting external action UI (e.g., Collections widget) */
   renderActions?: (entries: ExplorerItem[]) => React.ReactNode;
@@ -159,7 +159,7 @@ export const ExplorerSelectionSheet = ({
               <div className="grid gap-2">
                 {entries.map((entry) => (
                   <div
-                    key={entry.id}
+                    key={entry.path}
                     className="flex min-w-0 items-center gap-3 rounded-lg border border-border/60 bg-card/70 px-3 py-2 transition-colors hover:bg-card"
                   >
                     <div className="min-w-0 flex-1">
@@ -176,7 +176,7 @@ export const ExplorerSelectionSheet = ({
                       size="icon"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onRemove(entry.id);
+                        onRemove(entry.path);
                       }}
                       className="h-7 w-7 shrink-0 rounded-full border border-border/60 text-muted-foreground hover:text-foreground"
                       aria-label={`Remove ${entry.name}`}

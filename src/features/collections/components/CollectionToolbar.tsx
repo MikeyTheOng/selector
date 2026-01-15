@@ -2,13 +2,13 @@ import { CheckSquare } from "lucide-react";
 import { CollectionBreadcrumb } from "./CollectionBreadcrumb";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useCollectionSelection } from "../hooks/use-collection-selection";
+import { useExplorerSelection } from "@/hooks/explorer/use-explorer-selection";
 
 interface CollectionToolbarProps {
   collectionId?: string;
   isSelectionOpen: boolean;
   onToggleSelection: () => void;
-  selection: ReturnType<typeof useCollectionSelection>;
+  selection: ReturnType<typeof useExplorerSelection>;
 }
 
 /**

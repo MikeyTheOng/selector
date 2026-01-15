@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { homeDir } from "@tauri-apps/api/path";
 import { fsModule } from "@/lib/tauri/fs";
 import { getErrorMessage, getPathBaseName, isHiddenName, resolveEntry } from "@/lib/path-utils";
-import type { LocationItem } from "@/types/fs";
+import type { LocationItem } from "@/types/explorer";
 
 type LocationsState = {
   locations: LocationItem[];

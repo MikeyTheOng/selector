@@ -53,6 +53,6 @@ Folders that form the current navigation path but are not explicitly selected ar
 
 ## 🛠 Developer Implementation Details
 
-- **Hook:** `useFileSelection` maintains `focusedFile` and `lastClickedFile` (anchor).
+- **Hook:** `useExplorerSelection` maintains `focusedPath` and `lastClickedPath` (anchor).
 - **Persistence:** Navigating between folders preserves the selection set (the "shopping cart").
-- **Consistency:** Both folders and files are mapped to a `FileRow` structure internally in views to ensure consistent selection logic.
+- **Consistency:** Both folders and files are represented using the unified `ExplorerItem` union type to ensure consistent selection logic across Files and Collections.

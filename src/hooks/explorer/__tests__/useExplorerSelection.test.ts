@@ -3,11 +3,17 @@ import { describe, it, expect } from 'vitest';
 import { useExplorerSelection } from '../use-explorer-selection';
 import type { ExplorerItem } from '@/types/explorer';
 
-const mockItem = (id: string, name: string): ExplorerItem => ({
-  id,
-  path: `/path/${id}`,
+// Mock item helper conforming to ExplorerFileItem
+const mockItem = (path: string, name: string): ExplorerItem => ({
+  path,
   name,
   kind: 'file',
+  extension: 'txt',
+  kindLabel: 'Text File',
+  size: 100,
+  sizeLabel: '100 B',
+  dateModified: new Date(),
+  dateModifiedLabel: 'Just now',
   status: 'available',
 });
 
@@ -15,24 +21,24 @@ describe('useExplorerSelection', () => {
   it('initializes with empty selection', () => {
     const { result } = renderHook(() => useExplorerSelection());
     expect(result.current.selectedCount).toBe(0);
-    expect(result.current.selectedItems).toEqual({});
+    expect(result.current.selectedPaths).toEqual({});
   });
 
   it('selects a single item', () => {
     const { result } = renderHook(() => useExplorerSelection());
-    const item = mockItem('a', 'Item A');
+    const item = mockItem('/path/a', 'Item A');
     
     act(() => {
       result.current.selectItem(item);
     });
     
     expect(result.current.selectedCount).toBe(1);
-    expect(result.current.selectedItems['a']).toBe(item);
+    expect(result.current.selectedPaths['/path/a']).toBe(item);
   });
 
   it('toggles selection', () => {
     const { result } = renderHook(() => useExplorerSelection());
-    const item = mockItem('a', 'Item A');
+    const item = mockItem('/path/a', 'Item A');
     
     act(() => {
       result.current.toggleSelection(item);
@@ -48,10 +54,10 @@ describe('useExplorerSelection', () => {
   it('selects a range of items', () => {
     const { result } = renderHook(() => useExplorerSelection());
     const items = [
-      mockItem('a', 'A'),
-      mockItem('b', 'B'),
-      mockItem('c', 'C'),
-      mockItem('d', 'D'),
+      mockItem('/path/a', 'A'),
+      mockItem('/path/b', 'B'),
+      mockItem('/path/c', 'C'),
+      mockItem('/path/d', 'D'),
     ];
     
     act(() => {
@@ -59,16 +65,16 @@ describe('useExplorerSelection', () => {
     });
     
     expect(result.current.selectedCount).toBe(3);
-    expect(result.current.selectedItems['a']).toBeDefined();
-    expect(result.current.selectedItems['b']).toBeDefined();
-    expect(result.current.selectedItems['c']).toBeDefined();
-    expect(result.current.selectedItems['d']).toBeUndefined();
+    expect(result.current.selectedPaths['/path/a']).toBeDefined();
+    expect(result.current.selectedPaths['/path/b']).toBeDefined();
+    expect(result.current.selectedPaths['/path/c']).toBeDefined();
+    expect(result.current.selectedPaths['/path/d']).toBeUndefined();
   });
 
   it('clears selection', () => {
     const { result } = renderHook(() => useExplorerSelection());
     act(() => {
-      result.current.selectItem(mockItem('a', 'A'));
+      result.current.selectItem(mockItem('/path/a', 'A'));
     });
     expect(result.current.selectedCount).toBe(1);
     
@@ -80,7 +86,7 @@ describe('useExplorerSelection', () => {
 
   it('selects multiple items', () => {
     const { result } = renderHook(() => useExplorerSelection());
-    const items = [mockItem('a', 'A'), mockItem('b', 'B')];
+    const items = [mockItem('/path/a', 'A'), mockItem('/path/b', 'B')];
     
     act(() => {
       result.current.selectMultiple(items);
@@ -88,37 +94,37 @@ describe('useExplorerSelection', () => {
     expect(result.current.selectedCount).toBe(2);
 
     act(() => {
-      result.current.selectMultiple([mockItem('c', 'C')], { additive: true });
+      result.current.selectMultiple([mockItem('/path/c', 'C')], { additive: true });
     });
     expect(result.current.selectedCount).toBe(3);
   });
 
   it('removes a specific selection', () => {
     const { result } = renderHook(() => useExplorerSelection());
-    const item = mockItem('a', 'A');
+    const item = mockItem('/path/a', 'A');
     act(() => { result.current.selectItem(item); });
     
     act(() => {
-      result.current.removeSelection('a');
+      result.current.removeSelection('/path/a');
     });
     expect(result.current.selectedCount).toBe(0);
   });
 
   it('handles focus and last clicked item', () => {
     const { result } = renderHook(() => useExplorerSelection());
-    const item = mockItem('a', 'A');
+    const item = mockItem('/path/a', 'A');
     
     act(() => {
-      result.current.focusItem(item, '/column');
+      result.current.focusItem(item);
+      result.current.updateLastClickedItem(item);
     });
     
-    expect(result.current.focusedItem?.item).toBe(item);
-    expect(result.current.focusedItem?.context).toBe('/column');
-    expect(result.current.lastClickedItem?.item).toBe(item);
+    expect(result.current.focusedPath).toBe('/path/a');
+    expect(result.current.lastClickedPath).toBe('/path/a');
 
     act(() => {
       result.current.clearFocus();
     });
-    expect(result.current.focusedItem).toBeNull();
+    expect(result.current.focusedPath).toBeNull();
   });
 });

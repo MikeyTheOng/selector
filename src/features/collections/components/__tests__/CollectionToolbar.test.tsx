@@ -1,11 +1,11 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CollectionToolbar } from '../CollectionToolbar';
-import { useCollectionSelection } from '../../hooks/use-collection-selection';
+import { useExplorerSelection } from '@/hooks/explorer/use-explorer-selection';
 import { useCollections } from '../../hooks/use-collections';
 import type { ExplorerItem } from '@/types/explorer';
 
-vi.mock('../../hooks/use-collection-selection');
+vi.mock('@/hooks/explorer/use-explorer-selection');
 vi.mock('../../hooks/use-collections');
 
 describe('CollectionToolbar', () => {
@@ -47,7 +47,7 @@ describe('CollectionToolbar', () => {
     collectionId: '1',
     isSelectionOpen: false,
     onToggleSelection: vi.fn(),
-    selection: mockSelection as unknown as ReturnType<typeof useCollectionSelection>,
+    selection: mockSelection as unknown as ReturnType<typeof useExplorerSelection>,
   };
 
   beforeEach(() => {
@@ -63,14 +63,34 @@ describe('CollectionToolbar', () => {
   it('displays selection count badge', () => {
     const selectionWithItems = {
       ...mockSelection,
-      selectedItems: { '1': true, '2': true },
+      selectedItems: { '/1': true, '/2': true },
       selectedEntries: [
-        { id: '1', name: 'Item 1', path: '/1', kind: 'file', status: 'available' } as ExplorerItem,
-        { id: '2', name: 'Item 2', path: '/2', kind: 'file', status: 'available' } as ExplorerItem
+        { 
+          path: '/1', 
+          name: 'Item 1', 
+          kind: 'file', 
+          status: 'available',
+          dateModified: new Date(),
+          dateModifiedLabel: 'Today',
+          kindLabel: 'File',
+          extension: 'txt',
+          sizeLabel: '0 KB',
+        } as ExplorerItem,
+        { 
+          path: '/2', 
+          name: 'Item 2', 
+          kind: 'file', 
+          status: 'available',
+          dateModified: new Date(),
+          dateModifiedLabel: 'Today',
+          kindLabel: 'File',
+          extension: 'txt',
+          sizeLabel: '0 KB',
+        } as ExplorerItem
       ],
     };
 
-    render(<CollectionToolbar {...defaultProps} selection={selectionWithItems as unknown as ReturnType<typeof useCollectionSelection>} />);
+    render(<CollectionToolbar {...defaultProps} selection={selectionWithItems as unknown as ReturnType<typeof useExplorerSelection>} />);
     expect(screen.getByText('2')).toBeDefined();
   });
 
@@ -83,11 +103,21 @@ describe('CollectionToolbar', () => {
   it('calls onToggleSelection when clicked', () => {
     const selectionWithItems = {
       ...mockSelection,
-      selectedItems: { '1': true },
-      selectedEntries: [{ id: '1', path: '/1', kind: 'file', name: 'Item 1', status: 'available' } as ExplorerItem],
+      selectedItems: { '/1': true },
+      selectedEntries: [{ 
+        path: '/1', 
+        kind: 'file', 
+        name: 'Item 1', 
+        status: 'available',
+        dateModified: new Date(),
+        dateModifiedLabel: 'Today',
+        kindLabel: 'File',
+        extension: 'txt',
+        sizeLabel: '0 KB',
+      } as ExplorerItem],
     };
 
-    render(<CollectionToolbar {...defaultProps} selection={selectionWithItems as unknown as ReturnType<typeof useCollectionSelection>} />);
+    render(<CollectionToolbar {...defaultProps} selection={selectionWithItems as unknown as ReturnType<typeof useExplorerSelection>} />);
     const button = screen.getByRole('button', { name: /selection/i });
     fireEvent.click(button);
     expect(defaultProps.onToggleSelection).toHaveBeenCalled();

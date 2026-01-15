@@ -8,7 +8,7 @@ import {
   isHiddenName,
   resolveEntry,
 } from "@/lib/path-utils";
-import type { FileRow, FolderListing, LocationItem } from "@/types/fs";
+import type { FileRow, FolderListing, FolderRow, LocationItem } from "@/types/explorer";
 
 const createListing = (overrides: Partial<FolderListing> = {}): FolderListing => ({
   folders: [],
@@ -96,7 +96,7 @@ export const useFolderListing = (
 
     const metadataReader = fsModule.metadata ?? fsModule.stat;
     const folderRows = await Promise.all(
-      folders.map(async (entry) => {
+      folders.map(async (entry): Promise<FolderRow> => {
         let mtime: Date | null = null;
         if (metadataReader) {
           try {
@@ -109,13 +109,15 @@ export const useFolderListing = (
         return {
           path: entry.path,
           name: entry.name,
+          status: 'available',
           dateModified: mtime,
           dateModifiedLabel: formatDateTime(mtime),
+          kindLabel: 'Folder',
         };
       }),
     );
     const rows = await Promise.all(
-      files.map(async (entry) => {
+      files.map(async (entry): Promise<FileRow> => {
         const name = entry.name;
         const extension = getExtension(name);
         let size: number | undefined;
@@ -134,6 +136,7 @@ export const useFolderListing = (
         return {
           path: entry.path,
           name,
+          status: 'available',
           extension,
           kindLabel: getKindLabel(extension),
           size,

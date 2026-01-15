@@ -40,7 +40,6 @@ vi.mock("@/lib/file-groups", () => ({
 describe("ExplorerSelectionSheet", () => {
   const mockEntries: ExplorerItem[] = [
     {
-      id: "1",
       path: "/path/to/file1.jpg",
       name: "file1.jpg",
       kind: "file",
@@ -49,9 +48,8 @@ describe("ExplorerSelectionSheet", () => {
       dateModified: new Date(),
       dateModifiedLabel: "Today",
       kindLabel: "Image",
-    },
+    } as ExplorerItem,
     {
-      id: "2",
       path: "/path/to/file2.jpg",
       name: "file2.jpg",
       kind: "file",
@@ -60,7 +58,7 @@ describe("ExplorerSelectionSheet", () => {
       dateModified: new Date(),
       dateModifiedLabel: "Today",
       kindLabel: "Image",
-    },
+    } as ExplorerItem,
   ];
 
   const defaultProps = {
@@ -92,7 +90,7 @@ describe("ExplorerSelectionSheet", () => {
     render(<ExplorerSelectionSheet {...defaultProps} />);
     const removeButtons = screen.getAllByLabelText(/Remove/);
     fireEvent.click(removeButtons[0]);
-    expect(defaultProps.onRemove).toHaveBeenCalledWith("1");
+    expect(defaultProps.onRemove).toHaveBeenCalledWith("/path/to/file1.jpg");
   });
 
   it("calls onClear when clear button is clicked", () => {

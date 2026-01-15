@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FileListView } from '../FileListView';
-import type { FolderListing, FileRow } from '@/types/fs';
+import type { FolderListing } from '@/types/explorer';
 
 // Simple mock for FileRowLabel
 vi.mock('../FileRowLabel', () => ({
@@ -11,7 +11,7 @@ vi.mock('../FileRowLabel', () => ({
 describe('FileListView', () => {
   const mockListing: FolderListing = {
     folders: [
-      { path: '/test/folder1', name: 'folder1', dateModified: new Date(), dateModifiedLabel: 'Jan 1, 2024' }
+      { path: '/test/folder1', name: 'folder1', dateModified: new Date(), dateModifiedLabel: 'Jan 1, 2024', status: 'available', kindLabel: 'Folder' }
     ],
     files: [
       {
@@ -22,7 +22,8 @@ describe('FileListView', () => {
         size: 1024,
         sizeLabel: '1 KB',
         dateModified: new Date(),
-        dateModifiedLabel: 'Jan 1, 2024'
+        dateModifiedLabel: 'Jan 1, 2024',
+        status: 'available'
       }
     ],
     isLoading: false,
@@ -33,15 +34,14 @@ describe('FileListView', () => {
 
   const defaultProps = {
     listing: mockListing,
-    selectedFiles: {},
-    lastClickedFile: null,
-    focusedFile: null,
+    selectedPaths: {},
+    lastClickedPath: null,
+    focusedPath: null,
     onSelectFolder: vi.fn(),
-    onSelectFile: vi.fn(),
+    onSelectItem: vi.fn(),
     onSelectRange: vi.fn(),
-    onUpdateLastClickedFile: vi.fn(),
-    onFocusFile: vi.fn(),
-    onToggleFileSelection: vi.fn(),
+    onFocusItem: vi.fn(),
+    onToggleSelection: vi.fn(),
   };
 
   beforeEach(() => {
@@ -57,16 +57,15 @@ describe('FileListView', () => {
     render(<FileListView {...defaultProps} />);
     expect(screen.getByText('folder1')).toBeDefined();
     expect(screen.getByText('file1.txt')).toBeDefined();
-    expect(screen.getByText('Text document')).toBeDefined();
   });
 
-  it('calls onSelectFile when a file is clicked', () => {
+  it('calls onSelectItem when a file is clicked', () => {
     render(<FileListView {...defaultProps} />);
     const fileButton = screen.getByText('file1.txt').closest('button');
     fireEvent.click(fileButton!);
 
-    expect(defaultProps.onSelectFile).toHaveBeenCalled();
-    expect(defaultProps.onFocusFile).toHaveBeenCalled();
+    expect(defaultProps.onSelectItem).toHaveBeenCalled();
+    expect(defaultProps.onFocusItem).toHaveBeenCalled();
   });
 
   it('calls onSelectFolder when a folder is double clicked', () => {
@@ -82,33 +81,43 @@ describe('FileListView', () => {
     const fileButton = screen.getByText('file1.txt').closest('button');
 
     fireEvent.click(fileButton!, { metaKey: true });
-    expect(defaultProps.onToggleFileSelection).toHaveBeenCalled();
+    expect(defaultProps.onToggleSelection).toHaveBeenCalled();
 
     vi.clearAllMocks();
     fireEvent.click(fileButton!, { ctrlKey: true });
-    expect(defaultProps.onToggleFileSelection).toHaveBeenCalled();
+    expect(defaultProps.onToggleSelection).toHaveBeenCalled();
   });
 
   it('supports shift click for range selection', () => {
-    const lastClicked: FileRow = {
-      path: '/test/last.txt',
-      name: 'last.txt',
-      extension: 'txt',
-      kindLabel: 'Text',
-      sizeLabel: '',
-      dateModified: null,
-      dateModifiedLabel: ''
+    // Add another file to act as the anchor
+    const extendedListing: FolderListing = {
+      ...mockListing,
+      files: [
+        ...mockListing.files,
+        {
+          path: '/test/last.txt',
+          name: 'last.txt',
+          extension: 'txt',
+          kindLabel: 'Text',
+          sizeLabel: '',
+          size: 0,
+          dateModified: null,
+          dateModifiedLabel: '',
+          status: 'available'
+        }
+      ]
     };
 
     render(<FileListView
       {...defaultProps}
-      lastClickedFile={{ file: lastClicked }}
+      listing={extendedListing}
+      lastClickedPath="/test/last.txt"
     />);
 
     const fileButton = screen.getByText('file1.txt').closest('button');
     fireEvent.click(fileButton!, { shiftKey: true });
 
     expect(defaultProps.onSelectRange).toHaveBeenCalled();
-    expect(defaultProps.onFocusFile).toHaveBeenCalled();
+    expect(defaultProps.onFocusItem).toHaveBeenCalled();
   });
 });

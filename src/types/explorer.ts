@@ -6,42 +6,64 @@ export type ExplorerItemKind = "file" | "folder";
 
 export type ExplorerItemStatus = "available" | "missing" | "offline";
 
-/**
- * Generic item that can be displayed in an Explorer view
- */
-export interface ExplorerItem {
-  /** Unique identifier for the item (e.g., file path or database ID) */
-  id: string;
-  /** The actual filesystem path or resource locator */
+export type FsDirEntry = {
+  name?: string | null;
   path: string;
-  /** Display name of the item */
-  name: string;
-  /** Whether it's a file or a folder */
-  kind: ExplorerItemKind;
-  /** Current availability status */
-  status: ExplorerItemStatus;
-  /** Optional date modified */
-  dateModified?: Date | null;
-  /** Formatted date modified string */
-  dateModifiedLabel?: string;
-  /** Optional file size in bytes */
+  isDirectory?: boolean;
+  isFile?: boolean;
+};
+
+export type FsMetadata = {
   size?: number;
-  /** Formatted size string (e.g., "1.2 MB") */
-  sizeLabel?: string;
-  /** Display label for the kind (e.g., "Folder", "PDF Document") */
-  kindLabel?: string;
-  /** File extension without the dot (e.g., "png", "txt") */
-  extension?: string;
+  mtime?: Date | null;
+};
+
+export type FsModule = {
+  readDir: (path: string, options?: { recursive?: boolean }) => Promise<FsDirEntry[]>;
+  metadata?: (path: string) => Promise<FsMetadata>;
+  stat?: (path: string) => Promise<FsMetadata>;
+};
+
+export type LocationItem = {
+  path: string;
+  name: string;
+  kind: "home" | "volume";
+};
+
+export interface BaseExplorerItem {
+  path: string;
+  name: string;
+  status: ExplorerItemStatus;
+  dateModified: Date | null;
+  dateModifiedLabel: string;
+  kindLabel: string;
 }
 
-/**
- * View modes supported by explorer components
- */
+export type FileRow = BaseExplorerItem & {
+  extension: string;
+  size?: number;
+  sizeLabel: string;
+};
+
+export type FolderRow = BaseExplorerItem;
+
+export type FolderListing = {
+  folders: FolderRow[];
+  files: FileRow[];
+  isLoading: boolean;
+  error?: string;
+  fileCount: number;
+  folderCount: number;
+  isTruncated: boolean;
+};
+
+export type ExplorerFileItem = FileRow & { kind: 'file' };
+export type ExplorerFolderItem = FolderRow & { kind: 'folder' };
+
+export type ExplorerItem = ExplorerFileItem | ExplorerFolderItem;
+
 export type ExplorerViewMode = "grid" | "list" | "column";
 
-/**
- * Generic listing state for explorer views
- */
 export interface ExplorerListing {
   /** All items in the current view */
   items: ExplorerItem[];
@@ -61,10 +83,10 @@ export interface ExplorerListing {
  * Current selection state in an explorer view
  */
 export interface ExplorerSelection {
-  /** Map of selected item IDs to their item data */
-  selectedIds: Record<string, ExplorerItem>;
-  /** The item that was most recently clicked (used for range selection) */
-  lastClickedId?: string | null;
-  /** The item that currently has focus (e.g., for keyboard navigation) */
-  focusedId?: string | null;
+  /** Map of selected item paths to their item data */
+  selectedPaths: Record<string, ExplorerItem>;
+  /** The item path that was most recently clicked (used for range selection) */
+  lastClickedPath?: string | null;
+  /** The item path that currently has focus (e.g., for keyboard navigation) */
+  focusedPath?: string | null;
 }

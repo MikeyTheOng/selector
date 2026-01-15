@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useCollectionSelection } from "../hooks/use-collection-selection";
+import { useExplorerSelection } from "@/hooks/explorer/use-explorer-selection";
 import { CollectionToolbar } from "./CollectionToolbar";
 import { CollectionsView } from "./CollectionsView";
 
@@ -11,7 +11,7 @@ export const CollectionsPage: React.FC<CollectionsPageProps> = ({
   collectionId,
 }) => {
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
-  const selection = useCollectionSelection();
+  const selection = useExplorerSelection();
 
   return (
     <div className="flex flex-col h-full overflow-hidden">

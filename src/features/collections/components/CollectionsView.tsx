@@ -4,8 +4,9 @@ import { toast } from "sonner";
 import { useCollections } from "../hooks/use-collections";
 import { useCollectionItems, getFilename } from "../hooks/use-collection-items";
 import { DuplicateItemError } from "../errors";
-import { useCollectionSelection, collectionItemToExplorerItem } from "../hooks/use-collection-selection";
+import { collectionItemToExplorerItem } from "../lib/utils";
 import { useExplorerViewState } from "@/hooks/explorer/use-explorer-view-state";
+import { useExplorerSelection } from "@/hooks/explorer/use-explorer-selection";
 import { useNavigation } from "@/hooks/use-navigation";
 import { getParentPath } from "@/lib/path-utils";
 import { ExplorerListView } from "@/components/explorer/ExplorerListView";
@@ -20,7 +21,7 @@ interface CollectionsViewProps {
   collectionId: string;
   isSelectionOpen: boolean;
   setIsSelectionOpen: (isOpen: boolean) => void;
-  selection: ReturnType<typeof useCollectionSelection>;
+  selection: ReturnType<typeof useExplorerSelection>;
 }
 
 export const CollectionsView: React.FC<CollectionsViewProps> = ({
@@ -33,13 +34,13 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
   const { collections } = useCollections();
   const { items, isLoading, removeItem, relinkItem, relinkFolder } = useCollectionItems(parsedId);
   const {
-    selectedItems,
+    selectedPaths,
     selectedEntries,
-    focusedItem,
-    lastClickedItem,
-    selectCollectionItem,
-    selectMultipleCollectionItems,
-    toggleCollectionItemSelection,
+    focusedPath,
+    lastClickedPath,
+    selectItem,
+    selectMultiple,
+    toggleSelection,
     focusItem,
     removeSelection,
     clearSelections
@@ -101,28 +102,34 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
     [items]);
 
   const handleItemClick = (item: ExplorerItem, event: React.MouseEvent) => {
-    const originalItem = items.find(i => i.path === item.id);
-    if (!originalItem) return;
+    // Find original item logic is mostly needed if we need domain fields not in ExplorerItem
+    // But we just need to pass ExplorerItem to selection hooks.
+    
+    // However, if we needed the original item for some reason, we could find it:
+    // const originalItem = items.find(i => i.path === item.path);
+    
+    // For selection, we just use the item (ExplorerItem) we already have.
 
-    if (event.shiftKey && lastClickedItem) {
-      const fromIndex = explorerItems.findIndex(i => i.id === lastClickedItem.item.id);
-      const toIndex = explorerItems.findIndex(i => i.id === item.id);
+    if (event.shiftKey && lastClickedPath) {
+      const fromIndex = explorerItems.findIndex(i => i.path === lastClickedPath);
+      const toIndex = explorerItems.findIndex(i => i.path === item.path);
       if (fromIndex !== -1 && toIndex !== -1) {
         const start = Math.min(fromIndex, toIndex);
         const end = Math.max(fromIndex, toIndex);
-        const range = items.slice(start, end + 1);
-        selectMultipleCollectionItems(range, { additive: true });
+        // We can just slice from explorerItems since we already have them converted
+        const range = explorerItems.slice(start, end + 1);
+        selectMultiple(range, { additive: true });
       }
     } else if (event.metaKey || event.ctrlKey) {
-      toggleCollectionItemSelection(originalItem);
+      toggleSelection(item);
     } else {
-      selectCollectionItem(originalItem);
+      selectItem(item);
     }
     focusItem(item);
   };
 
   const handleRemoveItem = async (item: ExplorerItem) => {
-    const originalItem = items.find(i => i.path === item.id);
+    const originalItem = items.find(i => i.path === item.path);
     if (originalItem) {
       await removeItem(originalItem.id);
     }
@@ -219,9 +226,9 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
         <ExplorerListView
           items={explorerItems}
           viewMode={viewMode}
-          selectedIds={selectedItems}
-          focusedId={focusedItem?.item.id}
-          lastClickedId={lastClickedItem?.item.id}
+          selectedPaths={selectedPaths} 
+          focusedPath={focusedPath}
+          lastClickedPath={lastClickedPath}
           onItemClick={handleItemClick}
           onItemDoubleClick={handleActivateItem}
           emptyMessage="No items found in this collection."
