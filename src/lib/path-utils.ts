@@ -88,6 +88,7 @@ const getPathHierarchy = (path: string, locations: LocationItem[]): string[] => 
 export {
   getErrorMessage,
   getPathBaseName,
+  getEntryPath,
   getParentPath,
   resolveEntry,
   isHiddenName,

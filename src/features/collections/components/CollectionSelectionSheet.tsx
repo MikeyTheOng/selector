@@ -1,9 +1,24 @@
-import React, { useState } from "react";
-import { Copy, Move, Trash2, Loader2 } from "lucide-react";
-import { ExplorerSelectionSheet } from "@/components/explorer/ExplorerSelectionSheet";
-import { useCollectionItems } from "../hooks/use-collection-items";
+import React, { useCallback, useState } from "react";
+import { Copy, Loader2, Move, Trash2, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { ExportResolutionModal } from "./ExportResolutionModal";
+import { RecentAppsPicker } from "@/components/explorer/RecentAppsPicker";
+import { detectAmbiguity } from "../lib/export-resolution";
+import { getExtension } from "@/lib/formatters";
+import { addRecentApp } from "@/lib/recent-apps";
 import type { ExplorerItem } from "@/types/explorer";
+import { invoke } from "@tauri-apps/api/core";
+import { toast } from "sonner";
+import { useCollectionItems } from "../hooks/use-collection-items";
 
 interface CollectionSelectionSheetProps {
   collectionId: number;
@@ -16,6 +31,17 @@ interface CollectionSelectionSheetProps {
   onRequestCopy?: (entries: ExplorerItem[]) => void;
 }
 
+const getExtensionForPaths = (paths: string[]) => {
+  for (const path of paths) {
+    const name = path.split("/").filter(Boolean).pop() ?? path;
+    const extension = getExtension(name);
+    if (extension) {
+      return extension;
+    }
+  }
+  return undefined;
+};
+
 export const CollectionSelectionSheet: React.FC<CollectionSelectionSheetProps> = ({
   collectionId,
   isOpen,
@@ -26,22 +52,199 @@ export const CollectionSelectionSheet: React.FC<CollectionSelectionSheetProps> =
   onRequestMove,
   onRequestCopy,
 }) => {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showAppPicker, setShowAppPicker] = useState(false);
+  const [pickerExtension, setPickerExtension] = useState<string>("");
+  const [pickerFilePaths, setPickerFilePaths] = useState<string[]>([]);
+  const [pendingAppName, setPendingAppName] = useState<string>("");
+  const [showResolutionModal, setShowResolutionModal] = useState(false);
+
+  const openAppPicker = useCallback((paths: string[], extension?: string) => {
+    if (paths.length === 0) {
+      toast.error("No files selected");
+      return;
+    }
+
+    const resolvedExtension = extension ?? getExtensionForPaths(paths) ?? "folder";
+    setPickerExtension(resolvedExtension);
+    setPickerFilePaths(paths);
+    setShowAppPicker(true);
+  }, []);
+
+  const handleOpenWith = useCallback(async () => {
+    if (detectAmbiguity(entries).isAmbiguous) {
+      setShowResolutionModal(true);
+      return;
+    }
+
+    openAppPicker(entries.map((file) => file.path));
+  }, [entries, openAppPicker]);
+
+  const handleResolutionProceed = useCallback(
+    (resolvedPaths: string[]) => {
+      setShowResolutionModal(false);
+      openAppPicker(resolvedPaths);
+    },
+    [openAppPicker],
+  );
+
+  const handleResolutionClose = useCallback(() => {
+    setShowResolutionModal(false);
+  }, []);
+
+  const handleAppSelected = useCallback(
+    async (appPath: string, appName: string, bundleId?: string) => {
+      setShowAppPicker(false);
+      setIsProcessing(true);
+      setPendingAppName(appName);
+
+      try {
+        const targetApp = bundleId || appPath;
+
+        await invoke("open_files_with_app", {
+          filePaths: pickerFilePaths,
+          appPath: targetApp,
+        });
+
+        addRecentApp(pickerExtension, {
+          name: appName,
+          path: appPath,
+          bundleId,
+        });
+
+        toast.success(
+          `Opened ${pickerFilePaths.length} file${pickerFilePaths.length === 1 ? "" : "s"} with ${appName}`,
+        );
+      } catch (err) {
+        console.error("Failed to open files:", err);
+        toast.error(`Failed to open files with ${appName}`);
+      } finally {
+        setIsProcessing(false);
+        setPendingAppName("");
+      }
+    },
+    [pickerFilePaths, pickerExtension],
+  );
+
+  const handleAppPickerClose = useCallback(() => {
+    setShowAppPicker(false);
+  }, []);
+
   return (
-    <ExplorerSelectionSheet
-      isOpen={isOpen}
-      entries={entries}
-      onClose={onClose}
-      onRemove={onRemove}
-      onClear={onClear}
-      renderActions={(sheetEntries) => (
-        <CollectionSelectionActions
-          collectionId={collectionId}
-          entries={sheetEntries}
-          onRequestMove={onRequestMove}
-          onRequestCopy={onRequestCopy}
-        />
-      )}
-    />
+    <>
+      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <SheetContent
+          side="right"
+          className="flex min-h-0 w-1/3 flex-col md:max-w-none"
+        >
+          <SheetHeader className="cursor-default select-none border-b border-border/60 pb-3 text-left">
+            <SheetTitle className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Selection
+            </SheetTitle>
+            <SheetDescription className="sr-only">
+              Manage your selected items
+            </SheetDescription>
+          </SheetHeader>
+          <ScrollArea className="mt-4 min-h-0 flex-1 pr-3">
+            {entries.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No items selected yet.
+              </p>
+            ) : (
+              <div className="grid gap-2">
+                {entries.map((entry) => (
+                  <div
+                    key={entry.path}
+                    className="flex min-w-0 items-center gap-3 rounded-lg border border-border/60 bg-card/70 px-3 py-2 transition-colors hover:bg-card"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="cursor-default select-text truncate text-sm font-medium text-foreground">
+                        {entry.name}
+                      </p>
+                      <p className="cursor-default select-text truncate text-xs text-muted-foreground">
+                        {entry.path}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemove(entry.path);
+                      }}
+                      className="h-7 w-7 shrink-0 rounded-full border border-border/60 text-muted-foreground hover:text-foreground"
+                      aria-label={`Remove ${entry.name}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+          <div className="mt-4 flex flex-col gap-3 border-t border-border/60 pt-3">
+            <CollectionSelectionActions
+              collectionId={collectionId}
+              entries={entries}
+              onRequestMove={onRequestMove}
+              onRequestCopy={onRequestCopy}
+            />
+
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleOpenWith}
+              disabled={entries.length === 0 || isProcessing}
+              className="w-full"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Opening{pendingAppName ? ` with ${pendingAppName}` : ""}...
+                </>
+              ) : (
+                "Open with..."
+              )}
+            </Button>
+
+            <div className="flex items-center justify-between">
+              <Badge
+                variant="secondary"
+                className="rounded-full border border-border/50 bg-background/70 px-2.5 py-0.5 text-xs text-muted-foreground"
+              >
+                {entries.length} items
+              </Badge>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onClear}
+                className="text-xs font-semibold text-muted-foreground hover:text-foreground"
+              >
+                Clear all
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <RecentAppsPicker
+        isOpen={showAppPicker}
+        extension={pickerExtension}
+        filePaths={pickerFilePaths}
+        onAppSelected={handleAppSelected}
+        onClose={handleAppPickerClose}
+      />
+
+      <ExportResolutionModal
+        isOpen={showResolutionModal}
+        entries={entries}
+        onProceed={handleResolutionProceed}
+        onClose={handleResolutionClose}
+      />
+    </>
   );
 };
 

@@ -10,7 +10,7 @@ export const useExplorerSelection = () => {
     () => Object.values(selectedPaths).sort((a, b) => a.name.localeCompare(b.name)),
     [selectedPaths],
   );
-  
+
   const selectedCount = selectedEntries.length;
 
   const selectItem = useCallback((item: ExplorerItem, options?: { additive?: boolean }) => {
