@@ -1,19 +1,27 @@
 import { useState, useCallback, useMemo } from "react";
 import type { ExplorerItem } from "@/types/explorer";
 
+const isIgnoredEntry = (item: ExplorerItem) => item.name.toLowerCase() === ".ds_store";
+
 export const useExplorerSelection = () => {
   const [selectedPaths, setSelectedPaths] = useState<Record<string, ExplorerItem>>({});
   const [lastClickedPath, setLastClickedPath] = useState<string | null>(null);
   const [focusedPath, setFocusedPath] = useState<string | null>(null);
 
   const selectedEntries = useMemo(
-    () => Object.values(selectedPaths).sort((a, b) => a.name.localeCompare(b.name)),
+    () =>
+      Object.values(selectedPaths)
+        .filter((item) => !isIgnoredEntry(item))
+        .sort((a, b) => a.name.localeCompare(b.name)),
     [selectedPaths],
   );
-  
+
   const selectedCount = selectedEntries.length;
 
   const selectItem = useCallback((item: ExplorerItem, options?: { additive?: boolean }) => {
+    if (isIgnoredEntry(item)) {
+      return;
+    }
     setSelectedPaths((prev) => {
       if (options?.additive) {
         if (prev[item.path]) {
@@ -26,19 +34,26 @@ export const useExplorerSelection = () => {
   }, []);
 
   const selectMultiple = useCallback((items: ExplorerItem[], options?: { additive?: boolean }) => {
+    const filteredItems = items.filter((item) => !isIgnoredEntry(item));
+    if (filteredItems.length === 0) {
+      return;
+    }
     setSelectedPaths((prev) => {
       if (options?.additive) {
         const next = { ...prev };
-        items.forEach((item) => {
+        filteredItems.forEach((item) => {
           next[item.path] = item;
         });
         return next;
       }
-      return Object.fromEntries(items.map((item) => [item.path, item] as const));
+      return Object.fromEntries(filteredItems.map((item) => [item.path, item] as const));
     });
   }, []);
 
   const toggleSelection = useCallback((item: ExplorerItem) => {
+    if (isIgnoredEntry(item)) {
+      return;
+    }
     setSelectedPaths((prev) => {
       const next = { ...prev };
       if (next[item.path]) {
@@ -74,7 +89,10 @@ export const useExplorerSelection = () => {
 
       const start = Math.min(fromIndex, toIndex);
       const end = Math.max(fromIndex, toIndex);
-      const rangeItems = allItems.slice(start, end + 1);
+      const rangeItems = allItems.slice(start, end + 1).filter((item) => !isIgnoredEntry(item));
+      if (rangeItems.length === 0) {
+        return;
+      }
 
       setSelectedPaths((prev) => {
         const next = { ...prev };

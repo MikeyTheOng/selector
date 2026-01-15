@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ExplorerSelectionSheet } from "../ExplorerSelectionSheet";
 import type { ExplorerItem } from "@/types/explorer";
@@ -20,6 +20,30 @@ vi.mock("sonner", () => ({
 vi.mock("@/lib/recent-apps", () => ({
   getRecentApps: vi.fn().mockResolvedValue([]),
   addRecentApp: vi.fn(),
+}));
+
+vi.mock("../RecentAppsPicker", () => ({
+  RecentAppsPicker: ({
+    isOpen,
+    extension,
+    filePaths,
+    onClose,
+  }: {
+    isOpen: boolean;
+    extension: string;
+    filePaths: string[];
+    onClose: () => void;
+  }) =>
+    isOpen ? (
+      <div>
+        <div>RecentAppsPicker</div>
+        <div data-testid="recent-apps-extension">{extension}</div>
+        <div data-testid="recent-apps-paths">{filePaths.join(",")}</div>
+        <button type="button" onClick={onClose}>
+          Close Picker
+        </button>
+      </div>
+    ) : null,
 }));
 
 // Mock file-groups module
@@ -123,5 +147,96 @@ describe("ExplorerSelectionSheet", () => {
   it("displays correct item count", () => {
     render(<ExplorerSelectionSheet {...defaultProps} />);
     expect(screen.getByText("2 items")).toBeDefined();
+  });
+
+  it("opens app picker directly for files-only selection", async () => {
+    render(<ExplorerSelectionSheet {...defaultProps} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /open all with/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("RecentAppsPicker")).toBeDefined();
+    });
+    expect(screen.queryByText(/resolve selection/i)).toBeNull();
+  });
+
+  it("opens resolution modal for selections with folders", () => {
+    const entries = [
+      ...mockEntries,
+      {
+        path: "/path/to/folder",
+        name: "folder",
+        kind: "folder",
+        status: "available",
+        dateModified: new Date(),
+        dateModifiedLabel: "Today",
+        kindLabel: "Folder",
+      } as ExplorerItem,
+    ];
+
+    render(<ExplorerSelectionSheet {...defaultProps} entries={entries} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /open all with/i }));
+
+    expect(screen.getByText(/resolve selection/i)).toBeDefined();
+    expect(screen.queryByText("RecentAppsPicker")).toBeNull();
+  });
+
+  it("proceeds from modal and opens app picker with resolved paths", async () => {
+    const entries = [
+      ...mockEntries,
+      {
+        path: "/path/to/folder",
+        name: "folder",
+        kind: "folder",
+        status: "available",
+        dateModified: new Date(),
+        dateModifiedLabel: "Today",
+        kindLabel: "Folder",
+      } as ExplorerItem,
+    ];
+
+    render(<ExplorerSelectionSheet {...defaultProps} entries={entries} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /open all with/i }));
+    fireEvent.click(screen.getByLabelText(/files only/i));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /open with/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /open with/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("RecentAppsPicker")).toBeDefined();
+    });
+    expect(screen.getByTestId("recent-apps-paths").textContent).toContain(
+      "/path/to/file1.jpg",
+    );
+  });
+
+  it("closes the resolution modal when cancel is clicked", async () => {
+    const entries = [
+      ...mockEntries,
+      {
+        path: "/path/to/folder",
+        name: "folder",
+        kind: "folder",
+        status: "available",
+        dateModified: new Date(),
+        dateModifiedLabel: "Today",
+        kindLabel: "Folder",
+      } as ExplorerItem,
+    ];
+
+    render(<ExplorerSelectionSheet {...defaultProps} entries={entries} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /open all with/i }));
+    fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/resolve selection/i)).toBeNull();
+    });
+    expect(screen.getByRole("button", { name: /open all with/i })).toBeDefined();
   });
 });

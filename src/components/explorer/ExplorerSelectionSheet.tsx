@@ -15,6 +15,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { ExportResolutionModal } from "./ExportResolutionModal";
+import { detectAmbiguity } from "@/features/collections/lib/export-resolution";
+import { getExtension } from "@/lib/formatters";
 import {
   getFileCountLabel,
   getFirstExtension,
@@ -27,6 +30,17 @@ import { ChevronUp, Loader2, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { RecentAppsPicker } from "./RecentAppsPicker";
+
+const getExtensionForPaths = (paths: string[]) => {
+  for (const path of paths) {
+    const name = path.split("/").filter(Boolean).pop() ?? path;
+    const extension = getExtension(name);
+    if (extension) {
+      return extension;
+    }
+  }
+  return undefined;
+};
 
 export interface ExplorerSelectionSheetProps {
   isOpen: boolean;
@@ -55,8 +69,21 @@ export const ExplorerSelectionSheet = ({
   const [pickerExtension, setPickerExtension] = useState<string>("");
   const [pickerFilePaths, setPickerFilePaths] = useState<string[]>([]);
   const [pendingAppName, setPendingAppName] = useState<string>("");
+  const [showResolutionModal, setShowResolutionModal] = useState(false);
 
   const grouped = groupFilesByMediaType(entries);
+
+  const openAppPicker = useCallback((paths: string[], extension?: string) => {
+    if (paths.length === 0) {
+      toast.error("No files selected");
+      return;
+    }
+
+    const resolvedExtension = extension ?? getExtensionForPaths(paths) ?? "folder";
+    setPickerExtension(resolvedExtension);
+    setPickerFilePaths(paths);
+    setShowAppPicker(true);
+  }, []);
 
   const handleOpenWith = useCallback(
     async (mode: OpenWithMode) => {
@@ -65,6 +92,10 @@ export const ExplorerSelectionSheet = ({
 
       switch (mode) {
         case "all":
+          if (detectAmbiguity(entries).isAmbiguous) {
+            setShowResolutionModal(true);
+            return;
+          }
           filesToOpen = entries;
           extension = getFirstExtension(entries);
           break;
@@ -78,22 +109,25 @@ export const ExplorerSelectionSheet = ({
           break;
       }
 
-      if (filesToOpen.length === 0) {
-        toast.error("No files selected");
-        return;
-      }
-
-      if (!extension) {
-        toast.error("Could not determine file type");
-        return;
-      }
-
-      setPickerExtension(extension);
-      setPickerFilePaths(filesToOpen.map((f) => f.path));
-      setShowAppPicker(true);
+      openAppPicker(
+        filesToOpen.map((file) => file.path),
+        extension,
+      );
     },
-    [entries, grouped],
+    [entries, grouped, openAppPicker],
   );
+
+  const handleResolutionProceed = useCallback(
+    (resolvedPaths: string[]) => {
+      setShowResolutionModal(false);
+      openAppPicker(resolvedPaths);
+    },
+    [openAppPicker],
+  );
+
+  const handleResolutionClose = useCallback(() => {
+    setShowResolutionModal(false);
+  }, []);
 
   const handleAppSelected = useCallback(
     async (appPath: string, appName: string, bundleId?: string) => {
@@ -300,6 +334,13 @@ export const ExplorerSelectionSheet = ({
         filePaths={pickerFilePaths}
         onAppSelected={handleAppSelected}
         onClose={handleAppPickerClose}
+      />
+
+      <ExportResolutionModal
+        isOpen={showResolutionModal}
+        entries={entries}
+        onProceed={handleResolutionProceed}
+        onClose={handleResolutionClose}
       />
     </>
   );

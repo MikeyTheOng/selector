@@ -10,7 +10,10 @@ import {
   resolveFoldersOnly,
 } from "../lib/export-resolution";
 
-export type ExportResolutionStrategy = "files-only" | "folders-only" | "expand-folders";
+export type ExportResolutionStrategy =
+  | "files-only"
+  | "folders-only"
+  | "expand-folders";
 
 type FileKindSelection = Record<FileKind, boolean>;
 
@@ -29,11 +32,13 @@ export const useExportResolution = (items: ExplorerItem[]) => {
     useState<ExportResolutionStrategy | null>(null);
   const [resolvedItems, setResolvedItems] = useState<ExplorerItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [fileKindSelection, setFileKindSelection] = useState<FileKindSelection>({
-    image: false,
-    video: false,
-    document: false,
-  });
+  const [fileKindSelection, setFileKindSelection] = useState<FileKindSelection>(
+    {
+      image: false,
+      video: false,
+      document: false,
+    },
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -103,7 +108,8 @@ export const useExportResolution = (items: ExplorerItem[]) => {
       .map((item) => item.path);
   }, [fileKindSelection, resolutionStrategy, resolvedItems]);
 
-  const isEmpty = Boolean(resolutionStrategy) && !isLoading && resolvedPaths.length === 0;
+  const isEmpty =
+    Boolean(resolutionStrategy) && !isLoading && resolvedPaths.length === 0;
 
   return {
     resolutionStrategy,
