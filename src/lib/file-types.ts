@@ -1,6 +1,6 @@
 export type FileKind = "image" | "video" | "document";
 
-export const IMAGE_EXTENSIONS = [
+const IMAGE_EXTENSIONS = [
   ".jpg",
   ".jpeg",
   ".png",
@@ -22,7 +22,7 @@ export const IMAGE_EXTENSIONS = [
   ".srw",
 ] as const;
 
-export const VIDEO_EXTENSIONS = [
+const VIDEO_EXTENSIONS = [
   ".mp4",
   ".mov",
   ".avi",

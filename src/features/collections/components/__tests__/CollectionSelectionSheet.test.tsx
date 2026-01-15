@@ -49,20 +49,6 @@ vi.mock("@/components/explorer/RecentAppsPicker", () => ({
     ) : null,
 }));
 
-vi.mock("@/lib/file-groups", () => ({
-  groupFilesByMediaType: vi.fn((files) => ({
-    images: { type: "image", files: [], extensions: new Set() },
-    videos: { type: "video", files: [], extensions: new Set() },
-    others: { type: "other", files: files, extensions: new Set() },
-    hasImages: false,
-    hasVideos: false,
-    hasOthers: files.length > 0,
-    hasMultipleTypes: false,
-  })),
-  getFirstExtension: vi.fn((files) => files[0]?.extension),
-  getFileCountLabel: vi.fn((count, type) => `${count} ${type}s`),
-}));
-
 describe("CollectionSelectionSheet", () => {
   const mockEntries: ExplorerItem[] = [
     {
@@ -128,14 +114,14 @@ describe("CollectionSelectionSheet", () => {
     expect(defaultProps.onClear).toHaveBeenCalled();
   });
 
-  it("shows Open All with button", () => {
+  it("shows Open with button", () => {
     render(<CollectionSelectionSheet {...defaultProps} />);
-    expect(screen.getByText("Open All with...")).toBeDefined();
+    expect(screen.getByText("Open with...")).toBeDefined();
   });
 
   it("disables button when no entries", () => {
     render(<CollectionSelectionSheet {...defaultProps} entries={[]} />);
-    const button = screen.getByText("Open All with...") as HTMLButtonElement;
+    const button = screen.getByText("Open with...") as HTMLButtonElement;
     expect(button.disabled).toBe(true);
   });
 
@@ -154,7 +140,7 @@ describe("CollectionSelectionSheet", () => {
   it("opens app picker directly for files-only selection", async () => {
     render(<CollectionSelectionSheet {...defaultProps} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /open all with/i }));
+    fireEvent.click(screen.getByRole("button", { name: /open with/i }));
 
     await waitFor(() => {
       expect(screen.getByText("RecentAppsPicker")).toBeDefined();
@@ -178,7 +164,7 @@ describe("CollectionSelectionSheet", () => {
 
     render(<CollectionSelectionSheet {...defaultProps} entries={entries} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /open all with/i }));
+    fireEvent.click(screen.getByRole("button", { name: /open with/i }));
 
     expect(screen.getByText(/resolve selection/i)).toBeDefined();
     expect(screen.queryByText("RecentAppsPicker")).toBeNull();
@@ -200,7 +186,7 @@ describe("CollectionSelectionSheet", () => {
 
     render(<CollectionSelectionSheet {...defaultProps} entries={entries} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /open all with/i }));
+    fireEvent.click(screen.getByRole("button", { name: /open with/i }));
     fireEvent.click(screen.getByLabelText(/files only/i));
 
     await waitFor(() => {
@@ -233,12 +219,12 @@ describe("CollectionSelectionSheet", () => {
 
     render(<CollectionSelectionSheet {...defaultProps} entries={entries} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /open all with/i }));
+    fireEvent.click(screen.getByRole("button", { name: /open with/i }));
     fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
 
     await waitFor(() => {
       expect(screen.queryByText(/resolve selection/i)).toBeNull();
     });
-    expect(screen.getByRole("button", { name: /open all with/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /open with/i })).toBeDefined();
   });
 });

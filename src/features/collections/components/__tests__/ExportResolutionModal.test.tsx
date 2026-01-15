@@ -110,7 +110,7 @@ describe("ExportResolutionModal", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /open with/i })).toBeDisabled();
-      expect(screen.getByText(/no files match your current filters/i)).toBeDefined();
+      expect(screen.getByText(/no files match your selection/i)).toBeDefined();
     });
   });
 

@@ -1,8 +1,6 @@
 import type { ExplorerItem } from "@/types/explorer";
 import { getFileKind } from "./file-types";
 
-export { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from "./file-types";
-
 export type MediaType = "image" | "video" | "other";
 
 export interface FileGroup {

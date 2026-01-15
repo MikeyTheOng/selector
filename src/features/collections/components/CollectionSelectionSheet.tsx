@@ -1,21 +1,7 @@
 import React, { useCallback, useState } from "react";
-import {
-  ChevronUp,
-  Copy,
-  Loader2,
-  Move,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Copy, Loader2, Move, Trash2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -28,11 +14,6 @@ import { ExportResolutionModal } from "./ExportResolutionModal";
 import { RecentAppsPicker } from "@/components/explorer/RecentAppsPicker";
 import { detectAmbiguity } from "../lib/export-resolution";
 import { getExtension } from "@/lib/formatters";
-import {
-  getFileCountLabel,
-  getFirstExtension,
-  groupFilesByMediaType,
-} from "@/lib/file-groups";
 import { addRecentApp } from "@/lib/recent-apps";
 import type { ExplorerItem } from "@/types/explorer";
 import { invoke } from "@tauri-apps/api/core";
@@ -61,8 +42,6 @@ const getExtensionForPaths = (paths: string[]) => {
   return undefined;
 };
 
-type OpenWithMode = "all" | "images" | "videos";
-
 export const CollectionSelectionSheet: React.FC<CollectionSelectionSheetProps> = ({
   collectionId,
   isOpen,
@@ -80,8 +59,6 @@ export const CollectionSelectionSheet: React.FC<CollectionSelectionSheetProps> =
   const [pendingAppName, setPendingAppName] = useState<string>("");
   const [showResolutionModal, setShowResolutionModal] = useState(false);
 
-  const grouped = groupFilesByMediaType(entries);
-
   const openAppPicker = useCallback((paths: string[], extension?: string) => {
     if (paths.length === 0) {
       toast.error("No files selected");
@@ -94,37 +71,14 @@ export const CollectionSelectionSheet: React.FC<CollectionSelectionSheetProps> =
     setShowAppPicker(true);
   }, []);
 
-  const handleOpenWith = useCallback(
-    async (mode: OpenWithMode) => {
-      let filesToOpen: ExplorerItem[] = [];
-      let extension: string | undefined;
+  const handleOpenWith = useCallback(async () => {
+    if (detectAmbiguity(entries).isAmbiguous) {
+      setShowResolutionModal(true);
+      return;
+    }
 
-      switch (mode) {
-        case "all":
-          if (detectAmbiguity(entries).isAmbiguous) {
-            setShowResolutionModal(true);
-            return;
-          }
-          filesToOpen = entries;
-          extension = getFirstExtension(entries);
-          break;
-        case "images":
-          filesToOpen = grouped.images.files;
-          extension = Array.from(grouped.images.extensions)[0];
-          break;
-        case "videos":
-          filesToOpen = grouped.videos.files;
-          extension = Array.from(grouped.videos.extensions)[0];
-          break;
-      }
-
-      openAppPicker(
-        filesToOpen.map((file) => file.path),
-        extension,
-      );
-    },
-    [entries, grouped, openAppPicker],
-  );
+    openAppPicker(entries.map((file) => file.path));
+  }, [entries, openAppPicker]);
 
   const handleResolutionProceed = useCallback(
     (resolvedPaths: string[]) => {
@@ -175,8 +129,6 @@ export const CollectionSelectionSheet: React.FC<CollectionSelectionSheetProps> =
   const handleAppPickerClose = useCallback(() => {
     setShowAppPicker(false);
   }, []);
-
-  const showDropdown = grouped.hasMultipleTypes;
 
   return (
     <>
@@ -239,87 +191,23 @@ export const CollectionSelectionSheet: React.FC<CollectionSelectionSheetProps> =
               onRequestCopy={onRequestCopy}
             />
 
-            {showDropdown ? (
-              <ButtonGroup className="w-full">
-                <Button
-                  type="button"
-                  variant="default"
-                  size="sm"
-                  onClick={() => handleOpenWith("all")}
-                  disabled={entries.length === 0 || isProcessing}
-                  className="flex-1"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Opening{pendingAppName ? ` with ${pendingAppName}` : ""}
-                      ...
-                    </>
-                  ) : (
-                    `Open All with...`
-                  )}
-                </Button>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="default"
-                      size="sm"
-                      disabled={entries.length === 0 || isProcessing}
-                      className="w-auto px-2"
-                    >
-                      <ChevronUp className="h-4 w-4" />
-                      <span className="sr-only">More options</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {grouped.hasImages && (
-                      <DropdownMenuItem
-                        onClick={() => handleOpenWith("images")}
-                      >
-                        Open Photos with... (
-                        {getFileCountLabel(
-                          grouped.images.files.length,
-                          "image",
-                        )}
-                        )
-                      </DropdownMenuItem>
-                    )}
-                    {grouped.hasVideos && (
-                      <DropdownMenuItem
-                        onClick={() => handleOpenWith("videos")}
-                      >
-                        Open Videos with... (
-                        {getFileCountLabel(
-                          grouped.videos.files.length,
-                          "video",
-                        )}
-                        )
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </ButtonGroup>
-            ) : (
-              <Button
-                type="button"
-                variant="default"
-                size="sm"
-                onClick={() => handleOpenWith("all")}
-                disabled={entries.length === 0 || isProcessing}
-                className="w-full"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Opening{pendingAppName ? ` with ${pendingAppName}` : ""}...
-                  </>
-                ) : (
-                  "Open All with..."
-                )}
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleOpenWith}
+              disabled={entries.length === 0 || isProcessing}
+              className="w-full"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Opening{pendingAppName ? ` with ${pendingAppName}` : ""}...
+                </>
+              ) : (
+                "Open with..."
+              )}
+            </Button>
 
             <div className="flex items-center justify-between">
               <Badge

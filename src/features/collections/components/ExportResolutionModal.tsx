@@ -181,12 +181,10 @@ export const ExportResolutionModal = ({
 
           {isEmpty && (
             <Alert variant="destructive">
-              <AlertTitle>No files selected to export</AlertTitle>
+              <AlertTitle>No files match your selection</AlertTitle>
               <AlertDescription>
-                Your current filters exclude all files. Adjust the resolution
-                option (Files only / Folders only / Expand folders) or re-enable
-                file types above, then click “Open with…” to export to another
-                app.
+                Adjust the resolution option (Files only / Folders only / Expand
+                folders) or re-enable file types above to continue.
               </AlertDescription>
             </Alert>
           )}
