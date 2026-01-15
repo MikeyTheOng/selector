@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 import { getFilename } from "../hooks/use-collection-items";
 import { useCollections } from "../hooks/use-collections";

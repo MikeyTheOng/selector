@@ -3,10 +3,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CollectionToolbar } from '../CollectionToolbar';
 import { useExplorerSelection } from '@/hooks/explorer/use-explorer-selection';
 import { useCollections } from '../../hooks/use-collections';
+import { useCollectionItems } from '../../hooks/use-collection-items';
 import type { ExplorerItem } from '@/types/explorer';
 
 vi.mock('@/hooks/explorer/use-explorer-selection');
 vi.mock('../../hooks/use-collections');
+vi.mock('../../hooks/use-collection-items');
 
 describe('CollectionToolbar', () => {
   const mockSelection = {
@@ -41,6 +43,26 @@ describe('CollectionToolbar', () => {
       isLoading: false,
       error: null
     });
+    vi.mocked(useCollectionItems).mockReturnValue({
+      items: [
+        {
+          id: 1,
+          collection_id: 1,
+          path: '/1',
+          item_type: 'file',
+          added_at: '2024-01-01',
+          status: 'available',
+        },
+      ],
+      isLoading: false,
+      error: null,
+      addItem: vi.fn(),
+      removeItem: vi.fn(),
+      removeItemByPath: vi.fn(),
+      refetch: vi.fn(),
+      relinkItem: vi.fn(),
+      relinkFolder: vi.fn(),
+    });
   });
 
   const defaultProps = {
@@ -54,9 +76,9 @@ describe('CollectionToolbar', () => {
     vi.clearAllMocks();
   });
 
-  it('renders selection button', () => {
+  it('renders open-with button when no items selected', () => {
     render(<CollectionToolbar {...defaultProps} />);
-    const button = screen.getByRole('button', { name: /selection/i });
+    const button = screen.getByRole('button', { name: /open with/i });
     expect(button).toBeDefined();
   });
 
@@ -94,9 +116,20 @@ describe('CollectionToolbar', () => {
     expect(screen.getByText('2')).toBeDefined();
   });
 
-  it('disables button when no items selected', () => {
+  it('disables open-with button when no collection entries', () => {
+    vi.mocked(useCollectionItems).mockReturnValue({
+      items: [],
+      isLoading: false,
+      error: null,
+      addItem: vi.fn(),
+      removeItem: vi.fn(),
+      removeItemByPath: vi.fn(),
+      refetch: vi.fn(),
+      relinkItem: vi.fn(),
+      relinkFolder: vi.fn(),
+    });
     render(<CollectionToolbar {...defaultProps} />);
-    const button = screen.getByRole('button', { name: /selection/i });
+    const button = screen.getByRole('button', { name: /open with/i });
     expect(button).toBeDisabled();
   });
 
