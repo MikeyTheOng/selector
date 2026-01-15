@@ -18,6 +18,7 @@ import {
   type ExportResolutionStrategy,
 } from "../hooks/use-export-resolution";
 import type { FileKind } from "@/lib/file-types";
+import { ExternalLink } from "lucide-react";
 
 interface ExportResolutionModalProps {
   isOpen: boolean;
@@ -199,6 +200,7 @@ export const ExportResolutionModal = ({
             onClick={handleProceed}
             disabled={isProceedDisabled}
           >
+            <ExternalLink className="h-4 w-4" />
             Open with...
           </Button>
         </DialogFooter>
