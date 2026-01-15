@@ -32,22 +32,6 @@ export const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === " ") {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown, { capture: true });
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown, { capture: true });
-    };
-  }, [isOpen]);
-
   const handleSelectTarget = async (targetId: number) => {
     if (isProcessing) return;
 
