@@ -1,43 +1,7 @@
 import type { ExplorerItem } from "@/types/explorer";
+import { getFileKind } from "./file-types";
 
-export const IMAGE_EXTENSIONS = [
-  ".jpg",
-  ".jpeg",
-  ".png",
-  ".gif",
-  ".bmp",
-  ".tiff",
-  ".tif",
-  ".webp",
-  ".heic",
-  ".heif",
-  ".raw",
-  ".cr2",
-  ".nef",
-  ".arw",
-  ".dng",
-  ".orf",
-  ".rw2",
-  ".pef",
-  ".srw",
-] as const;
-
-export const VIDEO_EXTENSIONS = [
-  ".mp4",
-  ".mov",
-  ".avi",
-  ".mkv",
-  ".wmv",
-  ".flv",
-  ".webm",
-  ".m4v",
-  ".mpg",
-  ".mpeg",
-  ".3gp",
-  ".mts",
-  ".m2ts",
-  ".vob",
-] as const;
+export { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from "./file-types";
 
 export type MediaType = "image" | "video" | "other";
 
@@ -58,20 +22,8 @@ export interface GroupedFiles {
 }
 
 export function getMediaType(extension: string | undefined): MediaType {
-  if (!extension) return "other";
-
-  const normalized = extension.toLowerCase();
-  const withDot = normalized.startsWith(".") ? normalized : `.${normalized}`;
-
-  if ((IMAGE_EXTENSIONS as readonly string[]).includes(withDot)) {
-    return "image";
-  }
-
-  if ((VIDEO_EXTENSIONS as readonly string[]).includes(withDot)) {
-    return "video";
-  }
-
-  return "other";
+  const kind = getFileKind(extension);
+  return kind === "document" ? "other" : kind;
 }
 
 export function getFirstExtension(files: ExplorerItem[]): string | undefined {

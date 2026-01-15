@@ -94,6 +94,10 @@ describe('formatters', () => {
       expect(getKindLabel('jpg')).toBe('JPEG image');
     });
 
+    it('supports extensions with a leading dot', () => {
+      expect(getKindLabel('.jpg')).toBe('JPEG image');
+    });
+
     it('returns uppercase extension for unknown extensions', () => {
       expect(getKindLabel('xyz')).toBe('XYZ');
     });
