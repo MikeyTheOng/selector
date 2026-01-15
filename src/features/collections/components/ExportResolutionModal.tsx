@@ -10,6 +10,8 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { ExplorerItem } from "@/types/explorer";
 import {
   useExportResolution,
@@ -74,6 +76,32 @@ export const ExportResolutionModal = ({
     onProceed(resolvedPaths);
   };
 
+  const resolutionOptions: Array<{
+    id: string;
+    value: ExportResolutionStrategy;
+    title: string;
+    description: string;
+  }> = [
+    {
+      id: "export-resolution-files-only",
+      value: "files-only",
+      title: "Files only",
+      description: "Include top-level files and ignore folders.",
+    },
+    {
+      id: "export-resolution-folders-only",
+      value: "folders-only",
+      title: "Folders only",
+      description: "Export folder references only.",
+    },
+    {
+      id: "export-resolution-expand-folders",
+      value: "expand-folders",
+      title: "Expand folders",
+      description: "Recursively include all files inside folders.",
+    },
+  ];
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
@@ -90,33 +118,34 @@ export const ExportResolutionModal = ({
             onValueChange={handleResolutionChange}
             className="gap-2"
           >
-            <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border/60 p-3 text-left">
-              <RadioGroupItem value="files-only" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Files only</p>
-                <p className="text-xs text-muted-foreground">
-                  Include top-level files and ignore folders.
-                </p>
-              </div>
-            </label>
-            <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border/60 p-3 text-left">
-              <RadioGroupItem value="folders-only" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Folders only</p>
-                <p className="text-xs text-muted-foreground">
-                  Export folder references only.
-                </p>
-              </div>
-            </label>
-            <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border/60 p-3 text-left">
-              <RadioGroupItem value="expand-folders" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Expand folders</p>
-                <p className="text-xs text-muted-foreground">
-                  Recursively include all files inside folders.
-                </p>
-              </div>
-            </label>
+            {resolutionOptions.map((option) => (
+              <label
+                key={option.value}
+                htmlFor={option.id}
+                className="block text-left"
+              >
+                <Card
+                  className={[
+                    "cursor-pointer py-0 transition-colors",
+                    resolutionStrategy === option.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border/60 hover:bg-muted/30",
+                  ].join(" ")}
+                >
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-3">
+                      <RadioGroupItem id={option.id} value={option.value} />
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">{option.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {option.description}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </label>
+            ))}
           </RadioGroup>
 
           {showKindFilters && (
@@ -145,13 +174,21 @@ export const ExportResolutionModal = ({
           )}
 
           <div className="rounded-md border border-border/60 p-3 text-xs text-muted-foreground">
-            {isLoading ? "Resolving files..." : `${resolvedCountLabel} selected`}
+            {isLoading
+              ? "Resolving files..."
+              : `${resolvedCountLabel} selected`}
           </div>
 
           {isEmpty && (
-            <div className="rounded-md border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground">
-              No files match your current filters.
-            </div>
+            <Alert variant="destructive">
+              <AlertTitle>No files selected to export</AlertTitle>
+              <AlertDescription>
+                Your current filters exclude all files. Adjust the resolution
+                option (Files only / Folders only / Expand folders) or re-enable
+                file types above, then click “Open with…” to export to another
+                app.
+              </AlertDescription>
+            </Alert>
           )}
         </div>
 
@@ -159,7 +196,11 @@ export const ExportResolutionModal = ({
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="button" onClick={handleProceed} disabled={isProceedDisabled}>
+          <Button
+            type="button"
+            onClick={handleProceed}
+            disabled={isProceedDisabled}
+          >
             Open with...
           </Button>
         </DialogFooter>
