@@ -42,6 +42,8 @@ type UseExplorerShortcutsOptions = {
   isPreviewActive: boolean;
   togglePreview: (path: string) => void;
   closePreview: () => void;
+  /** Optional callback for activating any item on Enter (overrides folder-only behavior) */
+  onActivateItem?: (item: ExplorerItem) => void;
 };
 
 export const useExplorerShortcuts = ({
@@ -60,6 +62,7 @@ export const useExplorerShortcuts = ({
   isPreviewActive,
   togglePreview,
   closePreview,
+  onActivateItem,
 }: UseExplorerShortcutsOptions) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyEvent) => {
@@ -164,8 +167,12 @@ export const useExplorerShortcuts = ({
             event.preventDefault();
             if (focusedPath) {
               const item = currentItems.find((i) => i.path === focusedPath);
-              if (item && item.kind === "folder") {
-                onSelectFolder(item.path);
+              if (item) {
+                if (onActivateItem) {
+                  onActivateItem(item);
+                } else if (item.kind === "folder") {
+                  onSelectFolder(item.path);
+                }
               }
             }
           }
@@ -279,5 +286,6 @@ export const useExplorerShortcuts = ({
     isPreviewActive,
     togglePreview,
     closePreview,
+    onActivateItem,
   ]);
 };

@@ -1,9 +1,20 @@
-import { createContext, useContext, useEffect, useMemo, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  ReactNode,
+} from "react";
 import { useFolderListing } from "../hooks/use-folder-listing";
 import { useExplorerSelection } from "@/hooks/explorer/use-explorer-selection";
-import { useQuickLook } from "../hooks/use-quick-look";
+import { useQuickLook } from "@/hooks/use-quick-look";
 import { useExplorerViewState } from "@/hooks/explorer/use-explorer-view-state";
-import type { LocationItem, FolderListing, ExplorerItem, ExplorerViewMode } from "@/types/explorer";
+import type {
+  LocationItem,
+  FolderListing,
+  ExplorerItem,
+  ExplorerViewMode,
+} from "@/types/explorer";
 
 interface ExplorerContextType {
   // State
@@ -22,8 +33,15 @@ interface ExplorerContextType {
   ensureListing: (path: string) => void;
   getListingForPath: (path: string) => FolderListing | undefined;
   selectItem: (item: ExplorerItem) => void;
-  selectMultiple: (items: ExplorerItem[], options?: { additive?: boolean }) => void;
-  selectRange: (start: ExplorerItem, end: ExplorerItem, allItems: ExplorerItem[]) => void;
+  selectMultiple: (
+    items: ExplorerItem[],
+    options?: { additive?: boolean },
+  ) => void;
+  selectRange: (
+    start: ExplorerItem,
+    end: ExplorerItem,
+    allItems: ExplorerItem[],
+  ) => void;
   toggleSelection: (item: ExplorerItem) => void;
   removeSelection: (path: string) => void;
   clearSelections: () => void;
@@ -37,12 +55,16 @@ interface ExplorerContextType {
   setViewMode: (mode: ExplorerViewMode) => void;
 }
 
-const ExplorerContext = createContext<ExplorerContextType | undefined>(undefined);
+const ExplorerContext = createContext<ExplorerContextType | undefined>(
+  undefined,
+);
 
 export const useExplorerContext = () => {
   const context = useContext(ExplorerContext);
   if (!context) {
-    throw new Error("useExplorerContext must be used within an ExplorerProvider");
+    throw new Error(
+      "useExplorerContext must be used within an ExplorerProvider",
+    );
   }
   return context;
 };
@@ -60,7 +82,10 @@ export const ExplorerProvider = ({
   locations,
   focusItemPath,
 }: ExplorerProviderProps) => {
-  const { listing, ensureListing, getListingForPath } = useFolderListing(folderId, locations);
+  const { listing, ensureListing, getListingForPath } = useFolderListing(
+    folderId,
+    locations,
+  );
   const {
     selectedPaths,
     selectedEntries,
@@ -78,8 +103,11 @@ export const ExplorerProvider = ({
     focusItem,
     clearFocus,
   } = useExplorerSelection();
-  const { isPreviewActive, togglePreview, updatePreview, closePreview } = useQuickLook();
-  const { viewMode, setViewMode } = useExplorerViewState({ initialViewMode: "list" });
+  const { isPreviewActive, togglePreview, updatePreview, closePreview } =
+    useQuickLook();
+  const { viewMode, setViewMode } = useExplorerViewState({
+    initialViewMode: "list",
+  });
   useEffect(() => {
     if (viewMode === "column") return;
     clearLastClickedItem();
@@ -93,12 +121,12 @@ export const ExplorerProvider = ({
     // listing.files contains FileRows. FileRow is compatible with ExplorerItem (as ExplorerFileItem if we add kind)
     // But listing.files elements might NOT have 'kind' property if they come from useFolderListing directly?
     // Let's check useFolderListing.
-    
+
     // Assuming listing.files are FileRows.
     // If FileRow doesn't have 'kind', we can't pass it to focusItem (expects ExplorerItem).
     // We might need to cast or map.
-    
-    const fileToFocus = listing.files.find(f => f.path === focusItemPath);
+
+    const fileToFocus = listing.files.find((f) => f.path === focusItemPath);
     if (fileToFocus) {
       // In Phase 1 we updated types, but did we update useFolderListing to return ExplorerItems?
       // No, useFolderListing returns FolderListing which has files: FileRow[].
@@ -106,11 +134,17 @@ export const ExplorerProvider = ({
       // Yes, FileRow = BaseExplorerItem & { ... }.
       // But it does NOT have `kind: 'file'`.
       // ExplorerFileItem = FileRow & { kind: 'file' }.
-      
+
       // So we need to construct the ExplorerItem.
-      focusItem({ ...fileToFocus, kind: 'file' });
+      focusItem({ ...fileToFocus, kind: "file" });
     }
-  }, [focusItemPath, listing.isLoading, listing.error, listing.files, focusItem]);
+  }, [
+    focusItemPath,
+    listing.isLoading,
+    listing.error,
+    listing.files,
+    focusItem,
+  ]);
 
   const value = useMemo(
     () => ({
@@ -171,5 +205,9 @@ export const ExplorerProvider = ({
     ],
   );
 
-  return <ExplorerContext.Provider value={value}>{children}</ExplorerContext.Provider>;
+  return (
+    <ExplorerContext.Provider value={value}>
+      {children}
+    </ExplorerContext.Provider>
+  );
 };

@@ -10,7 +10,7 @@ export {
 // Hooks
 export { useFolderListing } from "./hooks/use-folder-listing";
 export { useLocations } from "./hooks/use-locations";
-export { useQuickLook } from "./hooks/use-quick-look";
+export { useQuickLook } from "@/hooks/use-quick-look";
 export { useNavigation } from "@/hooks/use-navigation";
 
 // Types

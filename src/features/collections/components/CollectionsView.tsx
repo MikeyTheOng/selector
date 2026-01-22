@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { toast } from "sonner";
 import { useCollections } from "../hooks/use-collections";
@@ -7,6 +7,8 @@ import { DuplicateItemError } from "../errors";
 import { collectionItemToExplorerItem } from "../lib/utils";
 import { useExplorerViewState } from "@/hooks/explorer/use-explorer-view-state";
 import { useExplorerSelection } from "@/hooks/explorer/use-explorer-selection";
+import { useExplorerShortcuts } from "@/hooks/explorer/use-explorer-shortcuts";
+import { useQuickLook } from "@/hooks/use-quick-look";
 import { useNavigation } from "@/hooks/use-navigation";
 import { getParentPath } from "@/lib/path-utils";
 import { ExplorerListView } from "@/components/explorer/ExplorerListView";
@@ -40,10 +42,12 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
     lastClickedPath,
     selectItem,
     selectMultiple,
+    selectRange,
     toggleSelection,
     focusItem,
     removeSelection,
-    clearSelections
+    clearSelections,
+    clearFocus,
   } = selection;
   const { viewMode } = useExplorerViewState({ initialViewMode: "list" });
   const { navigateToExplorer } = useNavigation();
@@ -55,7 +59,9 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
     openCopyDialog,
     closeMoveCopyDialog,
   } = useMoveCopyDialog();
-
+  const { isPreviewActive, togglePreview, updatePreview, closePreview } =
+    useQuickLook();
+  
   const collection = collections.find((c) => c.id === parsedId);
 
   const handleActivateItem = async (item: ExplorerItem) => {
@@ -100,6 +106,39 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
   const explorerItems = useMemo(() =>
     items.map(collectionItemToExplorerItem),
     [items]);
+
+  // Keyboard shortcuts
+  const getCurrentViewItems = useCallback(() => explorerItems, [explorerItems]);
+  const noopSelectFolder = useCallback(() => {}, []);
+
+  useExplorerShortcuts({
+    getCurrentViewItems,
+    selectMultiple,
+    clearSelections,
+    clearFocus,
+    focusedPath,
+    viewMode: "list",
+    folderId: null,
+    onSelectFolder: noopSelectFolder,
+    focusItem,
+    toggleSelection,
+    selectRange,
+    lastClickedPath,
+    isPreviewActive,
+    togglePreview,
+    closePreview,
+    onActivateItem: handleActivateItem,
+  });
+
+  // Sync Quick Preview with focused item
+  useEffect(() => {
+    if (isPreviewActive && focusedPath) {
+      const timer = setTimeout(() => {
+        updatePreview(focusedPath);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [focusedPath, isPreviewActive, updatePreview]);
 
   const handleItemClick = (item: ExplorerItem, event: React.MouseEvent) => {
     // Find original item logic is mostly needed if we need domain fields not in ExplorerItem
