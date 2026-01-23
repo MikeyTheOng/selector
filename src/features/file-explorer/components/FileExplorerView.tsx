@@ -1,4 +1,4 @@
-import { useCallback, useEffect, type ComponentType } from "react";
+import { useCallback, type ComponentType } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ExplorerToolbar } from "@/components/explorer/ExplorerToolbar";
 import type { ExplorerSelectionPanelProps } from "@/components/explorer/ExplorerSelectionPanel";
@@ -48,9 +48,7 @@ export const FileExplorerView = ({
     clearFocus,
     isPreviewActive,
     togglePreview,
-    updatePreview,
     closePreview,
-    lastPreviewedPathRef,
     viewMode,
     setViewMode,
   } = useExplorerContext();
@@ -95,18 +93,6 @@ export const FileExplorerView = ({
     },
     [selectItem, toggleSelection, focusItem],
   );
-
-  // Sync Quick Preview with focused item
-  useEffect(() => {
-    // Skip if focused path is already being previewed (avoids redundant update on open)
-    if (isPreviewActive && focusedPath && focusedPath !== lastPreviewedPathRef.current) {
-      const timer = setTimeout(() => {
-        updatePreview(focusedPath);
-        lastPreviewedPathRef.current = focusedPath;
-      }, 150);
-      return () => clearTimeout(timer);
-    }
-  }, [focusedPath, isPreviewActive, updatePreview, lastPreviewedPathRef]);
 
   // Helper to get items for the current active view context (for keyboard nav)
   const getCurrentViewItems = useCallback(() => {

@@ -62,16 +62,6 @@ describe('useQuickLook', () => {
     expect(result.current.isPreviewActive).toBe(false);
   });
 
-  it('updates preview', async () => {
-    const { result } = renderHook(() => useQuickLook());
-
-    await act(async () => {
-      await result.current.updatePreview('/new/path');
-    });
-
-    expect(mockInvoke).toHaveBeenCalledWith('update_preview', { path: '/new/path' });
-  });
-
   it('closes preview', async () => {
     mockInvoke.mockResolvedValue(false);
 

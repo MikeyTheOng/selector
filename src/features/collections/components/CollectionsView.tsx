@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { toast } from "sonner";
 import { useCollections } from "../hooks/use-collections";
@@ -59,13 +59,9 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
     openCopyDialog,
     closeMoveCopyDialog,
   } = useMoveCopyDialog();
-  const {
-    isPreviewActive,
-    togglePreview,
-    updatePreview,
-    closePreview,
-    lastPreviewedPathRef,
-  } = useQuickLook();
+  const { isPreviewActive, togglePreview, closePreview } = useQuickLook({
+    focusedPath,
+  });
   
   const collection = collections.find((c) => c.id === parsedId);
 
@@ -134,18 +130,6 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
     closePreview,
     onActivateItem: handleActivateItem,
   });
-
-  // Sync Quick Preview with focused item
-  useEffect(() => {
-    // Skip if focused path is already being previewed (avoids redundant update on open)
-    if (isPreviewActive && focusedPath && focusedPath !== lastPreviewedPathRef.current) {
-      const timer = setTimeout(() => {
-        updatePreview(focusedPath);
-        lastPreviewedPathRef.current = focusedPath;
-      }, 150);
-      return () => clearTimeout(timer);
-    }
-  }, [focusedPath, isPreviewActive, updatePreview, lastPreviewedPathRef]);
 
   const handleItemClick = (item: ExplorerItem, event: React.MouseEvent) => {
     // Find original item logic is mostly needed if we need domain fields not in ExplorerItem
