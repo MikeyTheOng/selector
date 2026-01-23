@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   ReactNode,
+  MutableRefObject,
 } from "react";
 import { useFolderListing } from "../hooks/use-folder-listing";
 import { useExplorerSelection } from "@/hooks/explorer/use-explorer-selection";
@@ -52,6 +53,7 @@ interface ExplorerContextType {
   togglePreview: (path: string) => void;
   updatePreview: (path: string) => void;
   closePreview: () => void;
+  lastPreviewedPathRef: MutableRefObject<string | null>;
   setViewMode: (mode: ExplorerViewMode) => void;
 }
 
@@ -103,8 +105,13 @@ export const ExplorerProvider = ({
     focusItem,
     clearFocus,
   } = useExplorerSelection();
-  const { isPreviewActive, togglePreview, updatePreview, closePreview } =
-    useQuickLook();
+  const {
+    isPreviewActive,
+    togglePreview,
+    updatePreview,
+    closePreview,
+    lastPreviewedPathRef,
+  } = useQuickLook();
   const { viewMode, setViewMode } = useExplorerViewState({
     initialViewMode: "list",
   });
@@ -173,6 +180,7 @@ export const ExplorerProvider = ({
       togglePreview,
       updatePreview,
       closePreview,
+      lastPreviewedPathRef,
       setViewMode,
     }),
     [
@@ -201,6 +209,7 @@ export const ExplorerProvider = ({
       togglePreview,
       updatePreview,
       closePreview,
+      lastPreviewedPathRef,
       setViewMode,
     ],
   );

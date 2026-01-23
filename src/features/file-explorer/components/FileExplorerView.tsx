@@ -50,6 +50,7 @@ export const FileExplorerView = ({
     togglePreview,
     updatePreview,
     closePreview,
+    lastPreviewedPathRef,
     viewMode,
     setViewMode,
   } = useExplorerContext();
@@ -97,13 +98,15 @@ export const FileExplorerView = ({
 
   // Sync Quick Preview with focused item
   useEffect(() => {
-    if (isPreviewActive && focusedPath) {
+    // Skip if focused path is already being previewed (avoids redundant update on open)
+    if (isPreviewActive && focusedPath && focusedPath !== lastPreviewedPathRef.current) {
       const timer = setTimeout(() => {
         updatePreview(focusedPath);
+        lastPreviewedPathRef.current = focusedPath;
       }, 150);
       return () => clearTimeout(timer);
     }
-  }, [focusedPath, isPreviewActive, updatePreview]);
+  }, [focusedPath, isPreviewActive, updatePreview, lastPreviewedPathRef]);
 
   // Helper to get items for the current active view context (for keyboard nav)
   const getCurrentViewItems = useCallback(() => {

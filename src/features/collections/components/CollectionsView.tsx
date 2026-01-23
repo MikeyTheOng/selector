@@ -59,8 +59,13 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
     openCopyDialog,
     closeMoveCopyDialog,
   } = useMoveCopyDialog();
-  const { isPreviewActive, togglePreview, updatePreview, closePreview } =
-    useQuickLook();
+  const {
+    isPreviewActive,
+    togglePreview,
+    updatePreview,
+    closePreview,
+    lastPreviewedPathRef,
+  } = useQuickLook();
   
   const collection = collections.find((c) => c.id === parsedId);
 
@@ -132,13 +137,15 @@ export const CollectionsView: React.FC<CollectionsViewProps> = ({
 
   // Sync Quick Preview with focused item
   useEffect(() => {
-    if (isPreviewActive && focusedPath) {
+    // Skip if focused path is already being previewed (avoids redundant update on open)
+    if (isPreviewActive && focusedPath && focusedPath !== lastPreviewedPathRef.current) {
       const timer = setTimeout(() => {
         updatePreview(focusedPath);
+        lastPreviewedPathRef.current = focusedPath;
       }, 150);
       return () => clearTimeout(timer);
     }
-  }, [focusedPath, isPreviewActive, updatePreview]);
+  }, [focusedPath, isPreviewActive, updatePreview, lastPreviewedPathRef]);
 
   const handleItemClick = (item: ExplorerItem, event: React.MouseEvent) => {
     // Find original item logic is mostly needed if we need domain fields not in ExplorerItem
