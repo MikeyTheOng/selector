@@ -14,7 +14,15 @@ export const detectAmbiguity = (
   items: ExplorerItem[],
 ): { isAmbiguous: boolean } => {
   const hasFolder = items.some((item) => item.kind === "folder");
-  return { isAmbiguous: hasFolder };
+  const fileKinds = new Set<FileKind>();
+  for (const item of items) {
+    if (item.kind !== "file") continue;
+    fileKinds.add(getFileKind(item.extension));
+    if (fileKinds.size > 1) {
+      break;
+    }
+  }
+  return { isAmbiguous: hasFolder || fileKinds.size > 1 };
 };
 
 export const resolveFilesOnly = (items: ExplorerItem[]): ExplorerItem[] =>

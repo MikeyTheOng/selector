@@ -34,9 +34,17 @@ const createFolder = (path: string): ExplorerItem => ({
 });
 
 describe("detectAmbiguity", () => {
-  it("returns false for files-only selection", () => {
+  it("returns false for single-kind files-only selection", () => {
     const result = detectAmbiguity([createFile("/path/to/file.txt")]);
     expect(result.isAmbiguous).toBe(false);
+  });
+
+  it("returns true for files of multiple kinds", () => {
+    const result = detectAmbiguity([
+      createFile("/path/to/photo.jpg", "jpg"),
+      createFile("/path/to/video.mp4", "mp4"),
+    ]);
+    expect(result.isAmbiguous).toBe(true);
   });
 
   it("returns true for folders-only selection", () => {
