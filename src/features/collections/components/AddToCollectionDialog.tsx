@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 import { getFilename } from "../hooks/use-collection-items";
 import { useCollections } from "../hooks/use-collections";
@@ -31,22 +31,6 @@ export const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   const { collections, createCollection, isLoading } = useCollections();
   const [isProcessing, setIsProcessing] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === " ") {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown, { capture: true });
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown, { capture: true });
-    };
-  }, [isOpen]);
 
   const handleSelectTarget = async (targetId: number) => {
     if (isProcessing) return;

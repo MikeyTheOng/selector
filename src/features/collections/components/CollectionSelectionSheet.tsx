@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from "react";
-import { Copy, Loader2, Move, Trash2, X } from "lucide-react";
+import React, { useState } from "react";
+import { Copy, ExternalLink, Loader2, Move, Trash2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,13 +12,9 @@ import {
 } from "@/components/ui/sheet";
 import { ExportResolutionModal } from "./ExportResolutionModal";
 import { RecentAppsPicker } from "@/components/explorer/RecentAppsPicker";
-import { detectAmbiguity } from "../lib/export-resolution";
-import { getExtension } from "@/lib/formatters";
-import { addRecentApp } from "@/lib/recent-apps";
 import type { ExplorerItem } from "@/types/explorer";
-import { invoke } from "@tauri-apps/api/core";
-import { toast } from "sonner";
 import { useCollectionItems } from "../hooks/use-collection-items";
+import { useOpenWith } from "../hooks/use-open-with";
 
 interface CollectionSelectionSheetProps {
   collectionId: number;
@@ -31,17 +27,6 @@ interface CollectionSelectionSheetProps {
   onRequestCopy?: (entries: ExplorerItem[]) => void;
 }
 
-const getExtensionForPaths = (paths: string[]) => {
-  for (const path of paths) {
-    const name = path.split("/").filter(Boolean).pop() ?? path;
-    const extension = getExtension(name);
-    if (extension) {
-      return extension;
-    }
-  }
-  return undefined;
-};
-
 export const CollectionSelectionSheet: React.FC<CollectionSelectionSheetProps> = ({
   collectionId,
   isOpen,
@@ -52,83 +37,20 @@ export const CollectionSelectionSheet: React.FC<CollectionSelectionSheetProps> =
   onRequestMove,
   onRequestCopy,
 }) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [showAppPicker, setShowAppPicker] = useState(false);
-  const [pickerExtension, setPickerExtension] = useState<string>("");
-  const [pickerFilePaths, setPickerFilePaths] = useState<string[]>([]);
-  const [pendingAppName, setPendingAppName] = useState<string>("");
-  const [showResolutionModal, setShowResolutionModal] = useState(false);
-
-  const openAppPicker = useCallback((paths: string[], extension?: string) => {
-    if (paths.length === 0) {
-      toast.error("No files selected");
-      return;
-    }
-
-    const resolvedExtension = extension ?? getExtensionForPaths(paths) ?? "folder";
-    setPickerExtension(resolvedExtension);
-    setPickerFilePaths(paths);
-    setShowAppPicker(true);
-  }, []);
-
-  const handleOpenWith = useCallback(async () => {
-    if (detectAmbiguity(entries).isAmbiguous) {
-      setShowResolutionModal(true);
-      return;
-    }
-
-    openAppPicker(entries.map((file) => file.path));
-  }, [entries, openAppPicker]);
-
-  const handleResolutionProceed = useCallback(
-    (resolvedPaths: string[]) => {
-      setShowResolutionModal(false);
-      openAppPicker(resolvedPaths);
-    },
-    [openAppPicker],
-  );
-
-  const handleResolutionClose = useCallback(() => {
-    setShowResolutionModal(false);
-  }, []);
-
-  const handleAppSelected = useCallback(
-    async (appPath: string, appName: string, bundleId?: string) => {
-      setShowAppPicker(false);
-      setIsProcessing(true);
-      setPendingAppName(appName);
-
-      try {
-        const targetApp = bundleId || appPath;
-
-        await invoke("open_files_with_app", {
-          filePaths: pickerFilePaths,
-          appPath: targetApp,
-        });
-
-        addRecentApp(pickerExtension, {
-          name: appName,
-          path: appPath,
-          bundleId,
-        });
-
-        toast.success(
-          `Opened ${pickerFilePaths.length} file${pickerFilePaths.length === 1 ? "" : "s"} with ${appName}`,
-        );
-      } catch (err) {
-        console.error("Failed to open files:", err);
-        toast.error(`Failed to open files with ${appName}`);
-      } finally {
-        setIsProcessing(false);
-        setPendingAppName("");
-      }
-    },
-    [pickerFilePaths, pickerExtension],
-  );
-
-  const handleAppPickerClose = useCallback(() => {
-    setShowAppPicker(false);
-  }, []);
+  const {
+    handleOpenWith,
+    handleResolutionProceed,
+    handleResolutionClose,
+    handleAppSelected,
+    handleAppPickerClose,
+    isProcessing,
+    pendingAppName,
+    isOpenWithDisabled,
+    showAppPicker,
+    pickerExtension,
+    pickerFilePaths,
+    showResolutionModal,
+  } = useOpenWith(entries);
 
   return (
     <>
@@ -196,7 +118,7 @@ export const CollectionSelectionSheet: React.FC<CollectionSelectionSheetProps> =
               variant="default"
               size="sm"
               onClick={handleOpenWith}
-              disabled={entries.length === 0 || isProcessing}
+              disabled={isOpenWithDisabled}
               className="w-full"
             >
               {isProcessing ? (
@@ -205,7 +127,10 @@ export const CollectionSelectionSheet: React.FC<CollectionSelectionSheetProps> =
                   Opening{pendingAppName ? ` with ${pendingAppName}` : ""}...
                 </>
               ) : (
-                "Open with..."
+                <>
+                  <ExternalLink className="h-4 w-4" />
+                  Open with...
+                </>
               )}
             </Button>
 

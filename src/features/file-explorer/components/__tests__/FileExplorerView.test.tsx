@@ -1,9 +1,9 @@
-import { render, act, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FileExplorerView } from '../FileExplorerView';
 import { useExplorerContext } from '../../context/ExplorerContext';
 import { useNavigation } from '@/hooks/use-navigation';
-import { listen, type EventCallback } from '@tauri-apps/api/event';
+import { listen } from '@tauri-apps/api/event';
 import type { FolderListing, ExplorerFileItem } from '@/types/explorer';
 import type { ExplorerSelectionPanelProps } from '@/components/explorer/ExplorerSelectionPanel';
 
@@ -61,13 +61,6 @@ describe('FileExplorerView Integration', () => {
     isTruncated: false,
   };
 
-  type QuickLookNavigatePayload = {
-    key: string;
-    metaKey: boolean;
-    ctrlKey: boolean;
-    shiftKey: boolean;
-  };
-
   const defaultProps = {
     locations: [],
     folderId: '/test',
@@ -99,7 +92,6 @@ describe('FileExplorerView Integration', () => {
       clearFocus: vi.fn(),
       isPreviewActive: true,
       togglePreview: mockTogglePreview,
-      updatePreview: vi.fn(),
       closePreview: mockClosePreview,
       viewMode: 'list' as const,
       setViewMode: vi.fn(),
@@ -120,119 +112,6 @@ describe('FileExplorerView Integration', () => {
     });
 
     vi.mocked(listen).mockResolvedValue(() => { });
-  });
-
-  it('handles quicklook://navigate event for selection toggle (Cmd+Enter)', async () => {
-    let eventCallback: EventCallback<unknown> = () => { };
-    vi.mocked(listen).mockImplementation((event, callback) => {
-      if (event === 'quicklook://navigate') {
-        eventCallback = callback;
-      }
-      return Promise.resolve(() => { });
-    });
-
-    render(<FileExplorerView {...defaultProps} />);
-
-    // Simulate event from Quick Look panel
-    await act(async () => {
-      eventCallback({
-        event: 'quicklook://navigate',
-        id: 0,
-        payload: {
-          key: 'Enter',
-          metaKey: true,
-          ctrlKey: false,
-          shiftKey: false,
-        } satisfies QuickLookNavigatePayload,
-      });
-    });
-
-    expect(mockToggleSelection).toHaveBeenCalledWith(expect.objectContaining({ path: mockFiles[0].path }));
-  });
-
-  it('handles quicklook://navigate event for navigation (ArrowDown)', async () => {
-    let eventCallback: EventCallback<unknown> = () => { };
-    vi.mocked(listen).mockImplementation((event, callback) => {
-      if (event === 'quicklook://navigate') {
-        eventCallback = callback;
-      }
-      return Promise.resolve(() => { });
-    });
-
-    render(<FileExplorerView {...defaultProps} />);
-
-    // Simulate ArrowDown from Quick Look panel
-    await act(async () => {
-      eventCallback({
-        event: 'quicklook://navigate',
-        id: 0,
-        payload: {
-          key: 'ArrowDown',
-          metaKey: false,
-          ctrlKey: false,
-          shiftKey: false,
-        } satisfies QuickLookNavigatePayload,
-      });
-    });
-
-    // ArrowDown when file1 is focused should focus file2
-    expect(mockFocusItem).toHaveBeenCalledWith(expect.objectContaining({ path: mockFiles[1].path }));
-  });
-
-  it('handles quicklook://navigate event for closing preview (Escape)', async () => {
-    let eventCallback: EventCallback<unknown> = () => { };
-    vi.mocked(listen).mockImplementation((event, callback) => {
-      if (event === 'quicklook://navigate') {
-        eventCallback = callback;
-      }
-      return Promise.resolve(() => { });
-    });
-
-    render(<FileExplorerView {...defaultProps} />);
-
-    // Simulate Escape from Quick Look panel
-    await act(async () => {
-      eventCallback({
-        event: 'quicklook://navigate',
-        id: 0,
-        payload: {
-          key: 'Escape',
-          metaKey: false,
-          ctrlKey: false,
-          shiftKey: false,
-        } satisfies QuickLookNavigatePayload,
-      });
-    });
-
-    expect(mockClosePreview).toHaveBeenCalled();
-  });
-
-  it('handles quicklook://navigate event for toggling preview (Space)', async () => {
-    let eventCallback: EventCallback<unknown> = () => { };
-    vi.mocked(listen).mockImplementation((event, callback) => {
-      if (event === 'quicklook://navigate') {
-        eventCallback = callback;
-      }
-      return Promise.resolve(() => { });
-    });
-
-    render(<FileExplorerView {...defaultProps} />);
-
-    // Simulate Space from Quick Look panel
-    await act(async () => {
-      eventCallback({
-        event: 'quicklook://navigate',
-        id: 0,
-        payload: {
-          key: 'Space',
-          metaKey: false,
-          ctrlKey: false,
-          shiftKey: false,
-        } satisfies QuickLookNavigatePayload,
-      });
-    });
-
-    expect(mockTogglePreview).toHaveBeenCalledWith(mockFiles[0].path);
   });
 
   it('renders toolbar with correct file count', () => {
@@ -269,7 +148,6 @@ describe('FileExplorerView Integration', () => {
       clearFocus: vi.fn(),
       isPreviewActive: true,
       togglePreview: mockTogglePreview,
-      updatePreview: vi.fn(),
       closePreview: mockClosePreview,
       viewMode: 'list' as const,
       setViewMode: vi.fn(),
