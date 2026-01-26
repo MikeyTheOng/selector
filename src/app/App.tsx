@@ -7,6 +7,7 @@ import {
 import { FileExplorerPage, useLocations } from "@/features/file-explorer";
 import { LocationsSidebar } from "@/features/file-explorer/components/LocationsSidebar";
 import { NavigationProvider, useNavigation } from "@/hooks/use-navigation";
+import { useThemePreference } from "@/hooks/use-theme-preference";
 import { TextScaleProvider } from "@/providers/TextScaleProvider";
 import { MainLayout } from "./MainLayout";
 
@@ -49,6 +50,8 @@ function AppInner() {
 }
 
 function App() {
+  useThemePreference();
+
   return (
     <main className="flex h-screen min-h-0 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,rgba(76,138,255,0.18),transparent_55%),linear-gradient(135deg,rgba(248,250,255,0.9),rgba(236,240,247,0.9))] text-foreground">
       <TextScaleProvider>
