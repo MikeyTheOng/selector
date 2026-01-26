@@ -3,21 +3,17 @@ import {
   applyTextScale,
   normalizeTextScale,
   readStoredTextScale,
-  TEXT_SCALE_STORAGE_KEY,
   TextScaleContext,
   type TextScaleContextValue,
 } from "@/hooks/use-text-scale";
+import { writeUserPreferences } from "@/lib/user-preferences";
 
 export const TextScaleProvider = ({ children }: { children: ReactNode }) => {
   const [textScale, setTextScaleState] = useState(readStoredTextScale);
 
   useEffect(() => {
     applyTextScale(textScale);
-    try {
-      window.localStorage.setItem(TEXT_SCALE_STORAGE_KEY, textScale.toString());
-    } catch {
-      // Ignore storage failures (private mode, disabled storage, etc).
-    }
+    writeUserPreferences({ textScale });
   }, [textScale]);
 
   const setTextScale = (value: number) => {

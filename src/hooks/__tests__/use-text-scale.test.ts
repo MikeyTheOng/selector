@@ -3,8 +3,11 @@ import {
   normalizeTextScale,
   readStoredTextScale,
   applyTextScale,
-  TEXT_SCALE_STORAGE_KEY
 } from '../use-text-scale';
+import {
+  DEFAULT_USER_PREFERENCES,
+  USER_PREFERENCES_STORAGE_KEY,
+} from "@/lib/user-preferences";
 
 describe('use-text-scale helpers', () => {
   beforeEach(() => {
@@ -18,25 +21,31 @@ describe('use-text-scale helpers', () => {
     });
 
     it('returns default if invalid', () => {
-      expect(normalizeTextScale(0)).toBe(0.2);
-      expect(normalizeTextScale(-1)).toBe(0.2);
-      expect(normalizeTextScale(NaN)).toBe(0.2);
+      expect(normalizeTextScale(0)).toBe(DEFAULT_USER_PREFERENCES.textScale);
+      expect(normalizeTextScale(-1)).toBe(DEFAULT_USER_PREFERENCES.textScale);
+      expect(normalizeTextScale(NaN)).toBe(DEFAULT_USER_PREFERENCES.textScale);
     });
   });
 
   describe('readStoredTextScale', () => {
     it('returns stored value if exists', () => {
-      localStorage.setItem(TEXT_SCALE_STORAGE_KEY, '0.4');
-      expect(readStoredTextScale()).toBe(0.4);
+      localStorage.setItem(
+        USER_PREFERENCES_STORAGE_KEY,
+        JSON.stringify({ textScale: 1.2, theme: "dark" }),
+      );
+      expect(readStoredTextScale()).toBe(1.2);
     });
 
     it('returns default if not stored', () => {
-      expect(readStoredTextScale()).toBe(0.2);
+      expect(readStoredTextScale()).toBe(DEFAULT_USER_PREFERENCES.textScale);
     });
 
     it('returns default on invalid storage value', () => {
-      localStorage.setItem(TEXT_SCALE_STORAGE_KEY, 'invalid');
-      expect(readStoredTextScale()).toBe(0.2);
+      localStorage.setItem(
+        USER_PREFERENCES_STORAGE_KEY,
+        JSON.stringify({ textScale: "invalid", theme: "system" }),
+      );
+      expect(readStoredTextScale()).toBe(DEFAULT_USER_PREFERENCES.textScale);
     });
   });
 
