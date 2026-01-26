@@ -124,6 +124,18 @@
     height: 100%;
   }
 
+  .app-background {
+    background:
+      radial-gradient(circle at top, rgba(76, 138, 255, 0.18), transparent 55%),
+      linear-gradient(135deg, rgba(248, 250, 255, 0.9), rgba(236, 240, 247, 0.9));
+  }
+
+  .dark .app-background {
+    background:
+      radial-gradient(circle at top, rgba(90, 140, 255, 0.18), transparent 55%),
+      linear-gradient(135deg, rgba(10, 12, 18, 0.95), rgba(18, 22, 32, 0.95));
+  }
+
   html {
     font-size: calc(16px * var(--app-text-scale));
   }
