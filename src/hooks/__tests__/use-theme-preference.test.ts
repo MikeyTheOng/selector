@@ -11,8 +11,12 @@ vi.mock("@/lib/user-preferences", () => ({
   readUserPreferences: vi.fn(() => ({ textScale: 1, theme: "system" as const })),
 }));
 
-const { applyThemePreference, listenToSystemThemeChanges } = await import("@/lib/theme-preference");
-const { readUserPreferences } = await import("@/lib/user-preferences");
+const themeModule = await import("@/lib/theme-preference");
+const prefsModule = await import("@/lib/user-preferences");
+
+const applyThemePreference = vi.mocked(themeModule.applyThemePreference);
+const listenToSystemThemeChanges = vi.mocked(themeModule.listenToSystemThemeChanges);
+const readUserPreferences = vi.mocked(prefsModule.readUserPreferences);
 
 describe("useThemePreference", () => {
   beforeEach(() => {
