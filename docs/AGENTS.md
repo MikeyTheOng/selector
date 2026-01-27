@@ -62,7 +62,7 @@ This repository uses `eslint-plugin-boundaries` to enforce the [File Structure](
 - `useFolderListing` — Directory listing with caching and live FS watching
 - `useExplorerSelection` — Generic multi-item selection state (shared by Files and Collections)
 - `useLocations` — Sidebar locations (home directory, mounted volumes)
-- `useTextScale` — Global text scaling with `localStorage` persistence
+- `useUserPreferences` — Global user preferences (text scale + theme)
 
 ---
 
