@@ -1,16 +1,26 @@
 import { useEffect, useMemo, useRef } from "react";
 import { getName } from "@tauri-apps/api/app";
 import { CheckMenuItem, Menu, PredefinedMenuItem, Submenu } from "@tauri-apps/api/menu";
-import { type ThemePreference } from "@/lib/preferences/theme";
+import {
+  THEME_PREFERENCE_LABELS,
+  THEME_PREFERENCES,
+  type ThemePreference,
+} from "@/lib/preferences/theme";
 import { useUserPreferences } from "@/providers/UserPreferencesProvider";
 
-const appearanceOptions = [
-  { id: "appearance-light", text: "Light", value: "light" as const },
-  { id: "appearance-dark", text: "Dark", value: "dark" as const },
-  { id: "appearance-system", text: "System", value: "system" as const },
-];
-
 export const useAppMenu = () => {
+  useAppearanceMenu();
+};
+
+const APPEARANCE_MENU_ID = "appearance-submenu";
+
+const appearanceOptions = THEME_PREFERENCES.map((value) => ({
+  id: `appearance-${value}`,
+  text: THEME_PREFERENCE_LABELS[value],
+  value,
+}));
+
+const useAppearanceMenu = () => {
   const { theme, setTheme } = useUserPreferences();
   const initializedRef = useRef(false);
   const appearanceItemsRef = useRef<CheckMenuItem[]>([]);
@@ -49,7 +59,7 @@ export const useAppMenu = () => {
 
       if (!appSubmenu || cancelled) return;
 
-      const existingAppearance = await appSubmenu.get("appearance-submenu");
+      const existingAppearance = await appSubmenu.get(APPEARANCE_MENU_ID);
       if (existingAppearance instanceof Submenu) {
         const existingItems = await existingAppearance.items();
         appearanceItemsRef.current = existingItems.filter(
@@ -64,7 +74,7 @@ export const useAppMenu = () => {
       }
 
       const appearanceSubMenu = await Submenu.new({
-        id: "appearance-submenu",
+        id: APPEARANCE_MENU_ID,
         text: "Appearance...",
       });
       const appearanceSubMenuItems = await Promise.all(

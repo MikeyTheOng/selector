@@ -1,4 +1,12 @@
-export type ThemePreference = "light" | "dark" | "system";
+export const THEME_PREFERENCES = ["light", "dark", "system"] as const;
+
+export type ThemePreference = (typeof THEME_PREFERENCES)[number];
+
+export const THEME_PREFERENCE_LABELS: Record<ThemePreference, string> = {
+  light: "Light",
+  dark: "Dark",
+  system: "System",
+};
 
 export type ResolvedTheme = "light" | "dark";
 
