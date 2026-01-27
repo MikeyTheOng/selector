@@ -1,4 +1,5 @@
-export type ThemePreference = "light" | "dark" | "system";
+import { type ThemePreference } from "./theme";
+import { DEFAULT_TEXT_SCALE, normalizeTextScale } from "./text";
 
 export type UserPreferences = {
   textScale: number;
@@ -9,19 +10,12 @@ export const USER_PREFERENCES_STORAGE_KEY = "selector:userPreferences";
 const LEGACY_TEXT_SCALE_STORAGE_KEY = "selector:text-scale";
 
 export const DEFAULT_USER_PREFERENCES: UserPreferences = {
-  textScale: 1,
+  textScale: DEFAULT_TEXT_SCALE,
   theme: "system",
 };
 
 const isValidTheme = (value: unknown): value is ThemePreference =>
   value === "light" || value === "dark" || value === "system";
-
-export const normalizeTextScale = (value: unknown) => {
-  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
-    return DEFAULT_USER_PREFERENCES.textScale;
-  }
-  return value;
-};
 
 const normalizeTheme = (value: unknown): ThemePreference =>
   isValidTheme(value) ? value : DEFAULT_USER_PREFERENCES.theme;
@@ -78,9 +72,7 @@ export const readUserPreferences = (): UserPreferences => {
 };
 
 /** Merges, normalizes, and persists user preferences. Returns the stored value. */
-export const writeUserPreferences = (
-  next: Partial<UserPreferences>,
-): UserPreferences => {
+export const writeUserPreferences = (next: Partial<UserPreferences>): UserPreferences => {
   const merged = normalizeUserPreferences({ ...readUserPreferences(), ...next });
 
   try {

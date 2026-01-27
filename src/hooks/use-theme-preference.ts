@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { applyThemePreference, listenToSystemThemeChanges } from "@/lib/theme-preference";
-import { readUserPreferences } from "@/lib/user-preferences";
+import { applyThemePreference, listenToSystemThemeChanges } from "@/lib/preferences/theme";
+import { readUserPreferences } from "@/lib/preferences/storage";
 
 export const useThemePreference = () => {
   useEffect(() => {

@@ -1,4 +1,4 @@
-import type { ThemePreference } from "./user-preferences";
+export type ThemePreference = "light" | "dark" | "system";
 
 export type ResolvedTheme = "light" | "dark";
 

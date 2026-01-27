@@ -2,17 +2,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useThemePreference } from "../use-theme-preference";
 
-vi.mock("@/lib/theme-preference", () => ({
+vi.mock("@/lib/preferences/theme", () => ({
   applyThemePreference: vi.fn(),
   listenToSystemThemeChanges: vi.fn(() => vi.fn()),
 }));
 
-vi.mock("@/lib/user-preferences", () => ({
+vi.mock("@/lib/preferences/storage", () => ({
   readUserPreferences: vi.fn(() => ({ textScale: 1, theme: "system" as const })),
 }));
 
-const themeModule = await import("@/lib/theme-preference");
-const prefsModule = await import("@/lib/user-preferences");
+const themeModule = await import("@/lib/preferences/theme");
+const prefsModule = await import("@/lib/preferences/storage");
 
 const applyThemePreference = vi.mocked(themeModule.applyThemePreference);
 const listenToSystemThemeChanges = vi.mocked(themeModule.listenToSystemThemeChanges);

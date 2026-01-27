@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import type { ReactNode } from "react";
 import { TextScaleProvider } from "../TextScaleProvider";
 import { useTextScale } from "@/hooks/use-text-scale";
-import { USER_PREFERENCES_STORAGE_KEY } from "@/lib/user-preferences";
+import { USER_PREFERENCES_STORAGE_KEY } from "@/lib/preferences/storage";
 
 describe("TextScaleProvider", () => {
   const wrapper = ({ children }: { children: ReactNode }) => (

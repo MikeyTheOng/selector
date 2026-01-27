@@ -3,8 +3,8 @@ import {
   applyThemePreference,
   listenToSystemThemeChanges,
   resolveThemePreference,
-} from "../theme-preference";
-import type { ThemePreference } from "../user-preferences";
+  type ThemePreference,
+} from "../theme";
 
 const createMatchMedia = (matches: boolean) =>
   vi.fn().mockImplementation((query: string) => ({

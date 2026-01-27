@@ -6,7 +6,7 @@ import {
   TextScaleContext,
   type TextScaleContextValue,
 } from "@/hooks/use-text-scale";
-import { writeUserPreferences } from "@/lib/user-preferences";
+import { writeUserPreferences } from "@/lib/preferences/storage";
 
 export const TextScaleProvider = ({ children }: { children: ReactNode }) => {
   const [textScale, setTextScaleState] = useState(readStoredTextScale);

@@ -1,11 +1,6 @@
 import { createContext, useContext } from "react";
-import {
-  DEFAULT_USER_PREFERENCES,
-  normalizeTextScale as normalizeUserTextScale,
-  readUserPreferences,
-} from "@/lib/user-preferences";
-
-const TEXT_SCALE_CSS_VAR = "--app-text-scale";
+import { DEFAULT_USER_PREFERENCES, readUserPreferences } from "@/lib/preferences/storage";
+import { applyTextScale, normalizeTextScale as normalizeUserTextScale } from "@/lib/preferences/text";
 
 export const normalizeTextScale = (value: number) => normalizeUserTextScale(value);
 
@@ -21,12 +16,7 @@ export const readStoredTextScale = () => {
   }
 };
 
-export const applyTextScale = (scale: number) => {
-  if (typeof document === "undefined") {
-    return;
-  }
-  document.documentElement.style.setProperty(TEXT_SCALE_CSS_VAR, scale.toString());
-};
+export { applyTextScale };
 
 export const initializeTextScale = () => {
   applyTextScale(readStoredTextScale());

@@ -4,9 +4,9 @@ import {
   USER_PREFERENCES_STORAGE_KEY,
   readUserPreferences,
   writeUserPreferences,
-} from "../user-preferences";
+} from "../storage";
 
-describe("user preferences storage", () => {
+describe("preferences storage", () => {
   beforeEach(() => {
     localStorage.clear();
   });
