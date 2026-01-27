@@ -9,8 +9,10 @@ import { LocationsSidebar } from "@/features/file-explorer/components/LocationsS
 import { NavigationProvider, useNavigation } from "@/hooks/use-navigation";
 import { UserPreferencesProvider } from "@/providers/UserPreferencesProvider";
 import { MainLayout } from "./MainLayout";
+import { useAppMenu } from "./setupAppMenu";
 
 function AppInner() {
+  useAppMenu();
   const { locations, error: locationsError } = useLocations();
   const { currentRoute, navigateToExplorer } = useNavigation();
 
