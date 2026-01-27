@@ -140,7 +140,7 @@ export const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
             <p className="px-1 text-[0.625rem] font-bold uppercase tracking-widest text-muted-foreground/70">
               Existing Collections
             </p>
-            <ScrollArea className="h-50 rounded-md border p-1">
+            <ScrollArea className="h-50 rounded-md border border-border/50 bg-muted/30 p-1">
               <div className="flex flex-col gap-1">
                 {isLoading ? (
                   <div className="flex items-center justify-center p-4">
@@ -156,11 +156,11 @@ export const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
                       key={coll.id}
                       variant="ghost"
                       size="sm"
-                      className="h-9 w-full justify-start rounded-lg px-3 font-medium transition-colors hover:bg-muted/80"
+                      className="h-9 w-full justify-start rounded-lg px-3 font-medium text-foreground transition-colors hover:bg-accent"
                       onClick={() => handleSelectTarget(coll.id)}
                       disabled={isProcessing}
                     >
-                      <FolderPlus className="mr-2.5 h-4 w-4 text-primary/70" />
+                      <FolderPlus className="mr-2.5 h-4 w-4 text-muted-foreground" />
                       <span className="truncate">{coll.name}</span>
                     </Button>
                   ))

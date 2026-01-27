@@ -62,7 +62,7 @@ This repository uses `eslint-plugin-boundaries` to enforce the [File Structure](
 - `useFolderListing` — Directory listing with caching and live FS watching
 - `useExplorerSelection` — Generic multi-item selection state (shared by Files and Collections)
 - `useLocations` — Sidebar locations (home directory, mounted volumes)
-- `useTextScale` — Global text scaling with `localStorage` persistence
+- `useUserPreferences` — Global user preferences (text scale + theme)
 
 ---
 
@@ -79,6 +79,7 @@ This repository uses `eslint-plugin-boundaries` to enforce the [File Structure](
 - **Verification:** Before requesting a review or finishing a task, agents **must** run:
   1. `yarn test:ci` (Ensure all tests pass)
   2. `yarn eslint .` (Ensure no linting errors)
+- **Phase Test Gate:** For each phase, write tests before implementation steps and ask the user to verify the tests before proceeding.
 
 - Place tests under `src/**/*.test.ts(x)`
 - Refer to [testing.md](/docs/testing.md) for detailed guidelines.
@@ -97,7 +98,7 @@ This repository uses `eslint-plugin-boundaries` to enforce the [File Structure](
 
 - **Global Hub (`docs/`):** Infrastructure, architecture notes, and shared strategies (e.g., `docs/database.md`).
 - **Feature Spoke (`src/features/<feature>/docs/`):** Technical schemas, invariants, and API surfaces specific to a feature.
-- **Continuous Update:** Documentation must be updated in tandem with code changes during each implementation phase.
+- **Continuous Update (User-Verified):** Do not assume what should be documented. Propose candidate updates, ask the user what to add, and only update documentation after explicit verification.
 
 ---
 
