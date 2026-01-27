@@ -71,8 +71,8 @@ export const UserPreferencesProvider = ({ children }: { children: ReactNode }) =
 
   useLayoutEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, [contenteditable='true']")) {
+      const target = event.target;
+      if (target instanceof Element && target.closest("input, textarea, [contenteditable='true']")) {
         return;
       }
 
