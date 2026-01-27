@@ -7,8 +7,7 @@ import {
 import { FileExplorerPage, useLocations } from "@/features/file-explorer";
 import { LocationsSidebar } from "@/features/file-explorer/components/LocationsSidebar";
 import { NavigationProvider, useNavigation } from "@/hooks/use-navigation";
-import { useThemePreference } from "@/hooks/use-theme-preference";
-import { TextScaleProvider } from "@/providers/TextScaleProvider";
+import { UserPreferencesProvider } from "@/providers/UserPreferencesProvider";
 import { MainLayout } from "./MainLayout";
 
 function AppInner() {
@@ -50,11 +49,9 @@ function AppInner() {
 }
 
 function App() {
-  useThemePreference();
-
   return (
     <main className="app-background flex h-screen min-h-0 flex-col overflow-hidden text-foreground">
-      <TextScaleProvider>
+      <UserPreferencesProvider>
         <NavigationProvider>
           <Toaster
             className="pointer-events-auto"
@@ -65,7 +62,7 @@ function App() {
           />
           <AppInner />
         </NavigationProvider>
-      </TextScaleProvider>
+      </UserPreferencesProvider>
     </main>
   );
 }
