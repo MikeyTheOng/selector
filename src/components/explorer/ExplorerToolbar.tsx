@@ -54,6 +54,12 @@ export const ExplorerToolbar = ({
             {title}
           </p>
         )}
+        <Badge
+          variant="outline"
+          className="text-xs font-medium font-stretch-condensed text-muted-foreground"
+        >
+          {fileCount} files - {folderCount} folders
+        </Badge>
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-2">
@@ -109,14 +115,6 @@ export const ExplorerToolbar = ({
             Grid
           </ToggleGroupItem>
         </ToggleGroup>
-
-        {/* TODO: Move this to below header */}
-        <Badge
-          variant="secondary"
-          className="rounded-full border border-border/50 bg-background/70 px-3 py-1 text-xs font-medium text-muted-foreground"
-        >
-          {fileCount} files - {folderCount} folders
-        </Badge>
 
         {selectionPanel}
 
