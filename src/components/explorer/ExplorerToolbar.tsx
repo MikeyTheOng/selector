@@ -1,9 +1,21 @@
 import React from "react";
-import { Columns2, LayoutList, Grid2X2 } from "lucide-react";
+import { Columns3, List, LayoutGrid, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import type { ExplorerViewMode } from "@/types/explorer";
+
+type ViewModeItem = {
+  value: ExplorerViewMode;
+  label: string;
+  Icon: LucideIcon;
+};
+
+const VIEW_MODE_ITEMS: ViewModeItem[] = [
+  { value: "list", label: "List view", Icon: List },
+  { value: "column", label: "Column view", Icon: Columns3 },
+  { value: "grid", label: "Grid view", Icon: LayoutGrid },
+];
 
 export interface ExplorerToolbarProps {
   /** Current view mode (list, grid, or column) */
@@ -66,54 +78,29 @@ export const ExplorerToolbar = ({
         <ToggleGroup
           type="single"
           value={viewMode}
+          variant={"outline"}
           onValueChange={(value) =>
             value && onViewModeChange(value as ExplorerViewMode)
           }
-          className="rounded-full border border-border/50 bg-background/70 p-1 text-[0.6875rem] font-semibold text-muted-foreground"
+          className="group h-8 border-none text-xs text-muted-foreground hover:bg-foreground/10 transition"
           aria-label="View mode"
         >
-          <ToggleGroupItem
-            value="list"
-            className={cn(
-              "gap-1 rounded-full px-3 py-1",
-              viewMode === "list"
-                ? "bg-foreground/10 text-foreground"
-                : "hover:text-foreground",
-            )}
-            aria-label="List view"
-            disabled={disabledViewModes.includes("list")}
-          >
-            <LayoutList className="h-3.5 w-3.5" />
-            List
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="column"
-            className={cn(
-              "gap-1 rounded-full px-3 py-1",
-              viewMode === "column"
-                ? "bg-foreground/10 text-foreground"
-                : "hover:text-foreground",
-            )}
-            aria-label="Column view"
-            disabled={disabledViewModes.includes("column")}
-          >
-            <Columns2 className="h-3.5 w-3.5" />
-            Column
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="grid"
-            className={cn(
-              "gap-1 rounded-full px-3 py-1",
-              viewMode === "grid"
-                ? "bg-foreground/10 text-foreground"
-                : "hover:text-foreground",
-            )}
-            aria-label="Grid view"
-            disabled={disabledViewModes.includes("grid")}
-          >
-            <Grid2X2 className="h-3.5 w-3.5" />
-            Grid
-          </ToggleGroupItem>
+          {VIEW_MODE_ITEMS.map(({ value, label, Icon }) => (
+            <ToggleGroupItem
+              key={value}
+              value={value}
+              className={cn(
+                "gap-1 px-2 h-8",
+                viewMode === value
+                  ? "bg-foreground/10 text-foreground"
+                  : "hover:bg-transparent",
+              )}
+              aria-label={label}
+              disabled={disabledViewModes.includes(value)}
+            >
+              <Icon className="h-4 w-4" />
+            </ToggleGroupItem>
+          ))}
         </ToggleGroup>
 
         {selectionPanel}
