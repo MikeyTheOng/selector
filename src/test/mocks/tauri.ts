@@ -1,36 +1,74 @@
-import { vi } from "vitest";
+import { beforeEach, vi } from "vitest";
+import { clearMocks, mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 
-// Mock @tauri-apps/api/event
-export const mockEmit = vi.fn();
-export const mockListen = vi.fn();
+type IpcHandler = (cmd: string, payload?: unknown) => unknown;
 
-let listeners: Record<
-  string,
-  Array<(event: { payload?: unknown }) => void>
-> = {};
+type MenuNewPayload = {
+  options?: {
+    id?: unknown;
+  };
+};
 
-mockListen.mockImplementation(
-  (name: string, callback: (event: { payload?: unknown }) => void) => {
-    if (!listeners[name]) listeners[name] = [];
-    listeners[name].push(callback);
-    return Promise.resolve(() => {
-      listeners[name] = listeners[name].filter((l) => l !== callback);
-    });
-  },
-);
+const getMenuOptionId = (payload: unknown): string | undefined => {
+  if (typeof payload !== "object" || payload === null) return undefined;
+  const maybeOptions = (payload as MenuNewPayload).options;
+  if (typeof maybeOptions !== "object" || maybeOptions === null)
+    return undefined;
+  const maybeId = (maybeOptions as { id?: unknown }).id;
+  return typeof maybeId === "string" ? maybeId : undefined;
+};
 
-mockEmit.mockImplementation((name: string, payload?: unknown) => {
-  if (listeners[name]) {
-    listeners[name].forEach((l) => l({ payload }));
-  }
-  return Promise.resolve();
+const createDefaultIpcHandler = (): IpcHandler => {
+  let nextRid = 1;
+  const next = () => nextRid++;
+
+  return (cmd: string, payload?: unknown) => {
+    switch (cmd) {
+      case "plugin:app|name":
+        return "Selector Test";
+      case "plugin:menu|create_default": {
+        const rid = next();
+        return [rid, "default-menu"];
+      }
+      case "plugin:menu|new": {
+        const rid = next();
+        const id = getMenuOptionId(payload) ?? `menu-item-${rid}`;
+        return [rid, id];
+      }
+      case "plugin:menu|items":
+        return [];
+      case "plugin:menu|get":
+        return null;
+      case "plugin:menu|set_as_app_menu":
+        return null;
+      case "plugin:menu|text":
+        return "Selector Test";
+      case "plugin:menu|append":
+      case "plugin:menu|insert":
+      case "plugin:menu|set_checked":
+        return undefined;
+      default:
+        return undefined;
+    }
+  };
+};
+
+let ipcHandler: IpcHandler = createDefaultIpcHandler();
+
+const registerIpc = () => {
+  mockIPC((cmd, payload) => ipcHandler(cmd, payload), {
+    shouldMockEvents: true,
+  });
+  mockWindows("main");
+};
+
+registerIpc();
+
+beforeEach(() => {
+  clearMocks();
+  ipcHandler = createDefaultIpcHandler();
+  registerIpc();
 });
-
-vi.mock("@tauri-apps/api/event", () => ({
-  emit: (name: string, payload?: unknown) => mockEmit(name, payload),
-  listen: (name: string, callback: (event: { payload?: unknown }) => void) =>
-    mockListen(name, callback),
-}));
 
 // Mock database instance for @tauri-apps/plugin-sql
 export const mockDatabaseExecute = vi.fn();
@@ -67,181 +105,21 @@ vi.mock("@tauri-apps/api/path", () => ({
   homeDir: vi.fn(() => Promise.resolve("/Users/test")),
 }));
 
-// Mock @tauri-apps/api/app
-vi.mock("@tauri-apps/api/app", () => ({
-  getName: vi.fn(() => Promise.resolve("Test App")),
-}));
-
-// Mock @tauri-apps/api/menu
-type MenuEntry = {
-  id?: string;
-};
-
-class Menu {
-  private _items: MenuEntry[];
-
-  constructor({ items = [] }: { items?: MenuEntry[] } = {}) {
-    this._items = items;
-  }
-
-  static async default() {
-    return new Menu();
-  }
-
-  static async new({ items = [] }: { items?: MenuEntry[] } = {}) {
-    return new Menu({ items });
-  }
-
-  async items() {
-    return this._items;
-  }
-
-  async setAsAppMenu() {
-    return undefined;
-  }
-
-  async popup() {
-    return undefined;
-  }
-}
-
-class MenuItem {
-  id?: string;
-  text?: string;
-  enabled?: boolean;
-  action?: (id: string) => void;
-
-  constructor(
-    options: {
-      id?: string;
-      text?: string;
-      enabled?: boolean;
-      action?: (id: string) => void;
-    } = {},
-  ) {
-    this.id = options.id;
-    this.text = options.text;
-    this.enabled = options.enabled;
-    this.action = options.action;
-  }
-
-  static async new(options: {
-    id?: string;
-    text?: string;
-    enabled?: boolean;
-    action?: (id: string) => void;
-  }) {
-    return new MenuItem(options);
-  }
-}
-
-class CheckMenuItem extends MenuItem {
-  checked?: boolean;
-
-  constructor(
-    options: {
-      id?: string;
-      text?: string;
-      enabled?: boolean;
-      action?: (id: string) => void;
-      checked?: boolean;
-    } = {},
-  ) {
-    super(options);
-    this.checked = options.checked;
-  }
-
-  static async new(options: {
-    id?: string;
-    text?: string;
-    enabled?: boolean;
-    action?: (id: string) => void;
-    checked?: boolean;
-  }) {
-    return new CheckMenuItem(options);
-  }
-
-  async setChecked(checked: boolean) {
-    this.checked = checked;
-    return undefined;
-  }
-}
-
-class PredefinedMenuItem {
-  item?: string;
-  id?: string;
-
-  constructor(options: { item?: string; id?: string } = {}) {
-    this.item = options.item;
-    this.id = options.id;
-  }
-
-  static async new(options: { item?: string; id?: string }) {
-    return new PredefinedMenuItem(options);
-  }
-}
-
-class Submenu {
-  id?: string;
-  private _text: string;
-  private _items: MenuEntry[];
-
-  constructor(
-    options: { id?: string; text?: string; items?: MenuEntry[] } = {},
-  ) {
-    this.id = options.id;
-    this._text = options.text ?? "";
-    this._items = options.items ?? [];
-  }
-
-  static async new(options: {
-    id?: string;
-    text?: string;
-    items?: MenuEntry[];
-  }) {
-    return new Submenu(options);
-  }
-
-  async text() {
-    return this._text;
-  }
-
-  async items() {
-    return this._items;
-  }
-
-  async get(id: string) {
-    return this._items.find((item) => item.id === id);
-  }
-
-  async append(items: MenuEntry[]) {
-    this._items.push(...items);
-    return undefined;
-  }
-
-  async insert(items: MenuEntry[], index: number) {
-    this._items.splice(index, 0, ...items);
-    return undefined;
-  }
-}
-
-vi.mock("@tauri-apps/api/menu", () => ({
-  Menu,
-  MenuItem,
-  Submenu,
-  PredefinedMenuItem,
-  CheckMenuItem,
-}));
-
 // Mock @tauri-apps/plugin-shell
 vi.mock("@tauri-apps/plugin-shell", () => ({
   open: vi.fn(),
 }));
 
+export const setMockIPCHandler = (handler: IpcHandler) => {
+  ipcHandler = handler;
+};
+
 // Helper to reset all mocks between tests
 export const resetTauriMocks = () => {
   vi.clearAllMocks();
-  listeners = {};
+  clearMocks();
+  ipcHandler = createDefaultIpcHandler();
+  registerIpc();
 };
 
 // Helper to reset SQL mocks specifically (useful for database tests)
