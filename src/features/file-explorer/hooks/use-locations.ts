@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { homeDir } from "@tauri-apps/api/path";
-import { fsModule } from "@/lib/tauri/fs";
+import { readDir } from "@tauri-apps/plugin-fs";
 import { getErrorMessage, getPathBaseName, isHiddenName, resolveEntry } from "@/lib/path-utils";
 import type { LocationItem } from "@/types/explorer";
 
@@ -31,7 +31,7 @@ export const useLocations = () => {
         let locationRoots: LocationItem[] = [];
 
         try {
-          const volumeEntries = await fsModule.readDir("/Volumes", { recursive: false });
+          const volumeEntries = await readDir("/Volumes");
           locationRoots = volumeEntries
             .filter((entry) => entry.isDirectory)
             .map((entry) => resolveEntry(entry, "/Volumes"))

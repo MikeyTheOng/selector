@@ -2,14 +2,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useLocations } from '../use-locations';
 import { homeDir } from '@tauri-apps/api/path';
-import { fsModule } from '@/lib/tauri/fs';
-
-// Mock the fsModule
-vi.mock('@/lib/tauri/fs', () => ({
-  fsModule: {
-    readDir: vi.fn(),
-  }
-}));
+import { readDir } from '@tauri-apps/plugin-fs';
 
 // Mock @tauri-apps/api/path
 vi.mock('@tauri-apps/api/path', () => ({
@@ -23,8 +16,8 @@ describe('useLocations', () => {
 
   it('loads home directory and volumes', async () => {
     vi.mocked(homeDir).mockResolvedValue('/Users/test');
-    vi.mocked(fsModule.readDir).mockResolvedValue([
-      { name: 'ExternalDrive', isDirectory: true, path: '/Volumes/ExternalDrive' }
+    vi.mocked(readDir).mockResolvedValue([
+      { name: 'ExternalDrive', isDirectory: true, isFile: false, isSymlink: false }
     ]);
 
     const { result } = renderHook(() => useLocations());
@@ -50,7 +43,7 @@ describe('useLocations', () => {
 
   it('falls back to /Volumes if readDir fails', async () => {
     vi.mocked(homeDir).mockResolvedValue('/Users/test');
-    vi.mocked(fsModule.readDir).mockRejectedValue(new Error('Cannot read /Volumes'));
+    vi.mocked(readDir).mockRejectedValue(new Error('Cannot read /Volumes'));
 
     const { result } = renderHook(() => useLocations());
 

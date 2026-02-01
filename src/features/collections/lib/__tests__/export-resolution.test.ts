@@ -9,7 +9,7 @@ import {
   resolveExpandFolders,
 } from "../export-resolution";
 import type { ExplorerItem } from "@/types/explorer";
-import { fsModule } from "@/lib/tauri/fs";
+import { readDir, type DirEntry } from "@tauri-apps/plugin-fs";
 
 const createFile = (path: string, extension = "txt"): ExplorerItem => ({
   path,
@@ -32,6 +32,15 @@ const createFolder = (path: string): ExplorerItem => ({
   dateModifiedLabel: "Today",
   kindLabel: "Folder",
 });
+
+type TestDirEntry = DirEntry & { path?: string };
+
+const mockReadDir = (entriesByPath: Record<string, TestDirEntry[]>) => {
+  vi.mocked(readDir).mockImplementation(async (path) => {
+    const key = typeof path === "string" ? path : String(path);
+    return (entriesByPath[key] ?? []) as DirEntry[];
+  });
+};
 
 describe("detectAmbiguity", () => {
   it("returns false for single-kind files-only selection", () => {
@@ -106,15 +115,38 @@ describe("resolveExpandFolders", () => {
   });
 
   it("expands folder contents recursively", async () => {
-    vi.mocked(fsModule.readDir).mockResolvedValue([
-      { path: "/path/to/folder/nested.jpg", name: "nested.jpg", isFile: true },
-      { path: "/path/to/folder/inner", name: "inner", isDirectory: true },
-      { path: "/path/to/folder/inner/deep.txt", name: "deep.txt", isFile: true },
-    ]);
+    mockReadDir({
+      "/path/to/folder": [
+        {
+          path: "/path/to/folder/nested.jpg",
+          name: "nested.jpg",
+          isFile: true,
+          isDirectory: false,
+          isSymlink: false,
+        },
+        {
+          path: "/path/to/folder/inner",
+          name: "inner",
+          isDirectory: true,
+          isFile: false,
+          isSymlink: false,
+        },
+      ],
+      "/path/to/folder/inner": [
+        {
+          path: "/path/to/folder/inner/deep.txt",
+          name: "deep.txt",
+          isFile: true,
+          isDirectory: false,
+          isSymlink: false,
+        },
+      ],
+    });
 
     const result = await resolveExpandFolders([createFolder("/path/to/folder")]);
 
-    expect(fsModule.readDir).toHaveBeenCalledWith("/path/to/folder", { recursive: true });
+    expect(readDir).toHaveBeenCalledWith("/path/to/folder");
+    expect(readDir).toHaveBeenCalledWith("/path/to/folder/inner");
     expect(result.every((item) => item.kind === "file")).toBe(true);
     expect(result.map((item) => item.path).sort()).toEqual(
       ["/path/to/folder/nested.jpg", "/path/to/folder/inner/deep.txt"].sort(),
@@ -122,10 +154,24 @@ describe("resolveExpandFolders", () => {
   });
 
   it("ignores .DS_Store entries", async () => {
-    vi.mocked(fsModule.readDir).mockResolvedValue([
-      { path: "/path/to/folder/.DS_Store", name: ".DS_Store", isFile: true },
-      { path: "/path/to/folder/photo.jpg", name: "photo.jpg", isFile: true },
-    ]);
+    mockReadDir({
+      "/path/to/folder": [
+        {
+          path: "/path/to/folder/.DS_Store",
+          name: ".DS_Store",
+          isFile: true,
+          isDirectory: false,
+          isSymlink: false,
+        },
+        {
+          path: "/path/to/folder/photo.jpg",
+          name: "photo.jpg",
+          isFile: true,
+          isDirectory: false,
+          isSymlink: false,
+        },
+      ],
+    });
 
     const result = await resolveExpandFolders([createFolder("/path/to/folder")]);
 
@@ -133,7 +179,9 @@ describe("resolveExpandFolders", () => {
   });
 
   it("includes top-level files", async () => {
-    vi.mocked(fsModule.readDir).mockResolvedValue([]);
+    mockReadDir({
+      "/path/to/folder": [],
+    });
 
     const result = await resolveExpandFolders([
       createFile("/path/to/file.txt"),
@@ -144,9 +192,26 @@ describe("resolveExpandFolders", () => {
   });
 
   it("handles nested folders", async () => {
-    vi.mocked(fsModule.readDir).mockResolvedValue([
-      { path: "/path/to/folder/inner/deep.txt", name: "deep.txt", isFile: true },
-    ]);
+    mockReadDir({
+      "/path/to/folder": [
+        {
+          path: "/path/to/folder/inner",
+          name: "inner",
+          isDirectory: true,
+          isFile: false,
+          isSymlink: false,
+        },
+      ],
+      "/path/to/folder/inner": [
+        {
+          path: "/path/to/folder/inner/deep.txt",
+          name: "deep.txt",
+          isFile: true,
+          isDirectory: false,
+          isSymlink: false,
+        },
+      ],
+    });
 
     const result = await resolveExpandFolders([createFolder("/path/to/folder")]);
 

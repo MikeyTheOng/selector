@@ -65,7 +65,6 @@ describe('path-utils', () => {
     });
 
     it('returns null if name or path cannot be resolved', () => {
-      // @ts-expect-error - invalid entry shape
       expect(resolveEntry({}, '')).toBeNull();
     });
   });

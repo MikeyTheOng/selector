@@ -1,31 +1,46 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useFolderListing } from '../use-folder-listing';
-import { fsModule } from '@/lib/tauri/fs';
-import { watch, type WatchEvent } from '@tauri-apps/plugin-fs';
-import type { FsDirEntry, LocationItem } from '@/types/explorer';
-
-// Mock the fsModule
-vi.mock('@/lib/tauri/fs', () => ({
-  fsModule: {
-    readDir: vi.fn(),
-    stat: vi.fn(),
-  }
-}));
-
-// Mock @tauri-apps/plugin-fs watch
-vi.mock('@tauri-apps/plugin-fs', () => ({
-  watch: vi.fn(() => Promise.resolve(() => { })),
-}));
+import {
+  readDir,
+  stat,
+  watch,
+  type DirEntry,
+  type FileInfo,
+  type WatchEvent,
+} from '@tauri-apps/plugin-fs';
+import type { LocationItem } from '@/types/explorer';
 
 // Helper to mock successful directory read
-const mockReadDirSuccess = (entries: FsDirEntry[]) => {
-  vi.mocked(fsModule.readDir).mockResolvedValue(entries);
+const mockReadDirSuccess = (entries: DirEntry[]) => {
+  vi.mocked(readDir).mockResolvedValue(entries);
 };
 
 // Helper to mock successful stat
+const createFileInfo = (overrides: Partial<FileInfo> = {}): FileInfo => ({
+  isFile: true,
+  isDirectory: false,
+  isSymlink: false,
+  size: 0,
+  mtime: null,
+  atime: null,
+  birthtime: null,
+  readonly: false,
+  fileAttributes: null,
+  dev: null,
+  ino: null,
+  mode: null,
+  nlink: null,
+  uid: null,
+  gid: null,
+  rdev: null,
+  blksize: null,
+  blocks: null,
+  ...overrides,
+});
+
 const mockStatSuccess = (mtime: Date | null = null, size: number = 0) => {
-  vi.mocked(fsModule.stat!).mockResolvedValue({ mtime, size });
+  vi.mocked(stat).mockResolvedValue(createFileInfo({ mtime, size }));
 };
 
 describe('useFolderListing', () => {
@@ -48,9 +63,9 @@ describe('useFolderListing', () => {
 
   it('loads folder content when selectedFolder is provided', async () => {
     const mockEntries = [
-      { name: 'folder1', isDirectory: true, isFile: false, path: '/test/folder1' },
-      { name: 'file1.txt', isDirectory: false, isFile: true, path: '/test/file1.txt' },
-      { name: '.hidden', isDirectory: false, isFile: true, path: '/test/.hidden' },
+      { name: 'folder1', isDirectory: true, isFile: false, isSymlink: false },
+      { name: 'file1.txt', isDirectory: false, isFile: true, isSymlink: false },
+      { name: '.hidden', isDirectory: false, isFile: true, isSymlink: false },
     ];
 
     mockReadDirSuccess(mockEntries);
@@ -63,7 +78,7 @@ describe('useFolderListing', () => {
       expect(result.current.listing.isLoading).toBe(false);
     }, { timeout: 2000 });
 
-    expect(fsModule.readDir).toHaveBeenCalled();
+    expect(readDir).toHaveBeenCalled();
     expect(result.current.listing.folderCount).toBe(1);
     expect(result.current.listing.fileCount).toBe(1);
   });
@@ -95,7 +110,7 @@ describe('useFolderListing', () => {
     });
 
     await waitFor(() => {
-      expect(fsModule.readDir).toHaveBeenCalledWith('/home/sub', expect.any(Object));
+      expect(readDir).toHaveBeenCalledWith('/home/sub');
     });
   });
 
@@ -104,7 +119,7 @@ describe('useFolderListing', () => {
     renderHook(() => useFolderListing('/home', locations));
 
     await waitFor(() => {
-      expect(fsModule.readDir).toHaveBeenCalledTimes(1);
+      expect(readDir).toHaveBeenCalledTimes(1);
     });
 
     // Simulate window focus
@@ -113,7 +128,7 @@ describe('useFolderListing', () => {
     });
 
     await waitFor(() => {
-      expect(fsModule.readDir).toHaveBeenCalledTimes(2);
+      expect(readDir).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -132,7 +147,7 @@ describe('useFolderListing', () => {
     });
 
     // Reset call count for readDir
-    vi.mocked(fsModule.readDir).mockClear();
+    vi.mocked(readDir).mockClear();
     mockReadDirSuccess([]);
 
     // Simulate watch event
@@ -145,7 +160,7 @@ describe('useFolderListing', () => {
     });
 
     await waitFor(() => {
-      expect(fsModule.readDir).toHaveBeenCalled();
+      expect(readDir).toHaveBeenCalled();
     });
   });
 
@@ -154,7 +169,7 @@ describe('useFolderListing', () => {
     renderHook(() => useFolderListing('/home', locations));
 
     await waitFor(() => {
-      expect(fsModule.readDir).toHaveBeenCalledTimes(1);
+      expect(readDir).toHaveBeenCalledTimes(1);
     });
 
     // Mock visibilityState
@@ -169,7 +184,7 @@ describe('useFolderListing', () => {
     });
 
     await waitFor(() => {
-      expect(fsModule.readDir).toHaveBeenCalledTimes(2);
+      expect(readDir).toHaveBeenCalledTimes(2);
     });
   });
 });

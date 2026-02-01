@@ -5,8 +5,7 @@ import {
   getKindLabel,
 } from "@/lib/formatters";
 import { getFileKind } from "@/lib/file-types";
-import { getEntryPath } from "@/lib/path-utils";
-import { fsModule } from "@/lib/tauri/fs";
+import { readDirRecursive } from "@/lib/tauri/fs";
 import type { ExplorerItem } from "@/types/explorer";
 import type { FileKind } from "@/lib/file-types";
 
@@ -79,15 +78,21 @@ export const resolveExpandFolders = async (
 
   const resolved = await Promise.all(
     folders.map(async (folder) => {
-      const entries = await fsModule.readDir(folder.path, { recursive: true });
+      const entries = await readDirRecursive(folder.path, {
+        onError: (path, error) => {
+          console.warn(`Failed to read folder during export: ${path}`, error);
+        },
+        onSymlink: (path) => {
+          console.warn(`Skipping symlink during export: ${path}`);
+        },
+      });
       return entries
         .filter((entry) => entry.isFile ?? !entry.isDirectory)
         .map((entry) => {
-          const path = getEntryPath(entry, folder.path);
-          if (!path || isIgnoredPath(path)) {
+          if (!entry.path || isIgnoredPath(entry.path)) {
             return null;
           }
-          return createFileItem(path);
+          return createFileItem(entry.path);
         })
         .filter((entry): entry is ExplorerItem => Boolean(entry));
     }),
