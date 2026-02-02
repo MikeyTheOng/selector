@@ -1,12 +1,25 @@
-import { Folder, HardDrive } from "lucide-react";
+import { Folder, HardDrive, Home, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigation } from "@/hooks/use-navigation";
 import { cn } from "@/lib/utils";
 import type { LocationItem } from "@/types/explorer";
+import type { FavoriteLocationItem, FavoriteType } from "../types";
+
+function getFavoriteIcon(favoriteType: FavoriteType) {
+  switch (favoriteType) {
+    case "home":
+      return Home;
+    case "pictures":
+      return Image;
+    default:
+      console.error(`Unexpected favoriteType: ${favoriteType}`);
+      return Folder;
+  }
+}
 
 type LocationsSidebarProps = {
-  favorites: LocationItem[];
+  favorites: FavoriteLocationItem[];
   volumes: LocationItem[];
   renderCollections?: () => React.ReactNode;
 };
@@ -28,23 +41,26 @@ export const LocationsSidebar = ({
               <p className="cursor-default select-none px-2 pb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Favorites
               </p>
-              {favorites.map((fav) => (
-                <Button
-                  key={fav.path}
-                  type="button"
-                  variant="ghost"
-                  onClick={() => navigateToExplorer(fav.path)}
-                  className={cn(
-                    "h-auto w-full justify-start gap-2 rounded-lg px-2 py-2 text-left text-sm hover:text-foreground",
-                    selectedFolder === fav.path
-                      ? "bg-accent/70 text-foreground"
-                      : "text-foreground hover:bg-muted/50",
-                  )}
-                >
-                  <Folder className="h-4 w-4 text-muted-foreground" />
-                  <span className="truncate font-medium">{fav.name}</span>
-                </Button>
-              ))}
+              {favorites.map((fav) => {
+                const IconComponent = getFavoriteIcon(fav.favoriteType);
+                return (
+                  <Button
+                    key={fav.path}
+                    type="button"
+                    variant="ghost"
+                    onClick={() => navigateToExplorer(fav.path)}
+                    className={cn(
+                      "h-auto w-full justify-start gap-2 rounded-lg px-2 py-2 text-left text-sm hover:text-foreground",
+                      selectedFolder === fav.path
+                        ? "bg-accent/70 text-foreground"
+                        : "text-foreground hover:bg-muted/50",
+                    )}
+                  >
+                    <IconComponent className="h-4 w-4 text-muted-foreground" />
+                    <span className="truncate font-medium">{fav.name}</span>
+                  </Button>
+                );
+              })}
             </div>
           )}
 

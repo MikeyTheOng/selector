@@ -40,7 +40,7 @@ describe('useLocations', () => {
   });
 
   describe('favorites', () => {
-    it('includes Home and Pictures as favorites', async () => {
+    it('includes Home and Pictures as favorites with favoriteType', async () => {
       vi.mocked(homeDir).mockResolvedValue('/Users/test');
       vi.mocked(pictureDir).mockResolvedValue('/Users/test/Pictures');
       vi.mocked(readDir).mockResolvedValue([]);
@@ -55,26 +55,41 @@ describe('useLocations', () => {
         path: '/Users/test',
         name: 'test',
         kind: 'favorite',
+        favoriteType: 'home',
       });
       expect(result.current.favorites[1]).toEqual({
         path: '/Users/test/Pictures',
         name: 'Pictures',
         kind: 'favorite',
+        favoriteType: 'pictures',
       });
     });
 
-    it('sets error if pictureDir is unavailable', async () => {
+    it('skips favorite with failed path lookup and logs error', async () => {
       vi.mocked(homeDir).mockResolvedValue('/Users/test');
       vi.mocked(pictureDir).mockRejectedValue(new Error('Not available'));
       vi.mocked(readDir).mockResolvedValue([]);
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const { result } = renderHook(() => useLocations());
 
       await waitFor(() => {
-        expect(result.current.error).toBe('Not available');
+        expect(result.current.favorites).toHaveLength(1);
       });
 
-      expect(result.current.favorites).toHaveLength(0);
+      expect(result.current.favorites[0]).toEqual({
+        path: '/Users/test',
+        name: 'test',
+        kind: 'favorite',
+        favoriteType: 'home',
+      });
+      expect(result.current.error).toBeNull();
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to resolve Pictures path:',
+        expect.any(Error),
+      );
+
+      errorSpy.mockRestore();
     });
   });
 
@@ -182,14 +197,31 @@ describe('useLocations', () => {
   });
 
   describe('error handling', () => {
-    it('sets error when homeDir fails', async () => {
+    it('skips failed favorite and still loads remaining favorites', async () => {
       vi.mocked(homeDir).mockRejectedValue(new Error('Failed to get home dir'));
+      vi.mocked(pictureDir).mockResolvedValue('/Users/test/Pictures');
+      vi.mocked(readDir).mockResolvedValue([]);
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const { result } = renderHook(() => useLocations());
 
       await waitFor(() => {
-        expect(result.current.error).toBe('Failed to get home dir');
+        expect(result.current.favorites).toHaveLength(1);
       });
+
+      expect(result.current.favorites[0]).toEqual({
+        path: '/Users/test/Pictures',
+        name: 'Pictures',
+        kind: 'favorite',
+        favoriteType: 'pictures',
+      });
+      expect(result.current.error).toBeNull();
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to resolve Home path:',
+        expect.any(Error),
+      );
+
+      errorSpy.mockRestore();
     });
 
     it('has null error on success', async () => {
