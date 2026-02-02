@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { isHiddenName, resolveEntry } from "@/lib/path-utils";
+import type { LocationItem } from "@/types/explorer";
 import { homeDir, pictureDir } from "@tauri-apps/api/path";
 import { readDir, watch } from "@tauri-apps/plugin-fs";
-import { getErrorMessage, isHiddenName, resolveEntry } from "@/lib/path-utils";
-import type { LocationItem } from "@/types/explorer";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { FavoriteLocationItem, FavoriteType } from "../types";
 
 type LocationsState = {
-  favorites: LocationItem[];
+  favorites: FavoriteLocationItem[];
   volumes: LocationItem[];
   error: string | null;
 };
@@ -34,41 +35,47 @@ export const useLocations = () => {
   useEffect(() => {
     let isActive = true;
 
-    const loadLocations = async () => {
+    const createFavorite = async (
+      pathFn: () => Promise<string>,
+      name: string,
+      favoriteType: FavoriteType,
+      displayName?: string,
+    ): Promise<FavoriteLocationItem | null> => {
       try {
-        const homePath = await homeDir();
-        const picturesPath = await pictureDir();
-        if (!isActive) return;
-
-        const favorites: LocationItem[] = [
-          {
-            path: homePath,
-            name: homePath.split("/").pop() ?? "Home",
-            kind: "favorite",
-          },
-          {
-            path: picturesPath,
-            name: "Pictures",
-            kind: "favorite",
-          },
-        ];
-
-        let volumes: LocationItem[] = [];
-        try {
-          volumes = await readVolumes();
-          console.log("Volumes:", volumes); // # DEBUG
-        } catch {
-          console.log("Volumes not found"); // # DEBUG
-          volumes = [];
-        }
-
-        if (!isActive) return;
-
-        setState({ favorites, volumes, error: null });
+        const resolvedPath = await pathFn();
+        return {
+          path: resolvedPath,
+          name: displayName ?? resolvedPath.split("/").pop() ?? name,
+          kind: "favorite",
+          favoriteType,
+        };
       } catch (error) {
-        if (!isActive) return;
-        setState((prev) => ({ ...prev, error: getErrorMessage(error) }));
+        console.error(`Failed to resolve ${name} path:`, error);
+        return null;
       }
+    };
+
+    const loadLocations = async () => {
+      const favoriteResults = await Promise.all([
+        createFavorite(homeDir, "Home", "home"),
+        createFavorite(pictureDir, "Pictures", "pictures", "Pictures"),
+      ]);
+      const favorites = favoriteResults.filter(
+        (f): f is FavoriteLocationItem => f !== null,
+      );
+
+      if (!isActive) return;
+
+      let volumes: LocationItem[] = [];
+      try {
+        volumes = await readVolumes();
+      } catch {
+        volumes = [];
+      }
+
+      if (!isActive) return;
+
+      setState({ favorites, volumes, error: null });
     };
 
     loadLocations();

@@ -3,13 +3,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LocationsSidebar } from '../LocationsSidebar';
 import { useNavigation } from '@/hooks/use-navigation';
 import type { LocationItem } from '@/types/explorer';
+import type { FavoriteLocationItem } from '../../types';
 
 vi.mock('@/hooks/use-navigation');
 
 describe('LocationsSidebar', () => {
-  const mockFavorites: LocationItem[] = [
-    { path: '/Users/test', name: 'Home', kind: 'favorite' },
-    { path: '/Users/test/Pictures', name: 'Pictures', kind: 'favorite' },
+  const mockFavorites: FavoriteLocationItem[] = [
+    { path: '/Users/test', name: 'Home', kind: 'favorite', favoriteType: 'home' },
+    { path: '/Users/test/Pictures', name: 'Pictures', kind: 'favorite', favoriteType: 'pictures' },
   ];
 
   const mockVolumes: LocationItem[] = [

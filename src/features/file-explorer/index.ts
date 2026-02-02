@@ -20,3 +20,4 @@ export type {
   LocationItem,
   FolderListing,
 } from "@/types/explorer";
+export type { FavoriteType, FavoriteLocationItem } from "./types";

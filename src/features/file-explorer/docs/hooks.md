@@ -27,8 +27,15 @@ Purpose:
 - Watch `/Volumes` for live mount/unmount updates.
 - Handle errors from the filesystem layer (logged, not shown in UI).
 
+Each favorite carries a `favoriteType` field (`"home"` | `"pictures"`) used by
+the sidebar to select the correct Lucide icon.
+
+If a favorite's path lookup fails (e.g. `pictureDir()` rejects), that favorite
+is silently skipped and a `console.error` is logged. The remaining favorites
+still load normally, and no `error` is set on the hook state.
+
 Returns:
-- favorites: LocationItem[] (Home + Pictures, kind "favorite")
+- favorites: FavoriteLocationItem[] (Home + Pictures, kind "favorite")
 - volumes: LocationItem[] (entries from /Volumes, kind "volume")
 - rootLocations: LocationItem[] ([...favorites, ...volumes])
 - error: string | null
