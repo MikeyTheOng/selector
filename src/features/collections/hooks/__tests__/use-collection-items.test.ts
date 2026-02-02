@@ -2,18 +2,33 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useCollectionItems } from "../use-collection-items";
 import * as collectionsService from "../../lib/collections-service";
-import { fsModule } from "@/lib/tauri/fs";
+import { stat, type FileInfo } from "@tauri-apps/plugin-fs";
 import type { CollectionItem } from "../../types";
 
 // Mock the collections service
 vi.mock("../../lib/collections-service");
 
-// Mock the fsModule for status detection
-vi.mock("@/lib/tauri/fs", () => ({
-  fsModule: {
-    stat: vi.fn(),
-  },
-}));
+const createFileInfo = (overrides: Partial<FileInfo> = {}): FileInfo => ({
+  isFile: true,
+  isDirectory: false,
+  isSymlink: false,
+  size: 0,
+  mtime: null,
+  atime: null,
+  birthtime: null,
+  readonly: false,
+  fileAttributes: null,
+  dev: null,
+  ino: null,
+  mode: null,
+  nlink: null,
+  uid: null,
+  gid: null,
+  rdev: null,
+  blksize: null,
+  blocks: null,
+  ...overrides,
+});
 
 describe("useCollectionItems", () => {
   const mockCollectionId = 1;
@@ -63,11 +78,10 @@ describe("useCollectionItems", () => {
         mockItems,
       );
 
-      // Mock fsModule.stat to return success for all items (status: available)
-      vi.mocked(fsModule.stat!).mockResolvedValue({
-        size: 1024,
-        mtime: new Date(),
-      });
+      // Mock stat to return success for all items (status: available)
+      vi.mocked(stat).mockResolvedValue(
+        createFileInfo({ size: 1024, mtime: new Date() }),
+      );
 
       const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 
@@ -140,10 +154,9 @@ describe("useCollectionItems", () => {
       vi.mocked(collectionsService.getCollectionItems).mockResolvedValue(
         mockItems,
       );
-      vi.mocked(fsModule.stat!).mockResolvedValue({
-        size: 1024,
-        mtime: new Date(),
-      });
+      vi.mocked(stat).mockResolvedValue(
+        createFileInfo({ size: 1024, mtime: new Date() }),
+      );
 
       const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 
@@ -175,9 +188,9 @@ describe("useCollectionItems", () => {
       );
 
       // First call returns error for stat (missing), subsequent calls return success
-      vi.mocked(fsModule.stat!)
+      vi.mocked(stat)
         .mockRejectedValueOnce(new Error("File not found"))
-        .mockResolvedValue({ size: 1024, mtime: new Date() });
+        .mockResolvedValue(createFileInfo({ size: 1024, mtime: new Date() }));
 
       const { result } = renderHook(() => useCollectionItems(mockCollectionId));
 

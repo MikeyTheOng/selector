@@ -65,7 +65,6 @@ describe('path-utils', () => {
     });
 
     it('returns null if name or path cannot be resolved', () => {
-      // @ts-expect-error - invalid entry shape
       expect(resolveEntry({}, '')).toBeNull();
     });
   });
@@ -84,7 +83,7 @@ describe('path-utils', () => {
 
   describe('getPathHierarchy', () => {
     const locations: LocationItem[] = [
-      { path: '/Users/test', name: 'Home', kind: 'home' },
+      { path: '/Users/test', name: 'Home', kind: 'favorite' },
       { path: '/Volumes/Drive', name: 'Drive', kind: 'volume' },
     ];
 
@@ -100,7 +99,7 @@ describe('path-utils', () => {
 
     it('handles trailing slashes in locations', () => {
       const locationsWithSlash: LocationItem[] = [
-        { path: '/Users/test/', name: 'Home', kind: 'home' },
+        { path: '/Users/test/', name: 'Home', kind: 'favorite' },
       ];
       const path = '/Users/test/Documents';
       expect(getPathHierarchy(path, locationsWithSlash)).toEqual([
@@ -126,8 +125,8 @@ describe('path-utils', () => {
 
     it('selects the most specific location as root', () => {
       const multipleLocations: LocationItem[] = [
-        { path: '/Users', name: 'Users', kind: 'home' },
-        { path: '/Users/test', name: 'Home', kind: 'home' },
+        { path: '/Users', name: 'Users', kind: 'favorite' },
+        { path: '/Users/test', name: 'Home', kind: 'favorite' },
       ];
       const path = '/Users/test/Documents';
       expect(getPathHierarchy(path, multipleLocations)).toEqual([

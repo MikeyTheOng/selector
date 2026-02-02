@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { stat } from "@tauri-apps/plugin-fs";
 import { getErrorMessage } from "@/lib/path-utils";
-import { fsModule } from "@/lib/tauri/fs";
 import * as collectionsService from "../lib/collections-service";
 import type {
   CollectionItem,
@@ -24,7 +24,7 @@ async function detectItemStatus(
   item: CollectionItem,
 ): Promise<CollectionItemStatus> {
   try {
-    await fsModule.stat?.(item.path);
+    await stat(item.path);
     return "available";
   } catch {
     // Check if this is an external volume path
@@ -32,7 +32,7 @@ async function detectItemStatus(
     if (volumeMatch) {
       // Check if volume mount point exists
       try {
-        await fsModule.stat?.(`/Volumes/${volumeMatch[1]}`);
+        await stat(`/Volumes/${volumeMatch[1]}`);
         return "missing"; // Volume is mounted, but file is gone
       } catch {
         return "offline"; // Volume is not mounted

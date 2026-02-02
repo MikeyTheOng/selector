@@ -8,26 +8,16 @@ export type ExplorerItemStatus = "available" | "missing" | "offline";
 
 export type FsDirEntry = {
   name?: string | null;
-  path: string;
+  path?: string | null;
   isDirectory?: boolean;
   isFile?: boolean;
-};
-
-export type FsMetadata = {
-  size?: number;
-  mtime?: Date | null;
-};
-
-export type FsModule = {
-  readDir: (path: string, options?: { recursive?: boolean }) => Promise<FsDirEntry[]>;
-  metadata?: (path: string) => Promise<FsMetadata>;
-  stat?: (path: string) => Promise<FsMetadata>;
+  isSymlink?: boolean;
 };
 
 export type LocationItem = {
   path: string;
   name: string;
-  kind: "home" | "volume";
+  kind: "favorite" | "volume";
 };
 
 export interface BaseExplorerItem {

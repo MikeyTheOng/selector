@@ -29,9 +29,10 @@ describe('App Routing Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useLocations).mockReturnValue({
-      locations: [],
+      favorites: [],
+      volumes: [],
+      rootLocations: [],
       error: null,
-      homePath: '/home/user',
     });
     vi.mocked(useCollections).mockReturnValue({
       collections: [],

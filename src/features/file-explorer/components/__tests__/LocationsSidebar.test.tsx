@@ -7,9 +7,13 @@ import type { LocationItem } from '@/types/explorer';
 vi.mock('@/hooks/use-navigation');
 
 describe('LocationsSidebar', () => {
-  const mockLocations: LocationItem[] = [
-    { path: '/Users/test', name: 'Home', kind: 'home' },
-    { path: '/Volumes/Drive', name: 'Drive', kind: 'volume' }
+  const mockFavorites: LocationItem[] = [
+    { path: '/Users/test', name: 'Home', kind: 'favorite' },
+    { path: '/Users/test/Pictures', name: 'Pictures', kind: 'favorite' },
+  ];
+
+  const mockVolumes: LocationItem[] = [
+    { path: '/Volumes/Drive', name: 'Drive', kind: 'volume' },
   ];
 
   const mockNavigateToExplorer = vi.fn();
@@ -28,14 +32,15 @@ describe('LocationsSidebar', () => {
   });
 
   const defaultProps = {
-    locations: mockLocations,
-    locationsError: null,
+    favorites: mockFavorites,
+    volumes: mockVolumes,
   };
 
-  it('renders home location', () => {
+  it('renders favorites section with all favorites', () => {
     render(<LocationsSidebar {...defaultProps} />);
     expect(screen.getByText('Favorites')).toBeDefined();
     expect(screen.getByText('Home')).toBeDefined();
+    expect(screen.getByText('Pictures')).toBeDefined();
   });
 
   it('renders volume locations', () => {
@@ -44,10 +49,26 @@ describe('LocationsSidebar', () => {
     expect(screen.getByText('Drive')).toBeDefined();
   });
 
-  it('calls navigateToExplorer when location clicked', () => {
+  it('calls navigateToExplorer when favorite clicked', () => {
     render(<LocationsSidebar {...defaultProps} />);
     fireEvent.click(screen.getByText('Home'));
     expect(mockNavigateToExplorer).toHaveBeenCalledWith('/Users/test');
+  });
+
+  it('calls navigateToExplorer when volume clicked', () => {
+    render(<LocationsSidebar {...defaultProps} />);
+    fireEvent.click(screen.getByText('Drive'));
+    expect(mockNavigateToExplorer).toHaveBeenCalledWith('/Volumes/Drive');
+  });
+
+  it('shows empty state when no volumes', () => {
+    render(<LocationsSidebar favorites={mockFavorites} volumes={[]} />);
+    expect(screen.getByText('No mounted locations found.')).toBeDefined();
+  });
+
+  it('hides favorites section when no favorites', () => {
+    render(<LocationsSidebar favorites={[]} volumes={mockVolumes} />);
+    expect(screen.queryByText('Favorites')).toBeNull();
   });
 
   it('renders collections slot when provided', () => {

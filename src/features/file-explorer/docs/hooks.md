@@ -21,11 +21,14 @@ Returns:
 
 ## use-locations
 Purpose:
-- Discover home and volume roots for the sidebar.
-- Handle errors from the filesystem layer.
+- Discover favorites (Home, Pictures) and mounted volumes for the sidebar.
+- Provide a combined `rootLocations` list for root resolution in navigation
+  components (PathBar, ColumnView, use-folder-listing).
+- Watch `/Volumes` for live mount/unmount updates.
+- Handle errors from the filesystem layer (logged, not shown in UI).
 
 Returns:
-- locations: LocationItem[]
-- homePath: string | null
+- favorites: LocationItem[] (Home + Pictures, kind "favorite")
+- volumes: LocationItem[] (entries from /Volumes, kind "volume")
+- rootLocations: LocationItem[] ([...favorites, ...volumes])
 - error: string | null
-

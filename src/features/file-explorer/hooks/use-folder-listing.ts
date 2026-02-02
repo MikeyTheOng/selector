@@ -1,6 +1,5 @@
-import { watch, type WatchEvent } from "@tauri-apps/plugin-fs";
+import { readDir, stat, watch, type WatchEvent } from "@tauri-apps/plugin-fs";
 import { useCallback, useEffect, useState } from "react";
-import { fsModule } from "@/lib/tauri/fs";
 import { formatDateTime, formatSize, getExtension, getKindLabel } from "@/lib/formatters";
 import {
   getErrorMessage,
@@ -65,7 +64,7 @@ export const useFolderListing = (
   );
 
   const readFolderListing = useCallback(async (path: string) => {
-    const entries = await fsModule.readDir(path, { recursive: false });
+    const entries = await readDir(path);
     const visibleEntries = entries
       .map((entry) => {
         const resolved = resolveEntry(entry, path);
@@ -94,7 +93,7 @@ export const useFolderListing = (
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    const metadataReader = fsModule.metadata ?? fsModule.stat;
+    const metadataReader = stat;
     const folderRows = await Promise.all(
       folders.map(async (entry): Promise<FolderRow> => {
         let mtime: Date | null = null;

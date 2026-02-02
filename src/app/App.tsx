@@ -13,13 +13,13 @@ import { useAppMenu } from "./setupAppMenu";
 
 function AppInner() {
   useAppMenu();
-  const { locations, error: locationsError } = useLocations();
+  const { favorites, volumes, rootLocations } = useLocations();
   const { currentRoute, navigateToExplorer } = useNavigation();
 
   const sidebar = (
     <LocationsSidebar
-      locations={locations}
-      locationsError={locationsError}
+      favorites={favorites}
+      volumes={volumes}
       renderCollections={() => <CollectionsSidebarSection />}
     />
   );
@@ -29,7 +29,7 @@ function AppInner() {
       case "explorer":
         return (
           <FileExplorerPage
-            locations={locations}
+            locations={rootLocations}
             folderId={currentRoute.folderId}
             focusItemPath={currentRoute.focusItemPath}
             onSelectFolder={navigateToExplorer}

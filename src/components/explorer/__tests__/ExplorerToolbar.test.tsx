@@ -20,16 +20,18 @@ describe("ExplorerToolbar", () => {
       <ExplorerToolbar
         {...defaultProps}
         selectionPanel={<button>2 selected</button>}
-      />
+      />,
     );
     expect(screen.getByText(/2 selected/)).toBeDefined();
   });
 
   it("should call onViewModeChange when a view mode is selected", () => {
     const onViewModeChange = vi.fn();
-    render(<ExplorerToolbar {...defaultProps} onViewModeChange={onViewModeChange} />);
+    render(
+      <ExplorerToolbar {...defaultProps} onViewModeChange={onViewModeChange} />,
+    );
 
-    fireEvent.click(screen.getByText("Column"));
+    fireEvent.click(screen.getByRole("radio", { name: /column view/i }));
     expect(onViewModeChange).toHaveBeenCalledWith("column");
   });
 
@@ -39,7 +41,7 @@ describe("ExplorerToolbar", () => {
       <ExplorerToolbar
         {...defaultProps}
         selectionPanel={<button onClick={onToggle}>2 selected</button>}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText(/2 selected/));
@@ -52,7 +54,7 @@ describe("ExplorerToolbar", () => {
         {...defaultProps}
         title="My Collection"
         leftContent={<span>Left Action</span>}
-      />
+      />,
     );
     expect(screen.getByText("My Collection")).toBeDefined();
     expect(screen.getByText("Left Action")).toBeDefined();
@@ -63,7 +65,7 @@ describe("ExplorerToolbar", () => {
       <ExplorerToolbar
         {...defaultProps}
         rightContent={<button>Extra Action</button>}
-      />
+      />,
     );
     expect(screen.getByText("Extra Action")).toBeDefined();
   });

@@ -5,7 +5,7 @@ import type { LocationItem } from '@/types/explorer';
 
 describe('PathBar', () => {
   const mockLocations: LocationItem[] = [
-    { path: '/users/test', name: 'Home', kind: 'home' },
+    { path: '/users/test', name: 'Home', kind: 'favorite' },
   ];
 
   it('renders nothing when no folder selected', () => {
