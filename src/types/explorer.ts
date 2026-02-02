@@ -17,7 +17,7 @@ export type FsDirEntry = {
 export type LocationItem = {
   path: string;
   name: string;
-  kind: "home" | "volume";
+  kind: "favorite" | "volume";
 };
 
 export interface BaseExplorerItem {

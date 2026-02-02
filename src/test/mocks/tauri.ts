@@ -103,6 +103,7 @@ vi.mock("@tauri-apps/plugin-fs", () => ({
 // Mock @tauri-apps/api/path
 vi.mock("@tauri-apps/api/path", () => ({
   homeDir: vi.fn(() => Promise.resolve("/Users/test")),
+  pictureDir: vi.fn(() => Promise.resolve("/Users/test/Pictures")),
 }));
 
 // Mock @tauri-apps/plugin-shell

@@ -45,7 +45,7 @@ const mockStatSuccess = (mtime: Date | null = null, size: number = 0) => {
 
 describe('useFolderListing', () => {
   const locations: LocationItem[] = [
-    { path: '/home', name: 'Home', kind: 'home' }
+    { path: '/home', name: 'Home', kind: 'favorite' }
   ];
 
   beforeEach(() => {

@@ -1,75 +1,138 @@
-import { useEffect, useState } from "react";
-import { homeDir } from "@tauri-apps/api/path";
-import { readDir } from "@tauri-apps/plugin-fs";
-import { getErrorMessage, getPathBaseName, isHiddenName, resolveEntry } from "@/lib/path-utils";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { homeDir, pictureDir } from "@tauri-apps/api/path";
+import { readDir, watch } from "@tauri-apps/plugin-fs";
+import { getErrorMessage, isHiddenName, resolveEntry } from "@/lib/path-utils";
 import type { LocationItem } from "@/types/explorer";
 
 type LocationsState = {
-  locations: LocationItem[];
+  favorites: LocationItem[];
+  volumes: LocationItem[];
   error: string | null;
-  homePath: string | null;
+};
+
+const readVolumes = async (): Promise<LocationItem[]> => {
+  const volumeEntries = await readDir("/Volumes");
+  return volumeEntries
+    .filter((entry) => entry.isDirectory || entry.isSymlink)
+    .map((entry) => resolveEntry(entry, "/Volumes"))
+    .filter((entry): entry is { name: string; path: string } => Boolean(entry))
+    .filter((entry) => !isHiddenName(entry.name))
+    .map<LocationItem>((entry) => ({
+      path: entry.path,
+      name: entry.name,
+      kind: "volume",
+    }));
 };
 
 export const useLocations = () => {
   const [state, setState] = useState<LocationsState>({
-    locations: [],
+    favorites: [],
+    volumes: [],
     error: null,
-    homePath: null,
   });
 
   useEffect(() => {
     let isActive = true;
 
-    const loadRoots = async () => {
+    const loadLocations = async () => {
       try {
         const homePath = await homeDir();
-        if (!isActive) {
-          return;
-        }
+        const picturesPath = await pictureDir();
+        if (!isActive) return;
 
-        const homeLabel = getPathBaseName(homePath) || "Home";
-        let locationRoots: LocationItem[] = [];
-
-        try {
-          const volumeEntries = await readDir("/Volumes");
-          locationRoots = volumeEntries
-            .filter((entry) => entry.isDirectory)
-            .map((entry) => resolveEntry(entry, "/Volumes"))
-            .filter((entry): entry is { name: string; path: string } => Boolean(entry))
-            .filter((entry) => !isHiddenName(entry.name))
-            .map<LocationItem>((entry) => ({
-              path: entry.path,
-              name: entry.name,
-              kind: "volume",
-            }))
-            .sort((a, b) => a.name.localeCompare(b.name));
-        } catch {
-          locationRoots = [];
-        }
-
-        if (locationRoots.length === 0) {
-          locationRoots = [{ path: "/Volumes", name: "Volumes", kind: "volume" }];
-        }
-
-        const roots: LocationItem[] = [
-          { path: homePath, name: homeLabel, kind: "home" },
-          ...locationRoots,
+        const favorites: LocationItem[] = [
+          {
+            path: homePath,
+            name: homePath.split("/").pop() ?? "Home",
+            kind: "favorite",
+          },
+          {
+            path: picturesPath,
+            name: "Pictures",
+            kind: "favorite",
+          },
         ];
-        setState({ locations: roots, error: null, homePath });
-      } catch (error) {
-        if (!isActive) {
-          return;
+
+        let volumes: LocationItem[] = [];
+        try {
+          volumes = await readVolumes();
+          console.log("Volumes:", volumes); // # DEBUG
+        } catch {
+          console.log("Volumes not found"); // # DEBUG
+          volumes = [];
         }
+
+        if (!isActive) return;
+
+        setState({ favorites, volumes, error: null });
+      } catch (error) {
+        if (!isActive) return;
         setState((prev) => ({ ...prev, error: getErrorMessage(error) }));
       }
     };
 
-    loadRoots();
+    loadLocations();
 
     return () => {
       isActive = false;
     };
   }, []);
 
-  return state;
+  const refreshVolumes = useCallback(async () => {
+    try {
+      const volumes = await readVolumes();
+      setState((prev) => ({ ...prev, volumes }));
+    } catch (error) {
+      console.error("Failed to refresh /Volumes", error);
+    }
+  }, []);
+
+  // Watch /Volumes for live updates
+  useEffect(() => {
+    let isActive = true;
+    let stopWatcher: (() => void) | null = null;
+
+    const startWatcher = async () => {
+      try {
+        const stop = await watch(
+          "/Volumes",
+          () => {
+            if (!isActive) return;
+            void refreshVolumes();
+          },
+          { recursive: false, delayMs: 500 },
+        );
+
+        if (!isActive) {
+          stop();
+          return;
+        }
+
+        stopWatcher = stop;
+      } catch (error) {
+        if (isActive) {
+          console.warn("Failed to watch /Volumes", error);
+        }
+      }
+    };
+
+    void startWatcher();
+
+    return () => {
+      isActive = false;
+      stopWatcher?.();
+    };
+  }, [refreshVolumes]);
+
+  const rootLocations = useMemo(
+    () => [...state.favorites, ...state.volumes],
+    [state.favorites, state.volumes],
+  );
+
+  return {
+    favorites: state.favorites,
+    volumes: state.volumes,
+    rootLocations,
+    error: state.error,
+  };
 };
