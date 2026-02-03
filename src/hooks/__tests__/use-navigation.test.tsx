@@ -27,6 +27,7 @@ describe('useNavigation', () => {
       type: 'explorer',
       folderId: '/path/to/folder',
     });
+    expect(result.current.canGoBack).toBe(false);
   });
 
   it('navigates to collection view', () => {

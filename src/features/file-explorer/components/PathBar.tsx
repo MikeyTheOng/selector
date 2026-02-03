@@ -22,18 +22,22 @@ export const PathBar = ({
       return [] as GenericPathSegment[];
     }
 
-    // Find the matching root location (longest matching prefix)
-    const sortedLocations = [...locations]
-      .filter(
-        (loc) =>
-          selectedFolder === loc.path ||
-          selectedFolder.startsWith(loc.path.endsWith("/") ? loc.path : `${loc.path}/`),
-      )
-      .sort((a, b) => b.path.length - a.path.length);
+    const volumeLocations = locations.filter((loc) => loc.kind === "volume");
+    let rootPath = "/";
+    let rootName = "/";
 
-    const rootLocation = sortedLocations[0];
-    const rootPath = rootLocation?.path ?? selectedFolder;
-    const rootName = rootLocation?.name ?? getPathBaseName(rootPath);
+    if (selectedFolder.startsWith("/Volumes/")) {
+      const segments = selectedFolder.split("/").filter(Boolean);
+      const volumeName = segments[1];
+      rootPath = volumeName ? `/Volumes/${volumeName}` : "/Volumes";
+      const rootLocation = volumeLocations.find((loc) => loc.path === rootPath);
+      rootName = rootLocation?.name ?? volumeName ?? getPathBaseName(rootPath);
+    } else {
+      const macVolume = volumeLocations.find((loc) => loc.name === "Macintosh HD");
+      const defaultVolume = macVolume ?? volumeLocations[0];
+      rootName = defaultVolume?.name ?? "/";
+      rootPath = "/";
+    }
 
     // Start with root segment
     const result: GenericPathSegment[] = [
