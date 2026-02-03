@@ -2,10 +2,17 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FileListView } from '../FileListView';
 import type { FolderListing } from '@/types/explorer';
+import type { ContextMenuItemAction } from '@/components/explorer/ExplorerContextMenu';
+import type { FavoriteLocationItem } from '../../types';
 
 // Simple mock for FileRowLabel
 vi.mock('../FileRowLabel', () => ({
   FileRowLabel: ({ name }: { name: string }) => <div>{name}</div>,
+}));
+
+const showContextMenu = vi.fn();
+vi.mock('@/components/explorer/ExplorerContextMenu', () => ({
+  useExplorerContextMenu: () => ({ showContextMenu }),
 }));
 
 describe('FileListView', () => {
@@ -34,6 +41,7 @@ describe('FileListView', () => {
 
   const defaultProps = {
     listing: mockListing,
+    favorites: [],
     selectedPaths: {},
     lastClickedPath: null,
     focusedPath: null,
@@ -42,6 +50,8 @@ describe('FileListView', () => {
     onSelectRange: vi.fn(),
     onFocusItem: vi.fn(),
     onToggleSelection: vi.fn(),
+    onAddFavorite: vi.fn(),
+    onRemoveFavorite: vi.fn(),
   };
 
   beforeEach(() => {
@@ -119,5 +129,74 @@ describe('FileListView', () => {
 
     expect(defaultProps.onSelectRange).toHaveBeenCalled();
     expect(defaultProps.onFocusItem).toHaveBeenCalled();
+  });
+
+  it('adds Add to Favorites for non-favorited folders', () => {
+    render(<FileListView {...defaultProps} />);
+    const folderButton = screen.getByText('folder1').closest('button');
+    fireEvent.contextMenu(folderButton!);
+
+    const menuItems = showContextMenu.mock.calls[0][0];
+    const addItem = menuItems.find((item: { id?: string }) => item.id === 'add-to-favorites') as ContextMenuItemAction | undefined;
+    expect(addItem).toBeDefined();
+    expect(addItem?.enabled).toBe(true);
+    addItem?.action();
+    expect(defaultProps.onAddFavorite).toHaveBeenCalledWith('/test/folder1');
+  });
+
+  it('disables Remove from Favorites for built-in favorites', () => {
+    const favorites: FavoriteLocationItem[] = [
+      {
+        path: '/test/folder1',
+        name: 'folder1',
+        kind: 'favorite',
+        favoriteType: 'home',
+        status: 'available',
+      },
+    ];
+
+    render(<FileListView {...defaultProps} favorites={favorites} />);
+    const folderButton = screen.getByText('folder1').closest('button');
+    fireEvent.contextMenu(folderButton!);
+
+    const menuItems = showContextMenu.mock.calls[0][0];
+    const removeItem = menuItems.find((item: { id?: string }) => item.id === 'remove-from-favorites');
+    expect(removeItem).toBeDefined();
+    expect(removeItem.enabled).toBe(false);
+  });
+
+  it('enables Remove from Favorites for custom favorites', () => {
+    const favorites: FavoriteLocationItem[] = [
+      {
+        path: '/test/folder1',
+        name: 'folder1',
+        kind: 'favorite',
+        favoriteType: 'custom',
+        status: 'available',
+      },
+    ];
+
+    render(<FileListView {...defaultProps} favorites={favorites} />);
+    const folderButton = screen.getByText('folder1').closest('button');
+    fireEvent.contextMenu(folderButton!);
+
+    const menuItems = showContextMenu.mock.calls[0][0];
+    const removeItem = menuItems.find((item: { id?: string }) => item.id === 'remove-from-favorites') as ContextMenuItemAction | undefined;
+    expect(removeItem).toBeDefined();
+    expect(removeItem?.enabled).toBe(true);
+    removeItem?.action();
+    expect(defaultProps.onRemoveFavorite).toHaveBeenCalledWith('/test/folder1');
+  });
+
+  it('does not include favorites actions for file items', () => {
+    render(<FileListView {...defaultProps} />);
+    const fileButton = screen.getByText('file1.txt').closest('button');
+    fireEvent.contextMenu(fileButton!);
+
+    const menuItems = showContextMenu.mock.calls[0][0];
+    const addItem = menuItems.find((item: { id?: string }) => item.id === 'add-to-favorites');
+    const removeItem = menuItems.find((item: { id?: string }) => item.id === 'remove-from-favorites');
+    expect(addItem).toBeUndefined();
+    expect(removeItem).toBeUndefined();
   });
 });

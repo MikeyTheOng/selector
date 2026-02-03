@@ -33,6 +33,8 @@ describe('App Routing Integration', () => {
       volumes: [],
       rootLocations: [],
       error: null,
+      addFavorite: vi.fn(),
+      removeFavorite: vi.fn(),
     });
     vi.mocked(useCollections).mockReturnValue({
       collections: [],
