@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { toast } from "sonner";
 import { FileRowLabel } from "./FileRowLabel";
 import { ExplorerListView } from "@/components/explorer/ExplorerListView";
 import { useExplorerContextMenu } from "@/components/explorer/ExplorerContextMenu";
@@ -90,7 +91,15 @@ export const FileListView = ({
             id: "add-to-favorites",
             text: "Add to Favorites",
             enabled: item.status === "available",
-            action: () => onAddFavorite(normalized),
+            action: () => {
+              void (async () => {
+                try {
+                  await onAddFavorite(normalized);
+                } catch {
+                  toast.error("Failed to add favorite.");
+                }
+              })();
+            },
           });
         } else {
           items.push({
@@ -98,7 +107,15 @@ export const FileListView = ({
             id: "remove-from-favorites",
             text: "Remove from Favorites",
             enabled: favorite.favoriteType === "custom",
-            action: () => onRemoveFavorite(normalized),
+            action: () => {
+              void (async () => {
+                try {
+                  await onRemoveFavorite(normalized);
+                } catch {
+                  toast.error("Failed to remove favorite.");
+                }
+              })();
+            },
           });
         }
       }

@@ -45,6 +45,12 @@ Returns:
 - addFavorite(path): persists a custom favorite (ignores built-ins)
 - removeFavorite(path): removes a custom favorite
 
+Behavior notes:
+- add/remove are optimistic: the favorites list updates immediately, then
+  reconciles after the DB write + refresh.
+- add/remove may throw if the DB write fails; callers should handle errors
+  (e.g. show a toast).
+
 ## Navigation Notes
 - Breadcrumb root resolution (PathBar):
   - If `selectedFolder` is under `/Volumes`, the root segment is the matching

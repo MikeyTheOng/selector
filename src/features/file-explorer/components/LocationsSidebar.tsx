@@ -69,7 +69,15 @@ export const LocationsSidebar = ({
         id: "remove-favorite",
         text: "Remove from Favorites",
         enabled: favorite.favoriteType === "custom",
-        action: () => onRemoveFavorite(favorite.path),
+        action: () => {
+          void (async () => {
+            try {
+              await onRemoveFavorite(favorite.path);
+            } catch {
+              toast.error("Failed to remove favorite.");
+            }
+          })();
+        },
       },
     ]);
   };

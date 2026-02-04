@@ -302,11 +302,25 @@ export const useLocations = () => {
         return;
       }
 
-      await addFavoriteLocation(normalizedPath);
-      // await applyFavoriteUpdate(normalizedPath, "add");
-      await refreshFavorites();
+      const wasAlreadyFavorite = state.favorites.some(
+        (favorite) => favorite.path === normalizedPath,
+      );
+
+      void applyFavoriteUpdate(normalizedPath, "add");
+
+      try {
+        await addFavoriteLocation(normalizedPath);
+      } catch (error) {
+        console.error("Failed to add favorite:", error);
+        if (!wasAlreadyFavorite) {
+          void applyFavoriteUpdate(normalizedPath, "remove");
+        }
+        throw error;
+      } finally {
+        await refreshFavorites();
+      }
     },
-    [applyFavoriteUpdate, isBuiltInPath, refreshFavorites],
+    [applyFavoriteUpdate, isBuiltInPath, refreshFavorites, state.favorites],
   );
 
   const removeFavorite = useCallback(
@@ -314,11 +328,39 @@ export const useLocations = () => {
       const normalizedPath = normalizeFavoritePath(path);
       if (!normalizedPath) return;
 
-      await removeFavoriteLocation(normalizedPath);
-      // await applyFavoriteUpdate(normalizedPath, "remove");
-      await refreshFavorites();
+      const removedFavoriteIndex = state.favorites.findIndex(
+        (favorite) => favorite.path === normalizedPath,
+      );
+      const removedFavorite =
+        removedFavoriteIndex >= 0 ? state.favorites[removedFavoriteIndex] : undefined;
+
+      void applyFavoriteUpdate(normalizedPath, "remove");
+
+      try {
+        await removeFavoriteLocation(normalizedPath);
+      } catch (error) {
+        console.error("Failed to remove favorite:", error);
+        if (removedFavorite) {
+          setState((prev) => {
+            if (prev.favorites.some((favorite) => favorite.path === normalizedPath)) {
+              return prev;
+            }
+
+            const favorites = [...prev.favorites];
+            const insertAt =
+              removedFavoriteIndex >= 0 && removedFavoriteIndex <= favorites.length
+                ? removedFavoriteIndex
+                : favorites.length;
+            favorites.splice(insertAt, 0, removedFavorite);
+            return { ...prev, favorites };
+          });
+        }
+        throw error;
+      } finally {
+        await refreshFavorites();
+      }
     },
-    [applyFavoriteUpdate, refreshFavorites],
+    [applyFavoriteUpdate, refreshFavorites, state.favorites],
   );
 
   const rootLocations = useMemo(

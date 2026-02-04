@@ -326,7 +326,7 @@ describe('useLocations', () => {
       expect(result.current.favorites).toHaveLength(2);
     });
 
-    it('adds optimistic favorite after DB write resolves but before refresh completes', async () => {
+    it('adds optimistic favorite immediately and resolves after refresh completes', async () => {
       vi.mocked(homeDir).mockResolvedValue('/Users/test');
       vi.mocked(pictureDir).mockResolvedValue('/Users/test/Pictures');
       vi.mocked(readDir).mockResolvedValue([]);
@@ -353,12 +353,6 @@ describe('useLocations', () => {
       });
 
       expect(addFavoriteLocation).toHaveBeenCalledWith('/Custom');
-      expect(result.current.favorites).toHaveLength(2);
-
-      await act(async () => {
-        addDeferred.resolve();
-      });
-
       await waitFor(() => {
         expect(result.current.favorites).toHaveLength(3);
       });
@@ -367,6 +361,13 @@ describe('useLocations', () => {
       void addPromise.then(() => {
         addResolved = true;
       });
+      await Promise.resolve();
+      expect(addResolved).toBe(false);
+
+      await act(async () => {
+        addDeferred.resolve();
+      });
+
       await Promise.resolve();
       expect(addResolved).toBe(false);
 
@@ -390,6 +391,35 @@ describe('useLocations', () => {
       expect(result.current.favorites[2].path).toBe('/Custom');
     });
 
+    it('rolls back optimistic add and rejects when DB write fails', async () => {
+      vi.mocked(homeDir).mockResolvedValue('/Users/test');
+      vi.mocked(pictureDir).mockResolvedValue('/Users/test/Pictures');
+      vi.mocked(readDir).mockResolvedValue([]);
+      vi.mocked(detectFavoriteStatus).mockResolvedValue('available');
+      vi.mocked(addFavoriteLocation).mockRejectedValueOnce(new Error('DB error'));
+
+      const { result } = renderHook(() => useLocations());
+
+      await waitFor(() => {
+        expect(result.current.favorites).toHaveLength(2);
+      });
+
+      let addPromise!: Promise<void>;
+      await act(async () => {
+        addPromise = result.current.addFavorite('/Custom');
+      });
+
+      await waitFor(() => {
+        expect(result.current.favorites).toHaveLength(3);
+      });
+
+      await expect(addPromise).rejects.toBeDefined();
+
+      await waitFor(() => {
+        expect(result.current.favorites).toHaveLength(2);
+      });
+    });
+
     it('removes a favorite and refreshes', async () => {
       vi.mocked(homeDir).mockResolvedValue('/Users/test');
       vi.mocked(pictureDir).mockResolvedValue('/Users/test/Pictures');
@@ -405,6 +435,43 @@ describe('useLocations', () => {
         await result.current.removeFavorite('/Custom');
       });
       expect(removeFavoriteLocation).toHaveBeenCalledWith('/Custom');
+    });
+
+    it('rolls back optimistic remove and rejects when DB write fails', async () => {
+      vi.mocked(homeDir).mockResolvedValue('/Users/test');
+      vi.mocked(pictureDir).mockResolvedValue('/Users/test/Pictures');
+      vi.mocked(readDir).mockResolvedValue([]);
+      vi.mocked(getUserFavorites).mockResolvedValue([
+        {
+          path: '/Custom',
+          name: 'Custom',
+          kind: 'favorite',
+          favoriteType: 'custom',
+          status: 'available',
+        },
+      ]);
+      vi.mocked(removeFavoriteLocation).mockRejectedValueOnce(new Error('DB error'));
+
+      const { result } = renderHook(() => useLocations());
+
+      await waitFor(() => {
+        expect(result.current.favorites).toHaveLength(3);
+      });
+
+      let removePromise!: Promise<void>;
+      await act(async () => {
+        removePromise = result.current.removeFavorite('/Custom');
+      });
+
+      await waitFor(() => {
+        expect(result.current.favorites).toHaveLength(2);
+      });
+
+      await expect(removePromise).rejects.toBeDefined();
+
+      await waitFor(() => {
+        expect(result.current.favorites).toHaveLength(3);
+      });
     });
   });
 

@@ -4,6 +4,7 @@ import { FileListView } from '../FileListView';
 import type { FolderListing } from '@/types/explorer';
 import type { ContextMenuItemAction } from '@/components/explorer/ExplorerContextMenu';
 import type { FavoriteLocationItem } from '../../types';
+import { toast } from 'sonner';
 
 // Simple mock for FileRowLabel
 vi.mock('../FileRowLabel', () => ({
@@ -13,6 +14,12 @@ vi.mock('../FileRowLabel', () => ({
 const showContextMenu = vi.fn();
 vi.mock('@/components/explorer/ExplorerContextMenu', () => ({
   useExplorerContextMenu: () => ({ showContextMenu }),
+}));
+
+vi.mock('sonner', () => ({
+  toast: {
+    error: vi.fn(),
+  },
 }));
 
 describe('FileListView', () => {
@@ -144,6 +151,20 @@ describe('FileListView', () => {
     expect(defaultProps.onAddFavorite).toHaveBeenCalledWith('/test/folder1');
   });
 
+  it('shows toast when add to favorites fails', async () => {
+    const onAddFavorite = vi.fn().mockRejectedValueOnce(new Error('fail'));
+    render(<FileListView {...defaultProps} onAddFavorite={onAddFavorite} />);
+    const folderButton = screen.getByText('folder1').closest('button');
+    fireEvent.contextMenu(folderButton!);
+
+    const menuItems = showContextMenu.mock.calls[0][0];
+    const addItem = menuItems.find((item: { id?: string }) => item.id === 'add-to-favorites') as ContextMenuItemAction | undefined;
+    addItem?.action();
+
+    await Promise.resolve();
+    expect(vi.mocked(toast.error)).toHaveBeenCalledWith('Failed to add favorite.');
+  });
+
   it('disables Remove from Favorites for built-in favorites', () => {
     const favorites: FavoriteLocationItem[] = [
       {
@@ -186,6 +207,36 @@ describe('FileListView', () => {
     expect(removeItem?.enabled).toBe(true);
     removeItem?.action();
     expect(defaultProps.onRemoveFavorite).toHaveBeenCalledWith('/test/folder1');
+  });
+
+  it('shows toast when remove from favorites fails', async () => {
+    const favorites: FavoriteLocationItem[] = [
+      {
+        path: '/test/folder1',
+        name: 'folder1',
+        kind: 'favorite',
+        favoriteType: 'custom',
+        status: 'available',
+      },
+    ];
+    const onRemoveFavorite = vi.fn().mockRejectedValueOnce(new Error('fail'));
+
+    render(
+      <FileListView
+        {...defaultProps}
+        favorites={favorites}
+        onRemoveFavorite={onRemoveFavorite}
+      />,
+    );
+    const folderButton = screen.getByText('folder1').closest('button');
+    fireEvent.contextMenu(folderButton!);
+
+    const menuItems = showContextMenu.mock.calls[0][0];
+    const removeItem = menuItems.find((item: { id?: string }) => item.id === 'remove-from-favorites') as ContextMenuItemAction | undefined;
+    removeItem?.action();
+
+    await Promise.resolve();
+    expect(vi.mocked(toast.error)).toHaveBeenCalledWith('Failed to remove favorite.');
   });
 
   it('does not include favorites actions for file items', () => {

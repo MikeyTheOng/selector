@@ -105,6 +105,24 @@ describe('LocationsSidebar', () => {
     expect(removeItem.enabled).toBe(true);
   });
 
+  it('shows toast when remove favorite fails', async () => {
+    const customFavorites: FavoriteLocationItem[] = [
+      { path: '/Custom', name: 'Custom', kind: 'favorite', favoriteType: 'custom', status: 'available' },
+    ];
+    const onRemoveFavorite = vi.fn().mockRejectedValueOnce(new Error('fail'));
+
+    render(<LocationsSidebar favorites={customFavorites} volumes={mockVolumes} onRemoveFavorite={onRemoveFavorite} />);
+    fireEvent.contextMenu(screen.getByText('Custom').closest('button')!);
+
+    const menuItems = showContextMenu.mock.calls[0][0];
+    const removeItem = menuItems.find((item: { id?: string }) => item.id === 'remove-favorite') as { action: () => void } | undefined;
+    expect(removeItem).toBeDefined();
+    removeItem?.action();
+
+    await Promise.resolve();
+    expect(vi.mocked(toast.error)).toHaveBeenCalledWith('Failed to remove favorite.');
+  });
+
   it('calls navigateToExplorer when volume clicked', () => {
     render(<LocationsSidebar {...defaultProps} />);
     fireEvent.click(screen.getByText('Drive'));
