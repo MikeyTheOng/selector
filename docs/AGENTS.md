@@ -104,8 +104,41 @@ This repository uses `eslint-plugin-boundaries` to enforce the [File Structure](
 
 ## Pull Request Guidelines
 
-- Provide a clear summary explaining what changed and why.
+### PR Title Format
+- PR titles must start with a bracketed type: `[Feat]`, `[Fix]`, `[Chore]`, `[Refactor]`, `[Feat/Refactor]`, `[Docs]`, or `[Test]`.
+- Preferred example: `[Feat] Persist and Manage Custom Favorites in Explorer UI`
+
+### Required Structure
+- **PR Title**
+- **Description**: 1–3 sentences explaining what changed and why.
+- **Key Changes**: include concise technical detail for core functionality or complex logic. Prefer file paths or module/component names when relevant.
+
+### Optional Sections (when relevant)
+- **Data Model**
+- **Behavior Notes**
+
+### Other Requirements
 - Link related issues or tickets when applicable.
 - Include screenshots or recordings for UI changes.
 - Explicitly call out any changes to Tauri config, permissions, or capabilities.
 - Ensure all commits comply with the commit guidelines above.
+
+### Sample PR Structure
+```markdown
+# [Type] Short, descriptive PR title
+
+<Description paragraph explaining what changed and why. 1–3 sentences.>
+
+# Key Changes
+- Example: <core change with technical detail> (`path/to/file`)
+- Add favorites actions to list and sidebar context menus with optimistic updates and error toasts.
+  - File list actions and normalization: `src/features/file-explorer/components/FileListView.tsx`
+  - Sidebar actions and status handling: `src/features/file-explorer/components/LocationsSidebar.tsx`
+
+# Data Model
+- Example: <schema or storage change>
+- New table `favorite_locations` stores `path` with a unique constraint and `created_at` timestamp. Used to persist custom favorites across sessions.
+
+# Behavior Notes
+- Example: <behavior, edge case, or failure mode>
+```

@@ -9,6 +9,7 @@ import { FileListView } from "./FileListView";
 import { PathBar } from "./PathBar";
 import { useExplorerContext } from "../context/ExplorerContext";
 import type { LocationItem, ExplorerItem } from "@/types/explorer";
+import type { FavoriteLocationItem } from "../types";
 import {
   fileRowToExplorerItem,
   folderRowToExplorerItem,
@@ -18,15 +19,21 @@ import { Button } from "@/components/ui/button";
 
 type FileExplorerViewProps = {
   locations: LocationItem[];
+  favorites: FavoriteLocationItem[];
   folderId: string | null;
   onSelectFolder: (path: string) => void;
+  onAddFavorite: (path: string) => void;
+  onRemoveFavorite: (path: string) => void;
   SelectionPanel: ComponentType<ExplorerSelectionPanelProps>;
 };
 
 export const FileExplorerView = ({
   locations,
+  favorites,
   folderId,
   onSelectFolder,
+  onAddFavorite,
+  onRemoveFavorite,
   SelectionPanel,
 }: FileExplorerViewProps) => {
   const {
@@ -178,6 +185,7 @@ export const FileExplorerView = ({
         ) : (
           <FileListView
             listing={listing}
+            favorites={favorites}
             selectedPaths={selectedPaths}
             lastClickedPath={lastClickedPath}
             focusedPath={focusedPath}
@@ -187,6 +195,8 @@ export const FileExplorerView = ({
             onSelectRange={selectRange}
             onFocusItem={focusItem}
             onToggleSelection={toggleSelection}
+            onAddFavorite={onAddFavorite}
+            onRemoveFavorite={onRemoveFavorite}
           />
         )}
       </div>

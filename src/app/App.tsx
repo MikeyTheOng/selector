@@ -13,13 +13,14 @@ import { useAppMenu } from "./setupAppMenu";
 
 function AppInner() {
   useAppMenu();
-  const { favorites, volumes, rootLocations } = useLocations();
+  const { favorites, volumes, rootLocations, addFavorite, removeFavorite } = useLocations();
   const { currentRoute, navigateToExplorer } = useNavigation();
 
   const sidebar = (
     <LocationsSidebar
       favorites={favorites}
       volumes={volumes}
+      onRemoveFavorite={removeFavorite}
       renderCollections={() => <CollectionsSidebarSection />}
     />
   );
@@ -30,9 +31,12 @@ function AppInner() {
         return (
           <FileExplorerPage
             locations={rootLocations}
+            favorites={favorites}
             folderId={currentRoute.folderId}
             focusItemPath={currentRoute.focusItemPath}
             onSelectFolder={navigateToExplorer}
+            onAddFavorite={addFavorite}
+            onRemoveFavorite={removeFavorite}
             SelectionPanel={AddToCollectionSelectionPanel}
           />
         );

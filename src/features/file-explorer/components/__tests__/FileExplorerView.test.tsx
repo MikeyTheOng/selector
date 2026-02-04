@@ -63,8 +63,11 @@ describe('FileExplorerView Integration', () => {
 
   const defaultProps = {
     locations: [],
+    favorites: [],
     folderId: '/test',
     onSelectFolder: vi.fn(),
+    onAddFavorite: vi.fn(),
+    onRemoveFavorite: vi.fn(),
     SelectionPanel: TestSelectionPanel,
   };
 

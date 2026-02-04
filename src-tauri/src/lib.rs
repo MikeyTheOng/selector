@@ -38,6 +38,18 @@ pub fn run() {
                         description: "create_collections",
                         sql: include_str!("../migrations/001_collections.sql"),
                         kind: MigrationKind::Up,
+                    },
+                    Migration {
+                        version: 2,
+                        description: "remove_volume_id",
+                        sql: include_str!("../migrations/002_remove_volume_id.sql"),
+                        kind: MigrationKind::Up,
+                    },
+                    Migration {
+                        version: 3,
+                        description: "favorite_locations",
+                        sql: include_str!("../migrations/003_favorite_locations.sql"),
+                        kind: MigrationKind::Up,
                     }],
                 )
                 .build(),

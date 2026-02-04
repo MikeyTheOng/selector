@@ -5,7 +5,9 @@ import type { LocationItem } from '@/types/explorer';
 
 describe('PathBar', () => {
   const mockLocations: LocationItem[] = [
-    { path: '/users/test', name: 'Home', kind: 'favorite' },
+    { path: '/Users/test', name: 'Home', kind: 'favorite' },
+    { path: '/Volumes/Macintosh HD', name: 'Macintosh HD', kind: 'volume' },
+    { path: '/Volumes/External', name: 'External', kind: 'volume' },
   ];
 
   it('renders nothing when no folder selected', () => {
@@ -18,13 +20,13 @@ describe('PathBar', () => {
   it('renders breadcrumbs for selected folder', () => {
     render(
       <PathBar 
-        selectedFolder="/users/test/documents/work" 
+        selectedFolder="/Users/test/documents/work" 
         locations={mockLocations} 
         onSelectFolder={vi.fn()} 
       />
     );
     
-    expect(screen.getByText('Home')).toBeDefined();
+    expect(screen.getByText('Macintosh HD')).toBeDefined();
     expect(screen.getByText('documents')).toBeDefined();
     expect(screen.getByText('work')).toBeDefined();
   });
@@ -33,13 +35,26 @@ describe('PathBar', () => {
     const onSelectFolder = vi.fn();
     render(
       <PathBar 
-        selectedFolder="/users/test/documents/work" 
+        selectedFolder="/Users/test/documents/work" 
         locations={mockLocations} 
         onSelectFolder={onSelectFolder} 
       />
     );
     
     fireEvent.click(screen.getByText('documents').closest('button')!);
-    expect(onSelectFolder).toHaveBeenCalledWith('/users/test/documents');
+    expect(onSelectFolder).toHaveBeenCalledWith('/Users/test/documents');
+  });
+
+  it('uses volume root for external paths', () => {
+    render(
+      <PathBar
+        selectedFolder="/Volumes/External/projects/demo"
+        locations={mockLocations}
+        onSelectFolder={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('External')).toBeDefined();
+    expect(screen.getByText('projects')).toBeDefined();
   });
 });

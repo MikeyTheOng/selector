@@ -1,19 +1,30 @@
-import { Folder, HardDrive, Home, Image } from "lucide-react";
+import { AlertCircle, Folder, HardDrive, Home, Image } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigation } from "@/hooks/use-navigation";
 import { cn } from "@/lib/utils";
+import { useExplorerContextMenu } from "@/components/explorer/ExplorerContextMenu";
 import type { LocationItem } from "@/types/explorer";
-import type { FavoriteLocationItem, FavoriteType } from "../types";
+import type { FavoriteLocationItem } from "../types";
 
-function getFavoriteIcon(favoriteType: FavoriteType) {
-  switch (favoriteType) {
+function getFavoriteIcon(favorite: FavoriteLocationItem) {
+  if (favorite.status === "missing") {
+    return AlertCircle;
+  }
+  if (favorite.status === "offline") {
+    return HardDrive;
+  }
+
+  switch (favorite.favoriteType) {
     case "home":
       return Home;
     case "pictures":
       return Image;
+    case "custom":
+      return Folder;
     default:
-      console.error(`Unexpected favoriteType: ${favoriteType}`);
+      console.error(`Unexpected favoriteType: ${favorite.favoriteType}`);
       return Folder;
   }
 }
@@ -21,16 +32,55 @@ function getFavoriteIcon(favoriteType: FavoriteType) {
 type LocationsSidebarProps = {
   favorites: FavoriteLocationItem[];
   volumes: LocationItem[];
+  onRemoveFavorite: (path: string) => void;
   renderCollections?: () => React.ReactNode;
 };
 
 export const LocationsSidebar = ({
   favorites,
   volumes,
+  onRemoveFavorite,
   renderCollections,
 }: LocationsSidebarProps) => {
   const { currentRoute, navigateToExplorer } = useNavigation();
+  const { showContextMenu } = useExplorerContextMenu();
   const selectedFolder = currentRoute.type === "explorer" ? currentRoute.folderId : null;
+
+  const handleFavoriteClick = (favorite: FavoriteLocationItem) => {
+    if (favorite.status === "missing") {
+      toast.error("This favorite location is missing.");
+      return;
+    }
+    if (favorite.status === "offline") {
+      toast.error("This favorite location is offline.");
+      return;
+    }
+    navigateToExplorer(favorite.path);
+  };
+
+  const handleFavoriteContextMenu = (
+    favorite: FavoriteLocationItem,
+    event: React.MouseEvent,
+  ) => {
+    event.preventDefault();
+    showContextMenu([
+      {
+        type: "item",
+        id: "remove-favorite",
+        text: "Remove from Favorites",
+        enabled: favorite.favoriteType === "custom",
+        action: () => {
+          void (async () => {
+            try {
+              await onRemoveFavorite(favorite.path);
+            } catch {
+              toast.error("Failed to remove favorite.");
+            }
+          })();
+        },
+      },
+    ]);
+  };
 
   return (
     <aside className="flex-col min-w-0 w-full sm:w-1/6 border-border/60 border-b lg:border-b-0 lg:border-r">
@@ -42,18 +92,22 @@ export const LocationsSidebar = ({
                 Favorites
               </p>
               {favorites.map((fav) => {
-                const IconComponent = getFavoriteIcon(fav.favoriteType);
+                const IconComponent = getFavoriteIcon(fav);
+                const isUnavailable = fav.status !== "available";
                 return (
                   <Button
                     key={fav.path}
                     type="button"
                     variant="ghost"
-                    onClick={() => navigateToExplorer(fav.path)}
+                    onClick={() => handleFavoriteClick(fav)}
+                    onContextMenu={(event) => handleFavoriteContextMenu(fav, event)}
                     className={cn(
-                      "h-auto w-full justify-start gap-2 rounded-lg px-2 py-2 text-left text-sm hover:text-foreground",
-                      selectedFolder === fav.path
-                        ? "bg-accent/70 text-foreground"
-                        : "text-foreground hover:bg-muted/50",
+                      "h-auto w-full justify-start gap-2 rounded-lg px-2 py-2 text-left text-sm",
+                      isUnavailable
+                        ? "text-muted-foreground hover:text-muted-foreground"
+                        : selectedFolder === fav.path
+                          ? "bg-accent/70 text-foreground"
+                          : "text-foreground hover:bg-muted/50 hover:text-foreground",
                     )}
                   >
                     <IconComponent className="h-4 w-4 text-muted-foreground" />

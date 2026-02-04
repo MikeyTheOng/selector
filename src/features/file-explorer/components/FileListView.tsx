@@ -1,13 +1,18 @@
 import { useMemo } from "react";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { toast } from "sonner";
 import { FileRowLabel } from "./FileRowLabel";
 import { ExplorerListView } from "@/components/explorer/ExplorerListView";
 import { useExplorerContextMenu } from "@/components/explorer/ExplorerContextMenu";
+import type { ContextMenuItemDef } from "@/components/explorer/ExplorerContextMenu";
 import { fileRowToExplorerItem, folderRowToExplorerItem } from "@/lib/explorer-utils";
 import type { FolderListing, ExplorerItem, ExplorerViewMode } from "@/types/explorer";
+import type { FavoriteLocationItem } from "../types";
+import { normalizeFavoritePath } from "../lib/favorites-service";
 
 type FileListViewProps = {
   listing: FolderListing;
+  favorites: FavoriteLocationItem[];
   selectedPaths: Record<string, ExplorerItem>;
   lastClickedPath: string | null;
   focusedPath: string | null;
@@ -18,10 +23,13 @@ type FileListViewProps = {
   onFocusItem: (item: ExplorerItem) => void;
   onToggleSelection: (item: ExplorerItem) => void;
   onActivateItem?: (item: ExplorerItem) => void;
+  onAddFavorite: (path: string) => void;
+  onRemoveFavorite: (path: string) => void;
 };
 
 export const FileListView = ({
   listing,
+  favorites,
   selectedPaths,
   lastClickedPath,
   focusedPath,
@@ -32,29 +40,89 @@ export const FileListView = ({
   onFocusItem,
   onToggleSelection,
   onActivateItem,
+  onAddFavorite,
+  onRemoveFavorite,
 }: FileListViewProps) => {
   const { showContextMenu } = useExplorerContextMenu();
 
-  const explorerItems = useMemo(() => [
-    ...listing.folders.map(folderRowToExplorerItem),
-    ...listing.files.map(fileRowToExplorerItem),
-  ], [listing]);
+  const explorerItems = useMemo(
+    () => [
+      ...listing.folders.map(folderRowToExplorerItem),
+      ...listing.files.map(fileRowToExplorerItem),
+    ],
+    [listing],
+  );
 
-  const getContextMenuItems = (item: ExplorerItem) => [
-    {
-      type: "item" as const,
-      id: "reveal-in-finder",
-      text: "Reveal in Finder",
-      enabled: item.status === "available",
-      action: async () => {
-        try {
-          await revealItemInDir(item.path);
-        } catch (error) {
-          console.error("Failed to reveal item:", error);
-        }
+  const favoritesByPath = useMemo(() => {
+    const map = new Map<string, FavoriteLocationItem>();
+    favorites.forEach((favorite) => {
+      const normalized = normalizeFavoritePath(favorite.path);
+      if (!normalized || map.has(normalized)) {
+        return;
+      }
+      map.set(normalized, favorite);
+    });
+    return map;
+  }, [favorites]);
+
+  const getContextMenuItems = (item: ExplorerItem): ContextMenuItemDef[] => {
+    const items: ContextMenuItemDef[] = [
+      {
+        type: "item" as const,
+        id: "reveal-in-finder",
+        text: "Reveal in Finder",
+        enabled: item.status === "available",
+        action: () => {
+          revealItemInDir(item.path).catch((error) => {
+            console.error("Failed to reveal item:", error);
+          });
+        },
       },
-    },
-  ];
+    ];
+
+    if (item.kind === "folder") {
+      const normalized = normalizeFavoritePath(item.path);
+      if (normalized) {
+        const favorite = favoritesByPath.get(normalized);
+        items.push({ type: "separator" as const });
+        if (!favorite) {
+          items.push({
+            type: "item" as const,
+            id: "add-to-favorites",
+            text: "Add to Favorites",
+            enabled: item.status === "available",
+            action: () => {
+              void (async () => {
+                try {
+                  await onAddFavorite(normalized);
+                } catch {
+                  toast.error("Failed to add favorite.");
+                }
+              })();
+            },
+          });
+        } else {
+          items.push({
+            type: "item" as const,
+            id: "remove-from-favorites",
+            text: "Remove from Favorites",
+            enabled: favorite.favoriteType === "custom",
+            action: () => {
+              void (async () => {
+                try {
+                  await onRemoveFavorite(normalized);
+                } catch {
+                  toast.error("Failed to remove favorite.");
+                }
+              })();
+            },
+          });
+        }
+      }
+    }
+
+    return items;
+  };
 
   const handleItemClick = (item: ExplorerItem, event: React.MouseEvent) => {
     // Shift+click for range selection

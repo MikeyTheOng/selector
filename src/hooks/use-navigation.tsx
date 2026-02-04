@@ -45,6 +45,16 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         return prev;
       }
 
+      const isInitialRoute =
+        prev.stack.length === 1 &&
+        prev.index === 0 &&
+        prev.stack[0].type === "explorer" &&
+        prev.stack[0].folderId === null;
+
+      if (isInitialRoute) {
+        return { stack: [route], index: 0 };
+      }
+
       // Clear forward history and add new route
       const nextStack = prev.stack.slice(0, prev.index + 1);
       nextStack.push(route);
