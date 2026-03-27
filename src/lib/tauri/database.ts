@@ -8,7 +8,16 @@
 
 import Database from "@tauri-apps/plugin-sql";
 
-const DATABASE_PATH = "sqlite:selector.db";
+const DEV_DATABASE_PATH = "sqlite:selector.dev.db";
+const PROD_DATABASE_PATH = "sqlite:selector.db";
+
+export function resolveDatabasePath(
+  isDev = import.meta.env.DEV,
+): string {
+  return isDev ? DEV_DATABASE_PATH : PROD_DATABASE_PATH;
+}
+
+const DATABASE_PATH = resolveDatabasePath();
 
 let dbInstance: Database | null = null;
 
@@ -24,10 +33,7 @@ export async function getDatabase(): Promise<Database> {
   dbInstance = await Database.load(DATABASE_PATH);
   
   // Enable foreign key support (disabled by default in SQLite)
-  // We skip this during Vitest tests to avoid interfering with call-count/call-order expectations in mocks
-  if (!import.meta.env.VITEST) {
-    await dbInstance.execute("PRAGMA foreign_keys = ON;");
-  }
+  await dbInstance.execute("PRAGMA foreign_keys = ON;");
 
   return dbInstance;
 }

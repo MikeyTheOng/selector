@@ -8,6 +8,7 @@ import {
   closeDatabase,
   getDatabasePath,
   resetDatabaseCache,
+  resolveDatabasePath,
 } from "../database";
 
 describe("database", () => {
@@ -56,10 +57,18 @@ describe("database", () => {
   });
 
   describe("getDatabasePath", () => {
-    it("should return the database path", () => {
+    it("should return the runtime database path", () => {
       const path = getDatabasePath();
 
-      expect(path).toBe("sqlite:selector.db");
+      expect(path).toBe(resolveDatabasePath(import.meta.env.DEV));
+    });
+
+    it("should return the production database path outside dev mode", () => {
+      expect(resolveDatabasePath(false)).toBe("sqlite:selector.db");
+    });
+
+    it("should return the dev database path in dev mode", () => {
+      expect(resolveDatabasePath(true)).toBe("sqlite:selector.dev.db");
     });
   });
 

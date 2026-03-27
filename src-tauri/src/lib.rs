@@ -4,6 +4,16 @@ use quicklook::QuickLookState;
 use tauri::Manager;
 use tauri_plugin_sql::{Migration, MigrationKind};
 
+#[cfg(debug_assertions)]
+const DATABASE_FILENAME: &str = "selector.dev.db";
+#[cfg(not(debug_assertions))]
+const DATABASE_FILENAME: &str = "selector.db";
+
+#[cfg(debug_assertions)]
+const DATABASE_URL: &str = "sqlite:selector.dev.db";
+#[cfg(not(debug_assertions))]
+const DATABASE_URL: &str = "sqlite:selector.db";
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -13,13 +23,14 @@ pub fn run() {
             #[cfg(debug_assertions)]
             {
                 if let Ok(app_data_dir) = app.path().app_data_dir() {
-                    let db_path = app_data_dir.join("selector.db");
+                    let db_path = app_data_dir.join(DATABASE_FILENAME);
                     println!("[dev] app_data_dir: {}", app_data_dir.display());
                     println!("[dev] sqlite db path: {}", db_path.display());
-                    println!("[dev] sqlite url used by plugin: sqlite:selector.db");
+                    println!("[dev] sqlite url used by plugin: {}", DATABASE_URL);
                 } else {
                     println!(
-                        "[dev] Could not resolve app_data_dir; sqlite url is sqlite:selector.db"
+                        "[dev] Could not resolve app_data_dir; sqlite url is {}",
+                        DATABASE_URL
                     );
                 }
             }
@@ -32,7 +43,7 @@ pub fn run() {
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations(
-                    "sqlite:selector.db",
+                    DATABASE_URL,
                     vec![Migration {
                         version: 1,
                         description: "create_collections",

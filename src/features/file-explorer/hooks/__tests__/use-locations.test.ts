@@ -396,7 +396,9 @@ describe('useLocations', () => {
       vi.mocked(pictureDir).mockResolvedValue('/Users/test/Pictures');
       vi.mocked(readDir).mockResolvedValue([]);
       vi.mocked(detectFavoriteStatus).mockResolvedValue('available');
-      vi.mocked(addFavoriteLocation).mockRejectedValueOnce(new Error('DB error'));
+      const dbError = new Error('DB error');
+      const addDeferred = createDeferred<void>();
+      vi.mocked(addFavoriteLocation).mockImplementationOnce(() => addDeferred.promise);
 
       const { result } = renderHook(() => useLocations());
 
@@ -408,12 +410,17 @@ describe('useLocations', () => {
       await act(async () => {
         addPromise = result.current.addFavorite('/Custom');
       });
+      void addPromise.catch(() => {});
 
       await waitFor(() => {
         expect(result.current.favorites).toHaveLength(3);
       });
 
-      await expect(addPromise).rejects.toBeDefined();
+      await act(async () => {
+        addDeferred.reject(dbError);
+      });
+
+      await expect(addPromise).rejects.toThrow('DB error');
 
       await waitFor(() => {
         expect(result.current.favorites).toHaveLength(2);
@@ -450,7 +457,9 @@ describe('useLocations', () => {
           status: 'available',
         },
       ]);
-      vi.mocked(removeFavoriteLocation).mockRejectedValueOnce(new Error('DB error'));
+      const dbError = new Error('DB error');
+      const removeDeferred = createDeferred<void>();
+      vi.mocked(removeFavoriteLocation).mockImplementationOnce(() => removeDeferred.promise);
 
       const { result } = renderHook(() => useLocations());
 
@@ -462,12 +471,17 @@ describe('useLocations', () => {
       await act(async () => {
         removePromise = result.current.removeFavorite('/Custom');
       });
+      void removePromise.catch(() => {});
 
       await waitFor(() => {
         expect(result.current.favorites).toHaveLength(2);
       });
 
-      await expect(removePromise).rejects.toBeDefined();
+      await act(async () => {
+        removeDeferred.reject(dbError);
+      });
+
+      await expect(removePromise).rejects.toThrow('DB error');
 
       await waitFor(() => {
         expect(result.current.favorites).toHaveLength(3);

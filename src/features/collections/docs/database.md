@@ -4,7 +4,7 @@ This document describes the schema and data invariants specifically for the Coll
 
 ## Overview
 
-Collections persist virtual file/folder groupings. The data is stored in the main `selector.db`.
+Collections persist virtual file/folder groupings. The data is stored in the main app database: `selector.dev.db` in development builds and `selector.db` in release builds.
 
 ## Schema
 
