@@ -21,6 +21,11 @@ import { resetDatabaseCache } from "@/lib/tauri/database";
 import { DuplicateItemError } from "../../errors";
 import type { Collection, CollectionItem } from "../../types";
 
+const getNonPragmaExecuteCalls = () =>
+  mockDatabaseExecute.mock.calls.filter(
+    ([sql]) => sql !== "PRAGMA foreign_keys = ON;",
+  );
+
 describe("collections-service", () => {
   beforeEach(() => {
     resetDatabaseCache();
@@ -253,7 +258,7 @@ describe("collections-service", () => {
         }),
       ).rejects.toThrow(DuplicateItemError);
 
-      expect(mockDatabaseExecute).not.toHaveBeenCalled();
+      expect(getNonPragmaExecuteCalls()).toHaveLength(0);
     });
   });
 
@@ -352,7 +357,7 @@ describe("collections-service", () => {
 
   describe("updateItemPath", () => {
     it("should update the path for an item across all collections", async () => {
-      mockDatabaseExecute.mockResolvedValueOnce({ rowsAffected: 3 });
+      mockDatabaseExecute.mockResolvedValue({ rowsAffected: 3 });
 
       const result = await updateItemPath(
         "/old/path/file.jpg",
@@ -360,7 +365,7 @@ describe("collections-service", () => {
       );
 
       expect(result).toBe(3);
-      expect(mockDatabaseExecute).toHaveBeenCalledWith(
+      expect(mockDatabaseExecute).toHaveBeenLastCalledWith(
         expect.stringContaining("UPDATE collection_items SET path = ?"),
         ["/new/path/file.jpg", "/old/path/file.jpg"],
       );
@@ -411,7 +416,7 @@ describe("collections-service", () => {
       );
 
       // Should update each item
-      expect(mockDatabaseExecute).toHaveBeenCalledTimes(3);
+      expect(getNonPragmaExecuteCalls()).toHaveLength(3);
     });
 
     it("should handle folder relinking with trailing slashes", async () => {
