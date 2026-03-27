@@ -4,7 +4,10 @@ This document describes the global database infrastructure, migration strategy, 
 
 ## Overview
 
-The application uses a local SQLite database (`selector.db`) managed by the Tauri SQL plugin.
+The application uses a local SQLite database managed by the Tauri SQL plugin:
+
+- Development builds: `selector.dev.db`
+- Release builds: `selector.db`
 
 ## Migrations
 
@@ -23,7 +26,7 @@ Migrations are managed using the **Tauri SQL plugin's built-in Rust-side migrati
 2. Register in `lib.rs`:
    ```rust
    .add_migrations(
-       "sqlite:selector.db",
+       DATABASE_URL,
        vec![
            Migration { version: 1, description: "create_collections", sql: include_str!("../migrations/001_collections.sql"), kind: MigrationKind::Up },
            Migration { version: 2, description: "your_migration", sql: include_str!("../migrations/002_your_migration.sql"), kind: MigrationKind::Up },
@@ -57,6 +60,11 @@ The Tauri SQL plugin does **not** support automatic rollbacks. To reverse a migr
 
 The SQLite database is stored in the app's data directory:
 
+- **Development builds**
+- **macOS:** `~/Library/Application Support/<bundle-id>/selector.dev.db`
+- **Windows:** `%APPDATA%/<bundle-id>/selector.dev.db`
+- **Linux:** `~/.local/share/<bundle-id>/selector.dev.db`
+- **Release builds**
 - **macOS:** `~/Library/Application Support/<bundle-id>/selector.db`
 - **Windows:** `%APPDATA%/<bundle-id>/selector.db`
 - **Linux:** `~/.local/share/<bundle-id>/selector.db`
