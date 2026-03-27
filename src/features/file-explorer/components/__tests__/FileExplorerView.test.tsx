@@ -1,10 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FileExplorerView } from '../FileExplorerView';
 import { useExplorerContext } from '../../context/ExplorerContext';
 import { useNavigation } from '@/hooks/use-navigation';
 import { listen } from '@tauri-apps/api/event';
-import type { FolderListing, ExplorerFileItem } from '@/types/explorer';
+import type { FolderListing, ExplorerFileItem, ExplorerFolderItem } from '@/types/explorer';
 import type { ExplorerSelectionPanelProps } from '@/components/explorer/ExplorerSelectionPanel';
 
 // Mock the context
@@ -45,6 +45,18 @@ describe('FileExplorerView Integration', () => {
       kindLabel: 'Text',
       size: 2048,
       sizeLabel: '2048 B',
+      dateModified: new Date(),
+      dateModifiedLabel: '',
+      status: 'available',
+    },
+  ];
+
+  const mockFolders: ExplorerFolderItem[] = [
+    {
+      path: '/test/folder-a',
+      name: 'folder-a',
+      kind: 'folder',
+      kindLabel: 'Folder',
       dateModified: new Date(),
       dateModifiedLabel: '',
       status: 'available',
@@ -162,5 +174,59 @@ describe('FileExplorerView Integration', () => {
     render(<FileExplorerView {...defaultProps} />);
 
     expect(screen.getByText('2 selected')).toBeDefined();
+  });
+
+  it('selects items from the active directory in column view', () => {
+    const selectMultiple = vi.fn();
+    const activeListing: FolderListing = {
+      folders: mockFolders,
+      files: [mockFiles[1]],
+      isLoading: false,
+      fileCount: 1,
+      folderCount: 1,
+      isTruncated: false,
+    };
+
+    const mockContextValue = {
+      listing: mockListing,
+      ensureListing: vi.fn(),
+      getListingForPath: vi.fn((path: string) =>
+        path === '/test' ? activeListing : undefined,
+      ),
+      selectedPaths: {},
+      selectedEntries: [],
+      selectedCount: 0,
+      lastClickedPath: null,
+      focusedPath: mockFolders[0].path,
+      selectItem: vi.fn(),
+      selectMultiple,
+      selectRange: vi.fn(),
+      toggleSelection: mockToggleSelection,
+      removeSelection: vi.fn(),
+      clearSelections: vi.fn(),
+      updateLastClickedItem: vi.fn(),
+      clearLastClickedItem: vi.fn(),
+      focusItem: mockFocusItem,
+      clearFocus: vi.fn(),
+      isPreviewActive: false,
+      togglePreview: mockTogglePreview,
+      closePreview: mockClosePreview,
+      viewMode: 'column' as const,
+      setViewMode: vi.fn(),
+      folderId: '/test',
+      locations: [],
+    };
+    vi.mocked(useExplorerContext).mockReturnValue(mockContextValue as unknown as ReturnType<typeof useExplorerContext>);
+
+    render(<FileExplorerView {...defaultProps} />);
+    fireEvent.keyDown(window, { key: 'a', metaKey: true });
+
+    expect(selectMultiple).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({ path: mockFolders[0].path, kind: 'folder' }),
+        expect.objectContaining({ path: mockFiles[1].path, kind: 'file' }),
+      ],
+      { additive: true },
+    );
   });
 });
