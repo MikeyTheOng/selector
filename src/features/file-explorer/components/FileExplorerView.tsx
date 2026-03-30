@@ -101,24 +101,18 @@ export const FileExplorerView = ({
     [selectItem, toggleSelection, focusItem],
   );
 
-  // Helper to get items for the current active view context (for keyboard nav)
+  // Helper to get items for the active directory (for keyboard nav)
   const getCurrentViewItems = useCallback(() => {
-    // In list view, it's just the current listing
-    if (viewMode === "list") {
-      return [
-        ...listing.folders.map(folderRowToExplorerItem),
-        ...listing.files.map(fileRowToExplorerItem),
-      ];
-    }
+    if (!folderId) return [];
 
-    const currentListing = getListingForPath(folderId || "");
-    if (!currentListing) return [];
+    const activeListing = getListingForPath(folderId);
+    if (!activeListing) return [];
 
     return [
-      ...currentListing.folders.map(folderRowToExplorerItem),
-      ...currentListing.files.map(fileRowToExplorerItem),
+      ...activeListing.folders.map(folderRowToExplorerItem),
+      ...activeListing.files.map(fileRowToExplorerItem),
     ];
-  }, [listing, viewMode, folderId, getListingForPath]);
+  }, [folderId, getListingForPath]);
 
   useExplorerShortcuts({
     getCurrentViewItems,

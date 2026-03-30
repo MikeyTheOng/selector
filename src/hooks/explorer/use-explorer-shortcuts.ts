@@ -128,58 +128,14 @@ export const useExplorerShortcuts = ({
           event.key,
         )
       ) {
-        if (currentItems.length === 0 && viewMode === "list") return;
-
-        if (viewMode === "list") {
-          if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-            event.preventDefault();
-            let nextIndex = -1;
-
-            if (!focusedPath) {
-              nextIndex = event.key === "ArrowUp" ? currentItems.length - 1 : 0;
-            } else {
-              const currentIndex = currentItems.findIndex(
-                (i) => i.path === focusedPath,
-              );
-              if (event.key === "ArrowUp") {
-                nextIndex = Math.max(0, currentIndex - 1);
-              } else {
-                nextIndex = Math.min(currentItems.length - 1, currentIndex + 1);
-              }
-            }
-
-            if (nextIndex !== -1) {
-              const nextItem = currentItems[nextIndex];
-              if (isShift && lastClickedPath) {
-                // Find anchor in current items
-                const anchorItem = currentItems.find(
-                  (i) => i.path === lastClickedPath,
-                );
-                if (anchorItem) {
-                  selectRange(anchorItem, nextItem, currentItems);
-                }
-                focusItem(nextItem);
-              } else {
-                focusItem(nextItem);
-              }
-            }
-          } else if (event.key === "Enter") {
-            event.preventDefault();
-            if (focusedPath) {
-              const item = currentItems.find((i) => i.path === focusedPath);
-              if (item) {
-                if (onActivateItem) {
-                  onActivateItem(item);
-                } else if (item.kind === "folder") {
-                  onSelectFolder(item.path);
-                }
-              }
-            }
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          if (viewMode !== "column") {
+            return;
           }
-        } else if (viewMode === "column") {
-          // Column View keyboard navigation
+
+          event.preventDefault();
+
           if (event.key === "ArrowLeft") {
-            event.preventDefault();
             // Go up to parent folder
             if (folderId) {
               const segments = folderId.split("/").filter(Boolean);
@@ -191,53 +147,61 @@ export const useExplorerShortcuts = ({
                 onSelectFolder("/");
               }
             }
-          } else if (event.key === "ArrowRight" || event.key === "Enter") {
-            event.preventDefault();
-            if (focusedPath) {
-              const item = currentItems.find((i) => i.path === focusedPath);
-              if (item && item.kind === "folder") {
+          } else if (focusedPath) {
+            const item = currentItems.find((i) => i.path === focusedPath);
+            if (item && item.kind === "folder") {
+              onSelectFolder(item.path);
+            }
+          }
+
+          return;
+        }
+
+        if (currentItems.length === 0) {
+          return;
+        }
+
+        if (event.key === "Enter") {
+          event.preventDefault();
+          if (focusedPath) {
+            const item = currentItems.find((i) => i.path === focusedPath);
+            if (item) {
+              if (onActivateItem) {
+                onActivateItem(item);
+              } else if (item.kind === "folder") {
                 onSelectFolder(item.path);
               }
             }
-          } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-            event.preventDefault();
+          }
+        } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+          event.preventDefault();
+          let nextIndex = -1;
 
-            if (currentItems.length === 0) return;
-
-            let nextIndex = -1;
-            // Check if focused item is in current list (active column)
-            // If focusedPath is set but not in currentItems, it means focus is in another column.
-            // In that case, we should probably start from 0 or keep focus there?
-            // Standard Finder behavior: up/down moves in active column.
-
-            const currentIndex = focusedPath
-              ? currentItems.findIndex((i) => i.path === focusedPath)
-              : -1;
-
-            if (currentIndex === -1) {
-              // Focus not in current column, start fresh
-              nextIndex = event.key === "ArrowUp" ? currentItems.length - 1 : 0;
+          if (!focusedPath) {
+            nextIndex = event.key === "ArrowUp" ? currentItems.length - 1 : 0;
+          } else {
+            const currentIndex = currentItems.findIndex(
+              (i) => i.path === focusedPath,
+            );
+            if (event.key === "ArrowUp") {
+              nextIndex = Math.max(0, currentIndex - 1);
             } else {
-              if (event.key === "ArrowUp") {
-                nextIndex = Math.max(0, currentIndex - 1);
-              } else {
-                nextIndex = Math.min(currentItems.length - 1, currentIndex + 1);
-              }
+              nextIndex = Math.min(currentItems.length - 1, currentIndex + 1);
             }
+          }
 
-            if (nextIndex !== -1) {
-              const nextItem = currentItems[nextIndex];
-              if (isShift && lastClickedPath) {
-                const anchorItem = currentItems.find(
-                  (i) => i.path === lastClickedPath,
-                );
-                if (anchorItem) {
-                  selectRange(anchorItem, nextItem, currentItems);
-                }
-                focusItem(nextItem);
-              } else {
-                focusItem(nextItem);
+          if (nextIndex !== -1) {
+            const nextItem = currentItems[nextIndex];
+            if (isShift && lastClickedPath) {
+              const anchorItem = currentItems.find(
+                (i) => i.path === lastClickedPath,
+              );
+              if (anchorItem) {
+                selectRange(anchorItem, nextItem, currentItems);
               }
+              focusItem(nextItem);
+            } else {
+              focusItem(nextItem);
             }
           }
         }

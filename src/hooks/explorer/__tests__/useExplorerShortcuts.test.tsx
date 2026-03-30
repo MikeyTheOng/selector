@@ -40,6 +40,16 @@ const mockFiles: ExplorerItem[] = [
   },
 ];
 
+const mockFolder: ExplorerItem = {
+  path: '/test/folder',
+  name: 'folder',
+  kind: 'folder',
+  kindLabel: 'Folder',
+  dateModified: new Date(),
+  dateModifiedLabel: '',
+  status: 'available',
+};
+
 type UseExplorerShortcutsOptions = Parameters<typeof useExplorerShortcuts>[0];
 
 const createOptions = (
@@ -127,6 +137,51 @@ describe('useExplorerShortcuts', () => {
     expect(options.focusItem).toHaveBeenCalledWith(
       expect.objectContaining({ path: mockFiles[1].path }),
     );
+  });
+
+  it('opens the focused folder on Enter in column view', async () => {
+    let eventCallback: EventCallback<unknown> = () => {};
+    vi.mocked(listen).mockImplementation((event, callback) => {
+      if (event === 'quicklook://navigate') {
+        eventCallback = callback;
+      }
+      return Promise.resolve(() => {});
+    });
+
+    const options = createOptions({
+      getCurrentViewItems: vi.fn(() => [mockFolder, ...mockFiles]),
+      focusedPath: mockFolder.path,
+      viewMode: 'column',
+    });
+    renderHook(() => useExplorerShortcuts(options));
+
+    await act(async () => {
+      eventCallback({
+        event: 'quicklook://navigate',
+        id: 0,
+        payload: {
+          key: 'Enter',
+          metaKey: false,
+          ctrlKey: false,
+          shiftKey: false,
+        } satisfies QuickLookNavigatePayload,
+      });
+    });
+
+    expect(options.onSelectFolder).toHaveBeenCalledWith(mockFolder.path);
+  });
+
+  it('ignores ArrowRight outside column view', () => {
+    const options = createOptions({
+      getCurrentViewItems: vi.fn(() => [mockFolder, ...mockFiles]),
+      focusedPath: mockFolder.path,
+      viewMode: 'list',
+    });
+    renderHook(() => useExplorerShortcuts(options));
+
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+
+    expect(options.onSelectFolder).not.toHaveBeenCalled();
   });
 
   it('handles quicklook://navigate event for closing preview (Escape)', async () => {
