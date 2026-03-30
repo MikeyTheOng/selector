@@ -1,7 +1,7 @@
 import { ExplorerProvider } from "../context/ExplorerContext";
 import type { ComponentType } from "react";
 import { FileExplorerView } from "./FileExplorerView";
-import type { LocationItem } from "@/types/explorer";
+import type { ExplorerItem, LocationItem } from "@/types/explorer";
 import type { ExplorerSelectionPanelProps } from "@/components/explorer/ExplorerSelectionPanel";
 import type { FavoriteLocationItem } from "../types";
 
@@ -13,6 +13,7 @@ type FileExplorerPageProps = {
   onSelectFolder: (path: string) => void;
   onAddFavorite: (path: string) => void;
   onRemoveFavorite: (path: string) => void;
+  onQuickAdd: (entries: ExplorerItem[]) => void | Promise<void>;
   SelectionPanel: ComponentType<ExplorerSelectionPanelProps>;
 };
 
@@ -24,6 +25,7 @@ export const FileExplorerPage = ({
   onSelectFolder,
   onAddFavorite,
   onRemoveFavorite,
+  onQuickAdd,
   SelectionPanel,
 }: FileExplorerPageProps) => {
   return (
@@ -35,6 +37,7 @@ export const FileExplorerPage = ({
         onSelectFolder={onSelectFolder}
         onAddFavorite={onAddFavorite}
         onRemoveFavorite={onRemoveFavorite}
+        onQuickAdd={onQuickAdd}
         SelectionPanel={SelectionPanel}
       />
     </ExplorerProvider>

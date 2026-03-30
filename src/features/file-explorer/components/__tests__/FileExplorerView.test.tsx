@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FileExplorerView } from '../FileExplorerView';
 import { useExplorerContext } from '../../context/ExplorerContext';
+import { useFileExplorerShortcuts } from '../../hooks/use-file-explorer-shortcuts';
 import { useNavigation } from '@/hooks/use-navigation';
 import { listen } from '@tauri-apps/api/event';
 import type { FolderListing, ExplorerFileItem, ExplorerFolderItem } from '@/types/explorer';
@@ -11,6 +12,9 @@ import type { ExplorerSelectionPanelProps } from '@/components/explorer/Explorer
 vi.mock('../../context/ExplorerContext');
 vi.mock('@/hooks/use-navigation');
 vi.mock('@tauri-apps/api/event');
+vi.mock('../../hooks/use-file-explorer-shortcuts', () => ({
+  useFileExplorerShortcuts: vi.fn(),
+}));
 
 describe('FileExplorerView Integration', () => {
   const mockToggleSelection = vi.fn();
@@ -80,6 +84,7 @@ describe('FileExplorerView Integration', () => {
     onSelectFolder: vi.fn(),
     onAddFavorite: vi.fn(),
     onRemoveFavorite: vi.fn(),
+    onQuickAdd: vi.fn(),
     SelectionPanel: TestSelectionPanel,
   };
 
@@ -127,6 +132,7 @@ describe('FileExplorerView Integration', () => {
     });
 
     vi.mocked(listen).mockResolvedValue(() => { });
+    vi.mocked(useFileExplorerShortcuts).mockImplementation(() => {});
   });
 
   it('renders toolbar with correct file count', () => {
@@ -174,6 +180,46 @@ describe('FileExplorerView Integration', () => {
     render(<FileExplorerView {...defaultProps} />);
 
     expect(screen.getByText('2 selected')).toBeDefined();
+  });
+
+  it('wires file explorer shortcuts with the current selection and callback', () => {
+    const selectedEntries = mockFiles;
+    const onQuickAdd = vi.fn();
+    const mockContextValue = {
+      listing: mockListing,
+      ensureListing: vi.fn(),
+      getListingForPath: vi.fn(),
+      selectedPaths: {},
+      selectedEntries,
+      selectedCount: 2,
+      lastClickedPath: null,
+      focusedPath: mockFiles[0].path,
+      selectItem: vi.fn(),
+      selectMultiple: vi.fn(),
+      selectRange: vi.fn(),
+      toggleSelection: mockToggleSelection,
+      removeSelection: vi.fn(),
+      clearSelections: vi.fn(),
+      updateLastClickedItem: vi.fn(),
+      clearLastClickedItem: vi.fn(),
+      focusItem: mockFocusItem,
+      clearFocus: vi.fn(),
+      isPreviewActive: false,
+      togglePreview: mockTogglePreview,
+      closePreview: mockClosePreview,
+      viewMode: 'list' as const,
+      setViewMode: vi.fn(),
+      folderId: '/test',
+      locations: [],
+    };
+    vi.mocked(useExplorerContext).mockReturnValue(mockContextValue as unknown as ReturnType<typeof useExplorerContext>);
+
+    render(<FileExplorerView {...defaultProps} onQuickAdd={onQuickAdd} />);
+
+    expect(useFileExplorerShortcuts).toHaveBeenCalledWith({
+      selectedEntries,
+      onQuickAdd,
+    });
   });
 
   it('selects items from the active directory in column view', () => {

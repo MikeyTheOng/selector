@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { getFilename } from "../hooks/use-collection-items";
 import { useCollections } from "../hooks/use-collections";
 import * as collectionsService from "../lib/collections-service";
+import { setLastUsedCollectionId } from "../lib/storage";
 import { DuplicateItemError } from "../errors";
 import { FolderPlus, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,7 @@ export const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
         toast.success(
           `Added ${added.length} item${added.length !== 1 ? "s" : ""} to '${targetCollection?.name || "collection"}'${summarySuffix}`,
         );
+        setLastUsedCollectionId(targetId);
       }
       onOpenChange(false);
     } catch (err) {

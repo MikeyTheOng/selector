@@ -22,6 +22,7 @@ describe('FileExplorerPage', () => {
     onSelectFolder: vi.fn(),
     onAddFavorite: vi.fn(),
     onRemoveFavorite: vi.fn(),
+    onQuickAdd: vi.fn(),
     SelectionPanel: () => <div data-testid="selection-panel" />,
   };
 

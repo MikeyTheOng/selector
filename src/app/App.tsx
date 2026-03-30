@@ -1,11 +1,12 @@
 import { Toaster } from "@/components/ui/sonner";
 import {
-    AddToCollectionSelectionPanel,
-    CollectionsPage,
-    CollectionsSidebarSection,
+  AddToCollectionSelectionPanel,
+  CollectionsPage,
+  CollectionsSidebarSection,
 } from "@/features/collections";
 import { FileExplorerPage, useLocations } from "@/features/file-explorer";
 import { LocationsSidebar } from "@/features/file-explorer/components/LocationsSidebar";
+import { quickAddToRememberedCollection } from "@/features/collections/lib/quick-add";
 import { NavigationProvider, useNavigation } from "@/hooks/use-navigation";
 import { UserPreferencesProvider } from "@/providers/UserPreferencesProvider";
 import { MainLayout } from "./MainLayout";
@@ -37,6 +38,7 @@ function AppInner() {
             onSelectFolder={navigateToExplorer}
             onAddFavorite={addFavorite}
             onRemoveFavorite={removeFavorite}
+            onQuickAdd={quickAddToRememberedCollection}
             SelectionPanel={AddToCollectionSelectionPanel}
           />
         );
