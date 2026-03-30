@@ -7,6 +7,7 @@ import { useExplorerShortcuts } from "@/hooks/explorer/use-explorer-shortcuts";
 import { ColumnView } from "./ColumnView";
 import { FileListView } from "./FileListView";
 import { PathBar } from "./PathBar";
+import { useFileExplorerShortcuts } from "../hooks/use-file-explorer-shortcuts";
 import { useExplorerContext } from "../context/ExplorerContext";
 import type { LocationItem, ExplorerItem } from "@/types/explorer";
 import type { FavoriteLocationItem } from "../types";
@@ -24,6 +25,7 @@ type FileExplorerViewProps = {
   onSelectFolder: (path: string) => void;
   onAddFavorite: (path: string) => void;
   onRemoveFavorite: (path: string) => void;
+  onQuickAdd: (entries: ExplorerItem[]) => void | Promise<void>;
   SelectionPanel: ComponentType<ExplorerSelectionPanelProps>;
 };
 
@@ -34,6 +36,7 @@ export const FileExplorerView = ({
   onSelectFolder,
   onAddFavorite,
   onRemoveFavorite,
+  onQuickAdd,
   SelectionPanel,
 }: FileExplorerViewProps) => {
   const {
@@ -130,6 +133,11 @@ export const FileExplorerView = ({
     isPreviewActive,
     togglePreview,
     closePreview,
+  });
+
+  useFileExplorerShortcuts({
+    selectedEntries,
+    onQuickAdd,
   });
 
   return (

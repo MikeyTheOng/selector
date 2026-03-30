@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   mockDatabaseExecute,
   mockDatabaseSelect,
@@ -30,6 +30,7 @@ describe("collections-service", () => {
   beforeEach(() => {
     resetDatabaseCache();
     resetSqlMocks();
+    vi.clearAllMocks();
   });
 
   describe("createCollection", () => {
